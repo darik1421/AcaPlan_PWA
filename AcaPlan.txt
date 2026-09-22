@@ -1,0 +1,303 @@
+﻿“Aplicación web para la gestión de horarios académicos de la UNAN-Managua CUR-Chontales”
+
+
+
+
+ Galeano D., Cruz G., Castilla D.,  Taleno N., Sierra B. 
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ Texto
+
+Descripción generada automáticamente 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Área de Conocimiento:
+Ciencias Básicas y de Tecnologías
+Recinto Universitario “Cornelio Silva Argüello”
+
+
+Aplicación web y móvil educativa en la ciudad de Juigalpa-Chontales para la gestión de horarios académicos de la UNAN-Managua CUR-Chontales
+
+
+Proyecto para optar al grado de:
+Ingeniero en Sistemas de Información
+
+
+Autores:
+Br. Gisela Paola Rocha Cruz 
+Br. Denis Oneyker Galeano Castillo 
+Br. Darikson Sneyder Castilla Velazquez  
+Br. Bradley Didier Sierra Ramirez 
+Br. Nahomy Sarai Taleno González 
+
+
+
+
+Asesor:
+  
+MSc. Isamar Bonilla
+Modalidad de Graduación
+
+
+
+
+
+
+Septiembre, 2026
+Carta Aval De Docente 
+________________
+Dedicatoria y Agradecimiento 
+En primer lugar, agradecemos a Dios por habernos dado la vida, la fortaleza, la sabiduría y la perseverancia necesarias para llegar hasta este momento. Le agradecemos por acompañarnos durante cada etapa de nuestra formación y por permitirnos superar los obstáculos que se presentaron a lo largo de este camino. 
+A nuestros padres, por ser los pilares para alcanzar esta meta. Gracias por su amor, apoyo, compresión y por cada sacrificio realizado para ayudarnos a continuar con nuestros estudios. Gracias por creer en nosotros, incluso en aquellos momentos en los que nosotros mismos dudamos de nuestras capacidades. Este logro también es de ustedes, porque detrás de cada uno de nuestros esfuerzos estuvieron siempre sus palabras de motivación y el deseo de vernos cumplir nuestros sueños.
+A nuestros hermanos y demás familiares, por acompañarnos durante este proceso, por su cariño, compresión y por estar presentes en los momentos importantes. Cada palabra de ánimo, cada gesto de apoyo y cada momento compartido contribuyendo a que pudiéramos seguir adelante. 
+A nuestros amigos y compañeros, por estar presentes durante estos años de universidad, por las experiencias compartidas, las risas, los momentos de estrés y también por el apoyo brindado en los momentos difíciles. Gracias por hacer que este recorrido fuera más llevadero y por formar parte de una etapa que siempre recordaremos.
+A nuestros docentes, por compartir con nosotros sus conocimientos, experiencias y enseñanzas, contribuyendo a nuestra formación académica y profesional. Agradecemos especialmente a nuestro tutor por su orientación, paciencia y recomendaciones durante el desarrollo de este proyecto, así como a todos aquellos docentes que, a lo largo de nuestra carrera, dejaron enseñanzas que llevaremos con nosotros en nuestra vida profesional.
+A la Universidad Nacional Autónoma de Nicaragua, Managua (UNAN-Managua), CUR-Chontales, por brindarnos la oportunidad de formarnos profesionalmente y proporcionarnos los conocimientos y herramientas necesarias para enfrentar los retos de nuestra futura vida laboral.
+Finalmente, agradecemos a todas las personas que, de una u otra manera, contribuyeron a que pudiéramos alcanzar esta meta. Culminar nuestra carrera universitaria representa el resultado de años de esfuerzo, dedicación, sacrificios y aprendizajes. Hoy cerramos una etapa importante de nuestras vidas con gratitud hacia todas las personas que caminaron a nuestro lado y con entusiasmo por los nuevos desafíos que nos esperan como profesionales.
+
+
+
+
+ 
+________________
+Resumen Ejecutivo 
+________________
+Índice
+________________
+Introducción 
+La planificación de horarios académicos constituye un proceso fundamental dentro de la gestión de las instituciones de educación superior, debido a que requiere coordinar asignaturas, docentes, aulas, secciones y períodos académicos para garantizar el adecuado desarrollo de las actividades universitarias. La elaboración de estos horarios representa un problema complejo, debido a la cantidad de restricciones y recursos que deben considerarse simultáneamente para obtener una programación factible. Entre estos elementos se encuentran la disponibilidad de los docentes y espacios físicos, la distribución de las asignaturas y la prevención de coincidencias entre las diferentes actividades académicas (Mokhtari et al., 2021; Rappos et al., 2022).
+En la UNAN-Managua CUR-Chontales, la elaboración de los horarios académicos es realizada actualmente por personal administrativo, quienes tienen a su cargo recopilar, organizar y revisar la información necesaria para construir la programación de las diferentes carreras. Este proceso implica considerar las asignaturas correspondientes a cada período académico, los docentes responsables de impartirlas, las secciones, las aulas disponibles y los horarios establecidos para el desarrollo de las actividades. Una vez organizada esta información, el personal encargado debe realizar diferentes verificaciones para evitar coincidencias en la asignación de docentes, aulas, secciones y períodos. Debido a la cantidad de información que debe ser procesada y validada, así como a las diferentes condiciones que deben cumplirse simultáneamente, esta actividad requiere una considerable cantidad de tiempo y organización, especialmente cuando se realizan modificaciones sobre una programación previamente elaborada (Algethami & Laesanklang, 2021; Betaouaf et al., 2021).
+Asimismo, la elaboración de los horarios no se limita a la creación de una única propuesta. Inicialmente, el personal administrativo genera un primer borrador a partir de la información disponible. Posteriormente, este es revisado para identificar posibles conflictos, inconsistencias o aspectos que deban ser modificados. Cuando se detecta alguna situación, como la coincidencia de un docente en dos actividades, la asignación de un aula que ya se encuentra ocupada o la necesidad de realizar ajustes en una determinada sección o período, se modifica la programación y se genera un nuevo borrador. Este procedimiento puede repetirse varias veces, debido a que durante las revisiones pueden identificarse detalles que no fueron considerados previamente o situaciones que aparecen como consecuencia de una modificación realizada en otra parte del horario. Por esta razón, se generan diferentes versiones antes de obtener una propuesta que cumpla con las condiciones establecidas y pueda convertirse en el horario institucional definitivo. Esta complejidad es característica del problema de planificación de horarios universitarios, en el que deben satisfacerse simultáneamente múltiples restricciones relacionadas con docentes, aulas, asignaturas y períodos académicos (Rappos et al., 2022; Mohammadi et al., 2023).
+Como respuesta a esta necesidad, el presente proyecto propone el desarrollo de una Progressive Web App (PWA) orientada a fortalecer el proceso de planificación de horarios académicos en la UNAN-Managua CUR-Chontales. La solución permitirá al personal administrativo encargado registrar o importar la información correspondiente a la programación académica de las diferentes carreras, centralizando los datos necesarios para la elaboración de los horarios. A partir de esta información, el sistema facilitará la organización de los datos y la generación de una propuesta de horario institucional que podrá ser revisada, validada y aprobada por el personal responsable. Asimismo, permitirá consultar la programación académica, identificar posibles conflictos y mantener la información organizada, contribuyendo a reducir el trabajo repetitivo asociado con la elaboración y modificación de múltiples borradores.
+El desarrollo de la solución se realizará mediante la metodología ágil Scrum, utilizando React para la construcción de la PWA y Firebase para la gestión y almacenamiento de la información. La aplicación estará orientada exclusivamente a las necesidades de la UNAN-Managua CUR-Chontales, y no contempla procesos relacionados con matrículas, calificaciones u otras funciones de gestión académica que se encuentren fuera del alcance definido para el proyecto. Finalmente, este documento presenta los principales elementos que sustentan la propuesta, incluyendo el planteamiento del problema, la justificación, los objetivos, el alcance, las limitaciones, los requisitos, los supuestos y las restricciones, así como la metodología que orientará el desarrollo del proyecto.
+________________
+Definición del problema o necesidad 
+La planificación de horarios académicos constituye una actividad esencial para el funcionamiento de las instituciones de educación superior, debido a que permite organizar la distribución de asignaturas, docentes, aulas, secciones y períodos académicos de acuerdo con la oferta educativa de cada institución. A nivel internacional, la elaboración de horarios universitarios es reconocida como un problema complejo de planificación, debido a que deben coordinarse múltiples recursos y restricciones de manera simultánea. Entre estas se encuentran la disponibilidad de aulas y docentes, la asignación de períodos, la distribución de las clases y la prevención de coincidencias entre actividades académicas. La literatura especializada señala que el problema de horarios universitarios requiere satisfacer restricciones obligatorias y, al mismo tiempo, buscar una programación que responda adecuadamente a las condiciones y necesidades de cada institución (Rappos et al., 2022; Algethami & Laesanklang, 2021).
+En el ámbito nacional, las instituciones de educación superior de Nicaragua también enfrentan la necesidad de organizar sus actividades académicas considerando los recursos disponibles y las particularidades de cada carrera. En la UNAN-Managua, por ejemplo, la programación académica requiere coordinar carreras, grupos, modalidades, períodos y horarios para garantizar el desarrollo de las actividades universitarias. Un antecedente desarrollado en la UNAN-Managua, FAREM-Matagalpa, identificó que la creación manual de horarios docentes constituía un proceso ineficiente dentro de la planificación académica y administrativa, evidenciando la necesidad de utilizar herramientas tecnológicas que contribuyan a mejorar este tipo de procesos (Valdivia Rivera et al., 2023).
+En el ámbito local, específicamente en la UNAN-Managua, CUR Chontales, la elaboración del horario institucional es realizada actualmente por personal administrativo, quienes deben recopilar la programación académica proporcionada por las diferentes carreras, organizar la información correspondiente a asignaturas, docentes, aulas, secciones y períodos, y posteriormente verificar que las asignaciones realizadas no presenten conflictos. Este proceso requiere revisar y consolidar una cantidad considerable de información antes de publicar la programación definitiva. Además, cuando se identifica una inconsistencia o se realiza una modificación, es necesario revisar nuevamente otras asignaciones que pueden verse afectadas, incrementando el tiempo requerido para completar el horario.
+La problemática se intensifica debido a que la programación no se obtiene necesariamente mediante una única propuesta. El personal responsable debe elaborar diferentes borradores del horario, revisarlos y realizar ajustes de acuerdo con los conflictos o detalles encontrados durante cada revisión. Por ejemplo, una modificación en la asignación de un docente puede afectar la disponibilidad de un aula o generar una coincidencia con otra asignatura, lo que obliga a efectuar nuevos cambios y generar otra versión del horario. De esta manera, pueden producirse varias versiones antes de obtener el horario definitivo. Este tipo de situaciones corresponde a la complejidad propia de los problemas de planificación de horarios universitarios, donde una modificación en una asignación puede afectar otras restricciones del sistema (Rappos et al., 2022).
+Asimismo, la centralización del proceso en el personal administrativ[a]o limita la participación directa de los coordinadores de carrera durante las diferentes etapas de organización de la información. Actualmente, estos deben proporcionar o comunicar la programación correspondiente a sus carreras para que posteriormente sea recopilada, integrada y revisada por el personal responsable de elaborar el horario institucional. La ausencia de una herramienta que centralice esta información y facilite su organización puede generar duplicidad de tareas, múltiples revisiones y mayor tiempo de respuesta ante los cambios solicitados.
+En este contexto, se identifica la necesidad de disponer de una solución tecnológica que facilite la participación de los coordinadores de carrera en el registro o importación de la programación académica, centralice la información y brinde apoyo al personal administrativo encargado de la planificación. Por ello, se propone el desarrollo de una Progressive Web App (PWA) que permita organizar la información académica, generar propuestas de horarios y detectar posibles conflictos entre docentes, aulas, asignaturas, secciones y períodos, con el propósito de contribuir a mejorar la eficiencia del proceso de planificación académica en la UNAN-Managua CUR Chontales.
+
+
+________________
+
+
+Objetivos del producto
+
+
+Objetivos General 
+Desarrollar una aplicación web progresiva (PWA) para la gestión y optimización de la programación académica en UNAN-Managua CUR-Chontales, que permita la centralización de registros e importación de información para la generación y consulta de horarios, integrando herramientas de inteligencia artificial en la distribución de secciones, laboratorios y demás recursos académicos, considerando las restricciones de disponibilidad y reduciendo los conflictos en su asignación,  mediante la aplicación de la metodología ágil Scrum y el uso de las tecnologías de desarrollo Firebase, Node.js y React. 
+Objetivos Específicos 
+* Analizar el proceso actual de planificación de horarios académicos en la UNAN-Managua, CUR-Chontales, mediante la identificación de necesidades y requerimientos.
+* Diseñar la arquitectura, base de datos e interfaces de la aplicación web progresiva (PWA), garantizando una solución funcional, intuitiva y acorde con los procesos de planificación académica.
+* Programar los módulos de la solución para la gestión de la programación académica, que permita la importación, registro y consulta de información, e integren herramientas de inteligencia artificial para la optimización de la distribución de secciones, laboratorios y demás recursos académicos, bajo las restricciones de disponibilidad y los requerimientos institucionales, centralizando los datos necesarios para la generación de horarios, favoreciendo una asignación eficiente y libre de conflictos. 
+* Evaluar el funcionamiento de la solución desarrollada mediante pruebas funcionales y de usabilidad, considerando el cumplimiento de los requisitos del proyecto y la calidad de la solución.
+
+
+
+
+
+
+Justificación e Importancia 
+El desarrollo del presente proyecto se justifica por la necesidad de fortalecer el proceso de planificación de horarios académicos en la UNAN-Managua CUR Chontales, mediante una solución tecnológica que facilite la organización de la información y optimice las actividades realizadas por los jefes de departamento. La propuesta busca incorporar herramientas que permitan una mayor participación de los coordinadores de carrera en el registro de la programación académica, favoreciendo un flujo de trabajo más organizado y eficiente sin modificar la responsabilidad que actualmente mantienen los jefes de departamento sobre la revisión y aprobación de los horarios institucionales.
+Desde el punto de vista institucional, el proyecto contribuirá a modernizar el proceso de planificación académica mediante la implementación de una PWA que centralice la información de una forma accesible y segura. Esto permitirá mejorar la coordinación entre los jefes de departamento, los coordinadores de carrera y el resto del personal académico, facilitando la disponibilidad y actualización de la información académica.
+Para los jefes de departamento encargados de la planificación académica, la solución representará una herramienta de apoyo durante la elaboración y organización de los horarios institucionales, reduciendo el tiempo dedicado a la integración y consolidación de la información. La aplicación permitirá a los coordinadores de carrera registrar o importar la programación académica mediante archivos en formato Excel, los cuales serán procesados y consolidados por el sistema para generar los horarios institucionales en formato PDF. Esto permitirá centralizar la información de las diferentes carreras y facilitar las actividades de revisión, validación y aprobación de los horarios antes de su publicación definitiva.
+Finalmente, desde la perspectiva académica y tecnológica, el proyecto permitirá aplicar conocimientos de ingeniería de software, desarrollo web y metodologías ágiles para construir una solución orientada a resolver una necesidad real de la institución, contribuyendo al fortalecimiento de la transformación digital de los procesos administrativos de la UNAN-Managua CUR-Chontales.
+
+
+
+
+
+
+
+
+
+
+Investigación de[b] Análisis
+La investigación de análisis permite conocer y comprender la situación actual relacionada con la planificación y distribución de los horarios académicos en la UNAN-Managua CUR-Chontales, con el propósito de identificar las principales necesidades y dificultades que pueden presentarse durante este proceso. Para ello, se consideran los diferentes elementos que intervienen en la elaboración de los horarios, entre ellos las carreras, asignaturas, docentes, secciones, aulas y períodos académicos, así como la necesidad de coordinar estos elementos de manera organizada.
+Actualmente, la planificación de los horarios académicos es realizada por personal administrativo[c], quienes deben recopilar, organizar y relacionar la información necesaria para establecer la distribución de las asignaturas, docentes, aulas y períodos correspondientes. Esta actividad requiere considerar múltiples condiciones para evitar coincidencias o conflictos en la programación, lo que puede representar una tarea compleja cuando la información se encuentra distribuida en diferentes documentos o medios de gestión.
+El análisis de esta situación permite identificar la necesidad de contar con una herramienta que facilite la organización y centralización de la información utilizada durante la planificación. Una gestión poco automatizada puede incrementar el tiempo requerido para revisar las diferentes combinaciones posibles y detectar inconsistencias en la distribución de los recursos académicos. Ante esta situación, surge la oportunidad de utilizar una solución tecnológica que proporcione apoyo al personal responsable del proceso y facilite la generación, consulta y organización de los horarios.[d]
+A partir de la investigación realizada, se determina que una Progressive Web App puede constituir una alternativa para centralizar la información y facilitar el acceso a las funcionalidades relacionadas con la planificación académica. La propuesta contempla además el uso de inteligencia artificial como mecanismo de apoyo para analizar las condiciones establecidas y contribuir a encontrar alternativas de distribución de los horarios, sin sustituir la supervisión y toma de decisiones del personal administrativo responsable.
+Por tanto, la investigación de análisis permite establecer las bases para el desarrollo de la propuesta, al relacionar las necesidades identificadas en el proceso actual con las funcionalidades que deberá proporcionar la solución tecnológica. De esta manera, el proyecto se orienta a apoyar la planificación de los horarios académicos mediante la organización de la información, la detección de posibles conflictos y la generación de alternativas que permitan realizar el proceso de una manera más organizada y eficie[e]nte.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Caracterización del macroentorno
+El macroentorno comprende aquellos factores externos que pueden influir directa o indirectamente en el desarrollo de la propuesta, aunque no se encuentren bajo el control directo de la institución. Para su caracterización se emplea el análisis PESTEL[f], considerando aspectos políticos, económicos, sociales, tecnológicos, ecológicos y legales que pueden incidir en el desarrollo de una Progressive Web App (PWA) orientada a apoyar la planificación y distribución de horarios académicos en la UNAN-Managua CUR-Chontales.
+Desde la perspectiva política, las políticas nacionales e institucionales relacionadas con la transformación digital, la modernización de los procesos administrativos y el fortalecimiento del uso de las tecnologías de la información representan un contexto favorable para el desarrollo de soluciones digitales aplicadas al ámbito educativo. Estas iniciativas pueden impulsar la incorporación de herramientas tecnológicas destinadas a mejorar la gestión de los procesos académicos y administrativos. Sin embargo, cualquier solución desarrollada deberá mantenerse acorde con las políticas y disposiciones establecidas por la institución y las autoridades correspondientes.[g]
+En el ámbito económico, la disponibilidad de recursos destinados a infraestructura tecnológica, conectividad, dispositivos y mantenimiento constituye un elemento que puede favorecer o limitar el desarrollo y funcionamiento de la solución. El acceso a computadoras, teléfonos inteligentes y otros dispositivos compatibles facilita la utilización de la PWA, mientras que las limitaciones presupuestarias pueden dificultar la adquisición de infraestructura, contratación de servicios tecnológicos o mantenimiento de la plataforma. Por esta razón, el uso de tecnologías escalables y alternativas que permitan optimizar los recursos disponibles representa una oportunidad para favorecer la sostenibilidad de la propuesta.
+En cuanto al aspecto social, la creciente utilización de dispositivos móviles y herramientas digitales favorece la aceptación de soluciones orientadas a la digitalización de procesos. La implementación de una plataforma para apoyar la planificación y consulta de horarios puede contribuir a mejorar la organización y facilitar el acceso a la información. No obstante, la incorporación de una nueva herramienta tecnológica también puede generar resistencia o dificultades de adaptación por parte de los usuarios, por lo que será necesario considerar una interfaz sencilla, comprensible y orientada a las necesidades de quienes utilizarán la solución. De igual manera, el uso de inteligencia artificial deberá considerar la aceptación y confianza de los usuarios, aplicándola como mecanismo de apoyo y manteniendo la supervisión humana durante el proceso de toma de decisiones.
+El factor tecnológico tiene una relación directa con el proyecto debido a que su funcionamiento depende de la disponibilidad y evolución de las tecnologías utilizadas. El desarrollo de una Progressive Web App permite aprovechar tecnologías web actuales para proporcionar acceso a la solución desde diferentes dispositivos compatibles. Asimismo, el proyecto contempla el uso de servicios tecnológicos para la gestión de información y mecanismos de inteligencia artificial orientados a apoyar la optimización de la distribución de horarios. La conectividad a internet y la disponibilidad de dispositivos adecuados representan condiciones importantes para su utilización, mientras que la evolución constante de las tecnologías requiere considerar futuras actualizaciones para mantener la funcionalidad, compatibilidad y seguridad de la plataforma.
+Desde el punto de vista ecológico, la digitalización de los procesos relacionados con la planificación y distribución de horarios puede contribuir a disminuir el uso de papel y otros recursos físicos. La disponibilidad de la información en formato digital permite reducir la necesidad de imprimir documentos para su almacenamiento, distribución o consulta, favoreciendo procesos administrativos con menor dependencia de materiales físicos. En este sentido, la propuesta puede contribuir indirectamente a un uso más eficiente de los recursos mediante la sustitución de determinados procesos documentales por alternativas digitales.
+Finalmente, el factor legal comprende las disposiciones que deben considerarse durante el desarrollo y utilización de la solución, especialmente aquellas relacionadas con la protección de la información, seguridad de los datos, propiedad intelectual y uso responsable de las tecnologías digitales y de inteligencia artificial. La plataforma deberá contemplar mecanismos adecuados para proteger la información gestionada y establecer controles de acceso de acuerdo con las funciones de los usuarios. Asimismo, el desarrollo deberá respetar las disposiciones institucionales y nacionales aplicables al tratamiento de información y al desarrollo de software. En relación con la inteligencia artificial, su utilización deberá realizarse de manera responsable, considerando sus resultados como apoyo para la planificación y no como sustituto de la supervisión y decisión del personal encargado.
+En conjunto, el análisis del macroentorno permite identificar condiciones externas que pueden favorecer el desarrollo de la propuesta, principalmente el avance de la transformación digital, la disponibilidad de tecnologías web y el creciente uso de herramientas digitales. Al mismo tiempo, aspectos como la disponibilidad de recursos económicos, la conectividad, la adaptación de los usuarios, la evolución tecnológica y el cumplimiento de las disposiciones legales deberán ser considerados durante las diferentes etapas de desarrollo de la solución.
+________________
+Estado del[h] arte 
+El estado del arte aborda la evolución de las soluciones tecnológicas aplicadas a la planificación y optimización de horarios académicos en la educación superior. A nivel internacional, las tendencias se enfocan en sistemas de gestión centralizados mediante arquitecturas web progresivas que garantizan accesibilidad multidispositivo y rendimiento optimización e inteligencia artificial para asistir en la distribución automatizada de asignaturas, docentes, aulas y períodos, reduciendo drásticamente los conflictos por superposición de recursos, De igual forma, el uso de mecanismos de importación de datos masivos (como archivos en formato en excel) y la validación en múltiples borradores han demostrado minimizar el tiempo invertido por el personal administrativo en la toma de decisiones. En el ámbito nacional, las alternativas existentes en las instituciones universitarias suelen depender de procesos manuales o herramientas fragmentadas que generan ineficiencias operativas y múltiples revisiones respectivas tal como la evidencia antecedentes institucionales previos por lo tanto, el presente proyecto de la UNAN-Managua CUR-Chontales se posiciona a la vanguardia al integrar en mismo ecosistema una progressive web app centralizada, un flujo de trabajo optimizado para coordinadores y jefes de departamento, y el soporte de inteligencia artificial para la mitigación eficiente de conflictos de horarios.
+________________
+Definición del producto
+________________
+Gestión de ideas 
+________________
+Evaluación de ideas 
+________________
+Estrategias de propiedad intelectual 
+________________
+impacto social y ambiental
+________________
+Desarrollo 
+________________
+Generación y selección del concepto
+________________
+Marco normativo y legal aplicado al producto 
+________________
+Pruebas de concepto
+________________
+Elementos constitutivos del producto
+________________
+________________
+________________
+ Interfaz de usuario gráfica
+
+Descripción generada automáticamente con confianza media 
+
+[a]Esto ya se los he corregido varias veces, quién es la persona que realiza el horario?
+[b]Deben utilizar los mismo títulos de la estructura
+[c]docente
+[d]Estos párrafos pertenecen al acápite del problema
+[e]Esto es parte de la justificación
+[f]Es una tabla o un gráfico que aborda todos esos aspectos mencionados.
+[g]Especificar cuáles son?
+[h]El microentorno???????????????????????

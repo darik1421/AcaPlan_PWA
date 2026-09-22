@@ -1,0 +1,25 @@
+# Credenciales y configuración local
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Dependencias y compilación
+node_modules/
+dist/
+build/
+coverage/
+.vite/
+
+# Archivos temporales y revisión de documentos
+.document-work/
+~$*
+*.tmp
+*.log
+.DS_Store
+Thumbs.db
+
+# Configuración personal del editor
+.idea/
+.vscode/
