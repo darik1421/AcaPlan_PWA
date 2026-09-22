@@ -23,3 +23,5 @@ Thumbs.db
 # Configuración personal del editor
 .idea/
 .vscode/
+
+Supabase.sql
