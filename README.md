@@ -2,35 +2,102 @@
 
 Aplicación web progresiva para la gestión de horarios académicos de la UNAN-Managua, CUR-Chontales.
 
-## Estado del proyecto
+## Estado actual
 
-Repositorio inicial de documentación y planificación. La aplicación web todavía no está implementada y aún no hay comandos de instalación o ejecución.
+Base local con React, JavaScript, HTML, CSS, Node.js y cliente de Supabase.
+La autenticación, los módulos académicos, la instalación PWA y el modo sin conexión están pendientes.
+La comprobación del backend no comprueba el acceso a la base de datos.
 
-## Tecnologías previstas
+## Estructura
 
-- React y JavaScript, con HTML y CSS para la interfaz.
-- Node.js para operaciones de servidor.
-- Supabase para autenticación y base de datos.
+```text
+ACAPLANWEB/
+├── frontend/
+│   ├── public/
+│   ├── src/
+│   │   ├── components/       # Componentes compartidos
+│   │   ├── features/auth/    # Futuro módulo de autenticación
+│   │   ├── lib/              # Cliente de Supabase
+│   │   ├── pages/            # Pantallas
+│   │   ├── services/         # Comunicación con la API
+│   │   └── App.jsx
+│   ├── .env                  # Local, excluido de Git
+│   ├── .env.example
+│   └── package.json
+├── backend/
+│   ├── src/app.js            # API HTTP
+│   ├── src/server.js         # Inicio del servidor
+│   ├── test/
+│   ├── .env                  # Local, excluido de Git
+│   ├── .env.example
+│   └── package.json
+├── .gitignore
+├── package.json              # Comandos desde la raíz
+└── Documentación del proyecto
+```
 
-La PWA y la aplicación móvil React Native son proyectos separados que comparten el mismo proyecto de Supabase. Los cambios en datos, permisos o autenticación deben mantener la compatibilidad con ambas aplicaciones.
+## Instalar
 
-## Alcance
+Node.js 20.17.0 es compatible con esta base. Vite 6 y su plugin están fijados para no instalar Vite 8 accidentalmente. El lockfile conserva las versiones resueltas; actualizar dependencias requiere revisar compatibilidad.
 
-Registro e importación de programación académica desde Excel; gestión de docentes, carreras, asignaturas, aulas, secciones y períodos; planificación manual y asistida por IA; detección de conflictos; revisión, aprobación, publicación y consulta de horarios; exportación a PDF y funciones de PWA.
+Desde la raíz:
 
-## Archivos iniciales
+```powershell
+npm run install:all
+```
 
-- `AcaPlan.txt`: contexto del proyecto de graduación.
-- `AcaPlan_PWA_Historias_y_Planificacion_SCRUM.docx`: historias de usuario y planificación de seis sprints.
-- `Supabase.sql`: esquema de referencia proporcionado al iniciar el proyecto. No representa necesariamente el estado actual del servicio y no debe ejecutarse automáticamente sobre la base compartida.
-- `.env.example`: nombres de las variables con valores ficticios.
+Al clonar, crea los archivos de entorno solo si todavía no existen:
 
-## Configuración local
+```powershell
+if (!(Test-Path frontend/.env)) { Copy-Item frontend/.env.example frontend/.env }
+if (!(Test-Path backend/.env)) { Copy-Item backend/.env.example backend/.env }
+```
 
-El archivo `.env` se mantiene fuera de Git. Los nombres de variables actuales proceden de la aplicación Expo y se ajustarán al configurar la herramienta de desarrollo de React para la PWA.
+Completa frontend/.env con la URL y clave pública del proyecto Supabase compartido:
+VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY y VITE_API_BASE_URL=/api.
+Se admite una clave anon o publishable. Las variables VITE_ son visibles en el navegador: nunca colocar claves secret ni service_role.
 
-No subir contraseñas, claves privadas ni claves `service_role`. Las credenciales privilegiadas de Supabase y del proveedor de IA se utilizarán únicamente en el servidor.
+El .env de la raíz se conserva como referencia local, pero ninguno de los dos servicios lo carga.
+El backend utiliza HOST=127.0.0.1 y PORT=3001. El endpoint de salud no necesita credenciales de Supabase.
+Las futuras credenciales privilegiadas pertenecerán exclusivamente al entorno del servidor.
 
-## Forma de trabajo
+## Ejecutar
 
-La rama principal es `main`. Para cada historia, crear una rama de trabajo, realizar los cambios y comprobar los criterios de aceptación antes de integrarlos. Las migraciones de la base compartida se probarán antes de aplicarse al entorno utilizado por ambas aplicaciones.
+En una terminal, desde la raíz:
+
+```powershell
+npm run dev:backend
+```
+
+En otra terminal, también desde la raíz:
+
+```powershell
+npm run dev:frontend
+```
+
+Abrir http://127.0.0.1:5173 y utilizar el botón de comprobación del servidor.
+El frontend llama a /api/health mediante el proxy de Vite hacia el puerto 3001.
+Si cambias PORT, modifica también el proxy en frontend/vite.config.js.
+
+## Verificar
+
+```powershell
+npm run lint
+npm test
+npm run build
+```
+
+La compilación se guarda en frontend/dist. Para producción falta configurar HTTPS y el proxy de /api hacia el backend. Vite preview permite inspeccionar la compilación, pero no sustituye esa configuración de producción.
+
+## Base de datos y archivos locales
+
+La PWA y la aplicación React Native son proyectos separados que comparten Supabase.
+Antes de implementar autenticación se comprobará la correspondencia de cuentas, perfiles y permisos.
+Las operaciones futuras deben respetar las políticas RLS y los controles del servidor.
+No aplicar migraciones o cambios de roles sin comprobar la compatibilidad con la app móvil.
+
+.env, frontend/.env, backend/.env, Supabase.sql, node_modules y dist están excluidos de Git.
+Supabase.sql es un esquema local de referencia, no una migración automática.
+Los dos .gitignore se conservan: el de la raíz aplica a todo el repositorio y el del frontend añade reglas locales.
+
+La documentación de contexto está en AcaPlan.txt y las historias y sprints en AcaPlan_PWA_Historias_y_Planificacion_SCRUM.docx.

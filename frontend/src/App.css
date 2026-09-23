@@ -1,0 +1,37 @@
+.app-shell { max-width: 1180px; margin: 0 auto; padding: 0 40px; }
+.app-header { display: flex; justify-content: space-between; align-items: center; padding: 28px 0; border-bottom: 1px solid #dce3e8; gap: 20px; }
+.brand { display: flex; align-items: center; gap: 12px; text-decoration: none; font-size: 26px; font-weight: 750; }
+.brand-mark { display: grid; place-items: center; width: 46px; height: 46px; background: #163e57; color: white; border-radius: 12px; font-size: 30px; }
+.brand small { display: block; margin-top: 3px; font-size: 9px; letter-spacing: 1.4px; color: #5f7480; }
+.institution { color: #647480; font-size: 13px; text-align: right; line-height: 1.6; }
+.institution strong { display: block; color: #25465a; }
+.welcome { padding: 70px 0 56px; }
+.eyebrow { font-size: 11px; color: #476878; font-weight: 700; letter-spacing: 1.6px; line-height: 1.8; }
+h1 { font-size: clamp(32px, 4.3vw, 52px); line-height: 1.13; letter-spacing: -1.8px; margin-bottom: 22px; font-weight: 650; }
+.intro { color: #5b6e7a; font-size: 17px; line-height: 1.75; max-width: 630px; }
+.stage { display: inline-block; font-size: 12px; background: #e5edf1; color: #315b70; padding: 9px 13px; border-radius: 6px; }
+.section-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 20px; }
+h2 { font-size: 19px; margin-bottom: 0; }
+.section-heading > span { color: #60717d; font-size: 12px; }
+.module-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.module-card { background: white; border: 1px solid #dce4e9; border-radius: 12px; padding: 28px; }
+.module-number { display: block; font-size: 12px; color: #5c7381; margin-bottom: 30px; }
+h3 { font-size: 18px; margin-bottom: 12px; }
+.module-card p { line-height: 1.65; color: #61717e; font-size: 14px; min-height: 48px; }
+.pending { display: block; margin-top: 24px; font-size: 11px; color: #71808a; }
+.setup-panel { display: flex; align-items: center; justify-content: space-between; gap: 28px; margin: 32px 0 56px; padding: 26px; background: #eaf0f3; border-radius: 12px; }
+.setup-panel h2 { font-size: 16px; margin-bottom: 12px; }
+.setup-panel p { max-width: 670px; font-size: 13px; line-height: 1.6; margin-bottom: 8px; color: #516976; }
+.setup-panel button { flex-shrink: 0; border: 0; border-radius: 7px; padding: 13px 19px; background: #163e57; color: white; font-size: 13px; }
+.setup-panel button:hover:not(:disabled) { background: #225574; }
+footer { display: flex; justify-content: space-between; gap: 12px; padding: 24px 0; border-top: 1px solid #dce3e8; color: #647480; font-size: 11px; }
+@media (max-width: 760px) {
+  .app-shell { padding: 0 22px; }
+  .welcome { padding: 46px 0 36px; }
+  .module-grid { grid-template-columns: 1fr; }
+  .module-number { margin-bottom: 18px; }
+  .module-card p { min-height: auto; }
+  .setup-panel { align-items: stretch; flex-direction: column; gap: 12px; }
+  .section-heading { align-items: flex-start; flex-direction: column; }
+  footer { flex-direction: column; }
+}
