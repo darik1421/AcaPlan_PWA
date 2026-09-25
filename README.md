@@ -5,7 +5,7 @@ Aplicación web progresiva para la gestión de horarios académicos de la UNAN-M
 ## Estado actual
 
 Base local con React, JavaScript, HTML, CSS, Node.js y cliente de Supabase.
-La autenticación, los módulos académicos, la instalación PWA y el modo sin conexión están pendientes.
+Sprint 1 implementado localmente: acceso, recuperación, cierre de sesión, cuentas y períodos. App móvil adaptada. Pendientes: aplicar SQL compartido, desplegar la Edge Function móvil en Supabase y aceptar con cuentas reales. Consulta [docs/sprint-1.md](docs/sprint-1.md).
 La comprobación del backend no comprueba el acceso a la base de datos.
 
 ## Estructura
@@ -16,7 +16,7 @@ ACAPLANWEB/
 │   ├── public/
 │   ├── src/
 │   │   ├── components/       # Componentes compartidos
-│   │   ├── features/auth/    # Futuro módulo de autenticación
+│   │   ├── features/auth/    # Acceso y recuperación
 │   │   ├── lib/              # Cliente de Supabase
 │   │   ├── pages/            # Pantallas
 │   │   ├── services/         # Comunicación con la API
@@ -57,9 +57,9 @@ Completa frontend/.env con la URL y clave pública del proyecto Supabase compart
 VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY y VITE_API_BASE_URL=/api.
 Se admite una clave anon o publishable. Las variables VITE_ son visibles en el navegador: nunca colocar claves secret ni service_role.
 
-El .env de la raíz se conserva como referencia local, pero ninguno de los dos servicios lo carga.
-El backend utiliza HOST=127.0.0.1 y PORT=3001. El endpoint de salud no necesita credenciales de Supabase.
-Las futuras credenciales privilegiadas pertenecerán exclusivamente al entorno del servidor.
+Se utilizan únicamente frontend/.env y backend/.env; el .env de la raíz fue eliminado.
+El backend utiliza HOST=127.0.0.1 y PORT=3001. Para verificar sesiones necesita SUPABASE_URL y SUPABASE_ANON_KEY del mismo proyecto. El endpoint /api/health sigue siendo público.
+La creación de cuentas requiere SUPABASE_SERVICE_ROLE_KEY exclusivamente en backend/.env.
 
 ## Ejecutar
 
@@ -75,8 +75,8 @@ En otra terminal, también desde la raíz:
 npm run dev:frontend
 ```
 
-Abrir http://127.0.0.1:5173 y utilizar el botón de comprobación del servidor.
-El frontend llama a /api/health mediante el proxy de Vite hacia el puerto 3001.
+Abrir http://127.0.0.1:5173 e ingresar con una cuenta autorizada existente. Reiniciar ambos servicios después de cambiar variables de entorno.
+El frontend verifica el perfil mediante /api/me a través del proxy de Vite hacia el puerto 3001.
 Si cambias PORT, modifica también el proxy en frontend/vite.config.js.
 
 ## Verificar
@@ -92,11 +92,11 @@ La compilación se guarda en frontend/dist. Para producción falta configurar HT
 ## Base de datos y archivos locales
 
 La PWA y la aplicación React Native son proyectos separados que comparten Supabase.
-Antes de implementar autenticación se comprobará la correspondencia de cuentas, perfiles y permisos.
-Las operaciones futuras deben respetar las políticas RLS y los controles del servidor.
+La autenticación verifica el correo de Supabase Auth contra un perfil activo en usuarios. Falta comprobar las políticas RLS y el flujo completo con cuentas reales.
+La gestión usa la RPC pwa_sprint1, aún pendiente de aplicar. Su migración local está en database.local/sprint-1.sql; revisar el impacto móvil en docs/sprint-1.md antes de ejecutarla.
 No aplicar migraciones o cambios de roles sin comprobar la compatibilidad con la app móvil.
 
-.env, frontend/.env, backend/.env, Supabase.sql, node_modules y dist están excluidos de Git.
+.env, frontend/.env, backend/.env, Supabase.sql, database.local/, node_modules y dist están excluidos de Git.
 Supabase.sql es un esquema local de referencia, no una migración automática.
 Los dos .gitignore se conservan: el de la raíz aplica a todo el repositorio y el del frontend añade reglas locales.
 

@@ -25,3 +25,6 @@ Thumbs.db
 .vscode/
 
 Supabase.sql
+
+# Migraciones SQL locales (no publicar)
+database.local/

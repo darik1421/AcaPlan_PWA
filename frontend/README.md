@@ -1,11 +1,13 @@
 # Frontend de AcaPlan
 
-React y JavaScript con Vite 6 para Node.js 20.17.0. Consulta el README de la raíz para iniciar ambos servicios.
+React y JavaScript con Vite 6, compatible con Node.js 20.17.0.
 
-- src/pages: pantallas.
+- src/features/auth: sesión, acceso, recuperación y cierre de sesión.
+- src/pages/DashboardPage.jsx: panel provisional por rol.
+- src/features/management: formularios y listados de cuentas y períodos.
 - src/components: componentes compartidos.
-- src/features/auth: futuro módulo de autenticación.
-- src/lib: cliente de Supabase.
-- src/services: comunicación con la API.
+- src/lib/supabase.js: cliente público de Supabase.
+- src/services/session.js: validación del perfil mediante el backend.
 
-La pantalla inicial es una base de desarrollo, sin autenticación ni funciones académicas todavía.
+Consulta el README de la raíz y docs/sprint-1.md para configuración y pruebas de aceptación.
+El diseño es provisional. Cuentas y períodos requieren desplegar la RPC del Sprint 1 tras revisar la integración móvil. Horarios, instalación PWA y modo sin conexión siguen pendientes.

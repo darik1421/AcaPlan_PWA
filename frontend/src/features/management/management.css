@@ -1,0 +1,29 @@
+.period-banner {display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;background:#e8f3f1;border:1px solid #c6ded8;border-radius:10px;padding:20px;margin-bottom:24px;color:#20594f}
+.workspace-nav {display:flex;gap:8px;border-bottom:1px solid #d3dfe5;margin-bottom:28px;overflow-x:auto}
+.workspace-nav button {border:0;background:transparent;color:#456477;padding:16px 20px;white-space:nowrap;border-bottom:3px solid transparent}
+.workspace-nav button.selected {border-color:#205a74;color:#163e57;font-weight:700}
+.section-heading,.list-toolbar {display:flex;justify-content:space-between;align-items:center;gap:20px;margin:18px 0}
+.section-heading h2 {margin:0}.section-heading p {margin-bottom:0}
+.management-form {background:white;padding:26px;border:1px solid #d8e3e8;border-radius:12px;margin:24px 0}
+.management-form fieldset {border:0;padding:0;margin:0;min-width:0}
+.form-grid {display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px}
+.form-grid label,.list-toolbar label {display:flex;flex-direction:column;gap:8px;font-size:14px;font-weight:600}
+.form-grid input,.form-grid select,.list-toolbar input {font:inherit;color:#193a4d;border:1px solid #b7cad4;border-radius:6px;background:white;padding:12px;width:100%;min-width:0}
+.form-grid input[readonly] {background:#f0f4f6;color:#526b79}
+.management-form .choice-group {border-top:1px solid #d8e3e8;margin-top:24px;padding-top:14px}
+.choice-group legend {font-size:14px;font-weight:600;padding-right:10px}
+.check-label {display:inline-flex;align-items:center;gap:8px;margin:8px 20px 8px 0;font-size:14px}
+.check-label input {width:18px;height:18px}
+.form-actions,.row-actions {display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.form-actions {margin-top:24px}.form-actions .primary {width:auto;margin:0}
+.list-toolbar label {width:min(100%,380px)}
+.table-scroll {overflow-x:auto;border:1px solid #d8e3e8;border-radius:10px;background:white}
+.table-scroll table {border-collapse:collapse;text-align:left;width:100%;font-size:14px;min-width:590px}
+.table-scroll caption {text-align:left;padding:14px 20px;color:#5a7281;font-size:12px}
+.table-scroll th {background:#eff4f7;color:#355367;font-size:12px;letter-spacing:.3px}
+.table-scroll td,.table-scroll th {padding:16px 20px;border-top:1px solid #e2e9ed}
+.table-scroll td {overflow-wrap:anywhere}.cell-detail {display:block;color:#59717e;font-size:12px;margin-top:7px}
+.badge {display:inline-block;background:#edf0f3;color:#50636f;border-radius:20px;padding:5px 10px;font-size:12px}
+.badge.active {background:#e5f4ec;color:#256743}
+.row-actions .secondary {padding:8px 12px}
+@media(max-width:650px){.form-grid{grid-template-columns:1fr}.section-heading,.list-toolbar{align-items:stretch;flex-direction:column}.management-form{padding:18px}.form-actions>*{flex:1}.period-banner{flex-direction:column}}

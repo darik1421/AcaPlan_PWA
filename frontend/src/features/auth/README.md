@@ -1,3 +1,3 @@
 # Autenticación
 
-Aquí se implementará el acceso, recuperación y cierre de sesión con el cliente de src/lib/supabase.js. Reutilizar las cuentas existentes del proyecto compartido. Los permisos requieren controles del servidor y políticas RLS; ocultar botones no sustituye la autorización.
+Bloque de inicio de sesión, recuperación y cierre de sesión. Consulta docs/sprint-1.md desde la raíz para configuración y pruebas de aceptación.
