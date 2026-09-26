@@ -38,7 +38,7 @@ ACAPLANWEB/
 
 ## Instalar
 
-Node.js 20.17.0 es compatible con esta base. Vite 6 y su plugin están fijados para no instalar Vite 8 accidentalmente. El lockfile conserva las versiones resueltas; actualizar dependencias requiere revisar compatibilidad.
+Usar Node.js 24 LTS (versión verificada: 24.21.0, indicada en .nvmrc). El frontend usa Vite 8.3.1 y @vitejs/plugin-react 6.1.1. El lockfile conserva las versiones resueltas. Reiniciar las terminales y los servidores de desarrollo después de actualizar Node.
 
 Desde la raíz:
 

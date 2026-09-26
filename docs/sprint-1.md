@@ -113,7 +113,7 @@ respecto de las pantallas originales de Git. El linter global reporta dos errore
 en login.tsx y un aviso en _layout.tsx. Expo configuró ESLint al ejecutar el comando por
 primera vez, agregando sus dependencias de desarrollo y eslint.config.js.
 La ejecución en dispositivo y Supabase real sigue pendiente. Expo/React Native instalados
-requieren Node >=20.19.4; el entorno actual tiene 20.17.0. No se cambió Node.
+requieren Node >=20.19.4. El 26/09/2026 se actualizó el equipo a Node 24.21.0 LTS y la PWA a Vite 8.3.1.
 
 ## Independencia de las aplicaciones
 La PWA conserva su backend Node. La app móvil llama directamente a Supabase Auth, RPC

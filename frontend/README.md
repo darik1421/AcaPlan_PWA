@@ -1,6 +1,6 @@
 # Frontend de AcaPlan
 
-React y JavaScript con Vite 6, compatible con Node.js 20.17.0.
+React y JavaScript con Vite 8.3.1 y @vitejs/plugin-react 6.1.1. Usar Node.js 24 LTS (verificado con 24.21.0).
 
 - src/features/auth: sesión, acceso, recuperación y cierre de sesión.
 - src/pages/DashboardPage.jsx: panel provisional por rol.
