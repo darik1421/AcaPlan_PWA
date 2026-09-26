@@ -10,4 +10,6 @@ React y JavaScript con Vite 8.3.1 y @vitejs/plugin-react 6.1.1. Usar Node.js 24 
 - src/services/session.js: validación del perfil mediante el backend.
 
 Consulta el README de la raíz y docs/sprint-1.md para configuración y pruebas de aceptación.
-El diseño es provisional. Cuentas y períodos requieren desplegar la RPC del Sprint 1 tras revisar la integración móvil. Horarios, instalación PWA y modo sin conexión siguen pendientes.
+El diseño es provisional. La RPC del Sprint 1 ya está desplegada en el proyecto compartido. Horarios, instalación PWA y modo sin conexión corresponden a sprints posteriores.
+
+`npm test` ejecuta las pruebas del frontend con servicios simulados, sin enviar correos ni modificar Supabase. Desde la raíz, `npm test` ejecuta backend y frontend.

@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { endSession } from './endSession'
 
 const base = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '')
 export async function getProfile(token, signal) {
@@ -17,19 +18,8 @@ export async function getProfile(token, signal) {
 }
 
 export async function logout() {
-  // El alcance local evita cerrar la sesión de la app móvil.
-  let remoteConfirmed = false
-  try {
-    const result = await Promise.race([
-      supabase.auth.signOut({ scope: 'local' }),
-      new Promise(resolve => setTimeout(() => resolve({ error: true }), 3500)),
-    ])
-    remoteConfirmed = !result.error
-  } catch { /* El cierre local siempre se completa. */ }
-  localStorage.removeItem('acaplan-pwa-auth')
-  localStorage.removeItem('acaplan-pwa-auth-code-verifier')
-  sessionStorage.removeItem('acaplan-recovery')
-  await supabase.auth.stopAutoRefresh()
-  window.location.replace(remoteConfirmed ? '/?salida=ok' : '/?salida=local')
+  return endSession({
+    auth: supabase.auth, storage: localStorage, sessionStorage,
+    navigate: url => window.location.replace(url),
+  })
 }
-

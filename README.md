@@ -5,7 +5,7 @@ Aplicación web progresiva para la gestión de horarios académicos de la UNAN-M
 ## Estado actual
 
 Base local con React, JavaScript, HTML, CSS, Node.js y cliente de Supabase.
-Sprint 1 implementado localmente: acceso, recuperación, cierre de sesión, cuentas y períodos. App móvil adaptada. Pendientes: aplicar SQL compartido, desplegar la Edge Function móvil en Supabase y aceptar con cuentas reales. Consulta [docs/sprint-1.md](docs/sprint-1.md).
+Sprint 1 implementado: acceso, recuperación, cierre de sesión, cuentas y períodos. SQL compartido y Edge Function móvil desplegados en Supabase; redirecciones de recuperación local configuradas. Se verificaron el acceso administrativo, las consultas y el cierre con una sesión real. Las pruebas que crean datos y la aceptación completa en teléfono se pospusieron por decisión del responsable. Consulta [docs/sprint-1.md](docs/sprint-1.md).
 La comprobación del backend no comprueba el acceso a la base de datos.
 
 ## Estructura
@@ -93,7 +93,7 @@ La compilación se guarda en frontend/dist. Para producción falta configurar HT
 
 La PWA y la aplicación React Native son proyectos separados que comparten Supabase.
 La autenticación verifica el correo de Supabase Auth contra un perfil activo en usuarios. Falta comprobar las políticas RLS y el flujo completo con cuentas reales.
-La gestión usa la RPC pwa_sprint1, aún pendiente de aplicar. Su migración local está en database.local/sprint-1.sql; revisar el impacto móvil en docs/sprint-1.md antes de ejecutarla.
+La gestión usa la RPC pwa_sprint1, aplicada en el proyecto compartido. Su migración local está en database.local/sprint-1.sql. Quien se conecte a ese mismo proyecto no necesita volver a ejecutarla. Consulta docs/sprint-1.md para otro entorno.
 No aplicar migraciones o cambios de roles sin comprobar la compatibilidad con la app móvil.
 
 .env, frontend/.env, backend/.env, Supabase.sql, database.local/, node_modules y dist están excluidos de Git.

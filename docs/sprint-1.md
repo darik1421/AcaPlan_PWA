@@ -2,9 +2,20 @@
 
 ## Estado
 H01 (inicio de sesión), H02 (recuperación), H03 (cuentas y funciones), H04 (salida)
-y H05 (períodos) tienen implementación local. El diseño es provisional, pendiente de Figma.
+y H05 (períodos) están implementadas. El diseño es provisional, pendiente de Figma.
 La migración compartida y la Edge Function móvil se desplegaron el 26/09/2026.
-No se declara terminado el sprint: falta realizar aceptación completa con cuentas reales y dispositivo móvil.
+El incremento está listo para demostración con el alcance implementado y las comprobaciones autorizadas.
+La aceptación completa no se da por aprobada: el responsable decidió posponer las pruebas que crean
+cuentas/períodos temporales. También quedan la entrega real de correo, la concurrencia con conexiones
+independientes y la ejecución en teléfono. No se presentan esas pruebas como realizadas.
+
+| Historia | Implementación y evidencia | Validación real pendiente |
+| --- | --- | --- |
+| H01 Acceso | Inicio administrativo real, perfil compartido, API protegida y pruebas de rechazo | Docente y cuenta inactiva reales |
+| H02 Recuperación | Formularios, respuestas sin enumerar cuentas, redirecciones guardadas y pruebas del flujo | Recepción del correo, enlace usado/vencido y cambio de contraseña real |
+| H03 Cuentas | Alta/edición/permisos, consulta administrativa real, pruebas del backend y de RLS | Altas/ediciones reales y recorrido móvil |
+| H04 Salida | Cierre real, retorno al acceso, apertura posterior sin panel; pruebas sin conexión y respuesta tardía | Regresión en otros navegadores |
+| H05 Períodos | Consulta real, formularios, validación y pruebas SQL de activación única/historial | Solicitudes simultáneas en conexiones PostgreSQL independientes |
 
 La clave administrativa del backend se comprobó mediante una consulta de solo lectura (HTTP 200).
 La RPC pwa_sprint1 está desplegada. Se modificaron esquema y permisos; no se crearon cuentas
@@ -16,9 +27,10 @@ ni se enviaron correos durante la verificación remota.
 - Reiniciar el backend después de cambiar variables. Nunca poner service_role en frontend ni compartirla en Git.
 - No se necesita .env en la raíz.
 
-Supabase Auth debe permitir la redirección http://127.0.0.1:5173/recuperar.
-Añadir http://localhost:5173/recuperar si se usa ese host y las URL HTTPS del despliegue.
-Conservar las redirecciones de React Native. Estas opciones no fueron modificadas.
+Supabase Auth ya permite http://127.0.0.1:5173/recuperar y http://localhost:5173/recuperar.
+Se guardaron las dos direcciones con autorización expresa. No había direcciones previas en la lista;
+no se eliminó ninguna redirección móvil. Site URL permanece en http://localhost:3000; la PWA envía
+explícitamente su redirectTo autorizado. Al publicar, añadir la URL HTTPS exacta del despliegue.
 
 ## Migración local y base compartida
 Archivo preparado: database.local/sprint-1.sql, excluido de Git por decisión del proyecto.
@@ -87,15 +99,24 @@ GET/HEAD /api/health sigue público y no comprueba Supabase.
 
 ## Verificación
 Desde la raíz: npm test, npm run lint, npm run build.
-Las pruebas Node usan servicios simulados y no modifican Supabase.
+Las 23 pruebas del backend y las 22 del frontend usan servicios simulados y no modifican Supabase.
 Cubren autenticación, rutas protegidas, errores de JSON, UTF8, límites del formulario,
 validaciones, permisos, separación de claves, altas y compensación ante fallos.
 Las pruebas SQL se ejecutaron en PostgreSQL embebido local con esquema Auth simulado:
 migración idempotente, permisos, RLS frente a políticas abiertas, último administrador,
 activación de períodos, duplicados, funciones, cuentas inactivas y creación de perfiles.
-No prueban concurrencia de conexiones reales ni las políticas existentes del proyecto remoto.
+Las 12 comprobaciones SQL locales no prueban concurrencia de conexiones independientes.
+En el proyecto remoto se comprobaron por separado las políticas y lecturas de administrador/anon.
 
-## Aceptación pendiente en el entorno acordado
+El frontend cubre respuestas de recuperación sin enumerar cuentas, enlace rechazado, contraseñas
+distintas, sesión autorizada/inactiva, recuperación tras recarga, limpieza al salir sin conexión,
+respuesta tardía tras salir y permisos/validaciones de formularios de cuentas y períodos.
+Se corrigió la pérdida del aviso de enlace inválido cuando el SDK limpia la URL y el bloqueo de
+navegación al salir si falla stopAutoRefresh. El temporizador del cierre se cancela al finalizar.
+Lint, compilación de producción y smoke de React → proxy Vite → backend pasaron.
+
+## Aceptación ampliada diferida
+No ejecutar altas ni cambios de prueba en la base compartida sin retomar la autorización del responsable.
 1. Administrador/docente válidos, contraseña incorrecta y cuenta inactiva/sin perfil.
 2. Alta, correo/cédula duplicados, edición, funciones y desactivación. Probar último administrador.
 3. Docente sin acceso administrativo, incluso al llamar API/RPC directamente.
@@ -136,8 +157,11 @@ Estos son tests locales simulados; no equivalen a un despliegue ni una prueba en
 - create-account desplegada: petición sin autorización devuelve 401 del gateway;
   petición con la clave pública devuelve 401 de la propia función (`La sesión no es válida.`).
 - Se repitieron las nueve pruebas locales de la Edge Function y las del adaptador móvil: todas pasaron.
-- No se realizó un alta real ni una sesión de usuario en la interfaz de ambas apps. Estas pruebas,
-  recuperación por correo y ejecución en teléfono siguen en la aceptación pendiente.
-- La consulta adicional de algoritmos de firma JWT no se completó: la revisión automática de
-  permisos quedó bloqueada por el límite de uso. Queda pendiente comprobar una invocación con
-  una sesión real; el rechazo de solicitudes sin sesión no demuestra esa compatibilidad.
+- El responsable inició sesión como administrador en la PWA. Se comprobaron el panel, las consultas
+  de cuentas/períodos, el cierre confirmado y la apertura posterior sin acceso al panel.
+- No se creó ningún dato de prueba. Alta real, recuperación por correo y ejecución en teléfono
+  siguen diferidas por el alcance de aceptación acordado.
+- Se completó la consulta pública JWKS: HTTP 200, algoritmo ES256. La documentación actual de
+  Supabase indica que verify_jwt admite firmas asimétricas; se conserva activado. Una llamada real
+  autorizada a create-account continúa pendiente: el rechazo anónimo no prueba ese recorrido.
+  Fuente: https://supabase.com/docs/guides/functions/auth-headers

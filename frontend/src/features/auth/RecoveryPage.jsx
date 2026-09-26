@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { supabase, supabaseConfigured } from '../../lib/supabase'
+import { supabase, supabaseConfigured, authLinkError } from '../../lib/supabase'
 import { useAuth } from './AuthContext'
 
 export default function RecoveryPage() {
@@ -8,8 +8,9 @@ export default function RecoveryPage() {
   const [error, setError] = useState('')
   const [sent, setSent] = useState(false)
   const [changed, setChanged] = useState(false)
-  const hasLinkError = new URLSearchParams(window.location.hash.slice(1)).has('error')
-    || new URLSearchParams(window.location.search).has('error')
+  const hasLinkError = !recovery && (authLinkError
+    || new URLSearchParams(window.location.hash.slice(1)).has('error')
+    || new URLSearchParams(window.location.search).has('error'))
   async function submit(event) {
     event.preventDefault()
     const values = new FormData(event.currentTarget)
@@ -61,4 +62,3 @@ export default function RecoveryPage() {
       </form>}
   </div></section>
 }
-
