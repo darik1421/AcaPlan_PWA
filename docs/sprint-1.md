@@ -3,12 +3,12 @@
 ## Estado
 H01 (inicio de sesión), H02 (recuperación), H03 (cuentas y funciones), H04 (salida)
 y H05 (períodos) tienen implementación local. El diseño es provisional, pendiente de Figma.
-No se declara terminado el sprint: falta aplicar la migración compartida,
-aplicarla en el entorno acordado y realizar aceptación con cuentas reales.
+La migración compartida y la Edge Function móvil se desplegaron el 26/09/2026.
+No se declara terminado el sprint: falta realizar aceptación completa con cuentas reales y dispositivo móvil.
 
 La clave administrativa del backend se comprobó mediante una consulta de solo lectura (HTTP 200).
-No se crearon cuentas, no se enviaron correos y no se modificó la base Supabase durante esta entrega.
-La RPC pwa_sprint1 todavía no está desplegada en el proyecto consultado.
+La RPC pwa_sprint1 está desplegada. Se modificaron esquema y permisos; no se crearon cuentas
+ni se enviaron correos durante la verificación remota.
 
 ## Configuración
 - frontend/.env: VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY (clave pública).
@@ -35,10 +35,11 @@ Las pantallas móviles accounts.tsx y periods.tsx ya fueron adaptadas: las consu
 usan pwa_sprint1 y el alta móvil usa la Edge Function create-account de Supabase. Conservan las funciones y carreras asignadas.
 El móvil no depende del backend Node de la PWA. Solo necesita su URL y clave pública de Supabase.
 Consultar ACAPLAN/docs/integracion-pwa.md para desplegar la Edge Function y realizar pruebas independientes.
-La migración continúa sin ejecutar en Supabase. El código móvil adaptado requiere esa RPC.
+La migración se aplicó en el proyecto yfagadpdxnwcislkocli. create-account se publicó con
+verificación JWT activada y sus dos archivos de servidor, sin dependencia del backend PWA.
 
-Antes de aplicar en un entorno acordado:
-1. Obtener respaldo y revisar las políticas/triggers actuales con el responsable de Supabase.
+Para aplicar en otro entorno:
+1. Acordar el respaldo y revisar las políticas/triggers actuales con el responsable de Supabase.
 2. Comprobar que el esquema coincide con la referencia y que hay una cuenta Auth de administrador
    vinculada por correo con un perfil usuarios activo. La migración no crea ese primer administrador.
 3. Revisar en particular triggers de auth.users: si ya crean perfiles automáticamente,
@@ -123,3 +124,20 @@ Se eliminó EXPO_PUBLIC_API_URL del ejemplo móvil y de su configuración local 
 La Edge Function pasó 9 pruebas de autorización, validación, separación de claves y
 compensación. El adaptador móvil verifica el alta sin acceso al backend de la PWA.
 Estos son tests locales simulados; no equivalen a un despliegue ni una prueba en teléfono.
+
+## Despliegue y comprobaciones remotas — 26/09/2026
+- Se aplicó la migración completa en una transacción, sin respaldo por decisión expresa del responsable.
+- Revisión previa: columnas compatibles, ningún correo duplicado, un período activo,
+  un administrador activo vinculado a Auth y ninguna política previa en las tablas revisadas.
+- Supabase confirmó `Success. No rows returned`; la API REST expone `pwa_sprint1`.
+- En una transacción de solo lectura con rol authenticated y contexto del administrador existente,
+  la RPC devolvió permiso administrativo, una cuenta y un período. RLS permitió leer su perfil.
+- Con rol anon: cero usuarios y períodos visibles, y sin permiso EXECUTE sobre la RPC.
+- create-account desplegada: petición sin autorización devuelve 401 del gateway;
+  petición con la clave pública devuelve 401 de la propia función (`La sesión no es válida.`).
+- Se repitieron las nueve pruebas locales de la Edge Function y las del adaptador móvil: todas pasaron.
+- No se realizó un alta real ni una sesión de usuario en la interfaz de ambas apps. Estas pruebas,
+  recuperación por correo y ejecución en teléfono siguen en la aceptación pendiente.
+- La consulta adicional de algoritmos de firma JWT no se completó: la revisión automática de
+  permisos quedó bloqueada por el límite de uso. Queda pendiente comprobar una invocación con
+  una sesión real; el rechazo de solicitudes sin sesión no demuestra esa compatibilidad.
