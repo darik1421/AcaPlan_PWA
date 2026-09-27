@@ -9,18 +9,18 @@ import './features/auth/auth.css'
 
 function Screens() {
   const { session, profile, loading, recovery, error, retry, logout } = useAuth()
-  if (loading) return <section className="recovery-wrap"><p role="status">Verificando tu acceso…</p></section>
-  if (recovery || window.location.pathname === '/recuperar') return <RecoveryPage />
-  if (!session) return <LoginPage />
-  if (!profile) return <section className="recovery-wrap"><div className="auth-card">
+  if (loading) return <AppLayout><section className="recovery-wrap"><p role="status">Verificando tu acceso…</p></section></AppLayout>
+  if (recovery || window.location.pathname === '/recuperar') return <AppLayout><RecoveryPage /></AppLayout>
+  if (!session) return <AppLayout><LoginPage /></AppLayout>
+  if (!profile) return <AppLayout><section className="recovery-wrap"><div className="auth-card">
     <h2>No se pudo habilitar el acceso</h2>
     <p className="error" role="alert">{error || 'Es necesario comprobar tu cuenta antes de continuar.'}</p>
     <button className="primary" onClick={retry}>Volver a comprobar</button>
     <button className="secondary back-link" onClick={logout}>Cerrar sesión</button>
-  </div></section>
+  </div></section></AppLayout>
   return <DashboardPage />
 }
 
 export default function App() {
-  return <AuthProvider><AppLayout><Screens /></AppLayout></AuthProvider>
+  return <AuthProvider><Screens /></AuthProvider>
 }

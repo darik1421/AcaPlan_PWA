@@ -1,5 +1,5 @@
 import { AccessError } from './auth.js'
-import { accountInput, periodInput, positiveId } from './validation.js'
+import { accountInput, carreraInput, asignaturaInput, aulaInput, pabellonInput, recursoInput, seccionInput, bloqueInput, disponibilidadInput, periodInput, positiveId } from './validation.js'
 
 const businessErrors = {
   ULTIMO_ADMIN: [409, 'No puedes desactivar ni cambiar el rol del último administrador activo.'],
@@ -36,6 +36,41 @@ export function createManagement({
       const mapped = businessErrors[body?.message]
       if (mapped) throw new AccessError(...mapped)
       if (body?.code === '23505') throw new AccessError(409, 'Ya existe un registro con esos datos o un período activo. Actualiza la lista.')
+      if (body?.code === '42501') throw new AccessError(403, 'No tienes permiso para esta operación.')
+      if (body?.code?.startsWith('22') || body?.code === '23514') throw new AccessError(400, 'Revisa los datos del formulario.')
+      const error = new AccessError(503, 'No se pudo confirmar la operación con la base de datos.')
+      error.uncertain = true
+      throw error
+    }
+    if (body === null) {
+      const error = new AccessError(503, 'Respuesta incompleta. Actualiza la lista antes de reintentar.')
+      error.uncertain = true
+      throw error
+    }
+    return body
+  }
+
+  async function rpc2(request, action, payload = {}) {
+    if (!url || !key) throw new AccessError(503, 'Falta configurar Supabase en el backend.')
+    let response
+    try {
+      response = await fetchImpl(`${url}/rest/v1/rpc/pwa_sprint2`, {
+        method: 'POST',
+        headers: { apikey: key, Authorization: request.headers.authorization, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, payload }),
+        signal: AbortSignal.timeout(15000),
+      })
+    } catch {
+      const error = new AccessError(503, 'No se pudo confirmar la operación. Actualiza la lista antes de volver a intentarlo.')
+      error.uncertain = true
+      throw error
+    }
+    const body = await response.json().catch(() => null)
+    if (!response.ok) {
+      if (body?.code === 'PGRST202' || response.status === 404) throw new AccessError(503, 'Falta aplicar la preparación SQL del Sprint 2 en Supabase.')
+      const mapped = businessErrors[body?.message]
+      if (mapped) throw new AccessError(...mapped)
+      if (body?.code === '23505') throw new AccessError(409, 'Ya existe una carrera con ese nombre.')
       if (body?.code === '42501') throw new AccessError(403, 'No tienes permiso para esta operación.')
       if (body?.code?.startsWith('22') || body?.code === '23514') throw new AccessError(400, 'Revisa los datos del formulario.')
       const error = new AccessError(503, 'No se pudo confirmar la operación con la base de datos.')
@@ -94,7 +129,13 @@ export function createManagement({
       if (route.startsWith('accounts.') && profile.rol !== 'administrador') throw new AccessError(403, 'Solo un administrador puede gestionar cuentas.')
       if (route === 'context') {
         const context = await rpc(request, 'context')
-        return { ...context, canCreateAccounts: profile.rol === 'administrador' && Boolean(serviceKey) }
+        const canManageCarreras = profile.rol === 'administrador' || context.permisos?.includes('planificador')
+        const canManageAsignaturas = profile.rol === 'administrador' || context.permisos?.includes('coordinador')
+        const canManageEspacios = profile.rol === 'administrador' || context.permisos?.includes('planificador')
+        const canManageBloques = canManageEspacios
+        const canManageSecciones = profile.rol === 'administrador' || context.permisos?.includes('coordinador')
+        const canManageDisponibilidad = canManageSecciones
+        return { ...context, canCreateAccounts: profile.rol === 'administrador' && Boolean(serviceKey), canManageCarreras, canManageAsignaturas, canManageEspacios, canManageSecciones, canManageBloques, canManageDisponibilidad }
       }
       if (route === 'accounts.create') return createAccount(request, data)
       if (route === 'accounts.update') return rpc(request, route, accountInput(data))
@@ -104,6 +145,37 @@ export function createManagement({
         return rpc(request, route, { id: positiveId(data.id), active: data.active })
       }
       if (['accounts.list', 'periods.list'].includes(route)) return rpc(request, route)
+      // ── Sprint 2: Carreras ──
+      if (route === 'carreras.list') return rpc2(request, route)
+      if (route === 'carreras.create') return rpc2(request, route, carreraInput(data, true))
+      if (route === 'carreras.update') return rpc2(request, route, carreraInput(data))
+      // ── Sprint 2: Asignaturas ──
+      if (route === 'asignaturas.list') return rpc2(request, route)
+      if (route === 'asignaturas.create') return rpc2(request, route, asignaturaInput(data, true))
+      if (route === 'asignaturas.update') return rpc2(request, route, asignaturaInput(data))
+      // ── Sprint 2: H08 Aulas y Recursos ──
+      if (['pabellones.list', 'recursos.list', 'aulas.list'].includes(route)) return rpc2(request, route)
+      if (route === 'pabellones.create') return rpc2(request, route, pabellonInput(data))
+      if (route === 'recursos.create') return rpc2(request, route, recursoInput(data))
+      if (route === 'aulas.create') return rpc2(request, route, aulaInput(data, true))
+      if (route === 'aulas.update') return rpc2(request, route, aulaInput(data))
+      // ── Sprint 2: H09 Secciones ──
+      if (route === 'secciones.list') return rpc2(request, route)
+      if (route === 'secciones.create') return rpc2(request, route, seccionInput(data, true))
+      if (route === 'secciones.update') return rpc2(request, route, seccionInput(data))
+      // ── Sprint 2: H10 Bloques ──
+      if (route === 'bloques.list') return rpc2(request, route)
+      if (route === 'bloques.create') return rpc2(request, route, require('./validation.js').bloqueInput(data, true))
+      if (route === 'bloques.update') return rpc2(request, route, require('./validation.js').bloqueInput(data))
+      // ── Sprint 2: H11 Disponibilidad ──
+      if (['docentes.list', 'disponibilidad.list'].includes(route)) return rpc2(request, route)
+      if (route === 'disponibilidad.create') return rpc2(request, route, disponibilidadInput(data, true))
+      if (route === 'disponibilidad.update') return rpc2(request, route, disponibilidadInput(data))
+      // ── Sprint 2: H12 Programacion ──
+      if (route === 'programacion.list') return rpc2(request, route)
+      if (route === 'programacion.create') return rpc2(request, route, require('./validation.js').programacionInput(data))
+      if (route === 'programacion.delete') return rpc2(request, route, { id: positiveId(data.id) })
+
       throw new AccessError(404, 'Operación no encontrada.')
     },
   }

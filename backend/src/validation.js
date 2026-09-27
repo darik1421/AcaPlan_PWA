@@ -35,6 +35,126 @@ export function accountInput(data, create = false) {
   } else result.id = positiveId(data.id)
   return result
 }
+export function carreraInput(data, create = false) {
+  const result = {
+    nombre: text(data.nombre, 'Nombre de la carrera', 150),
+  }
+  if (!create) {
+    result.id = positiveId(data.id)
+    if (data.estado !== undefined) {
+      if (!['activo', 'inactivo'].includes(data.estado)) fail('Estado no válido.')
+      result.estado = data.estado
+    }
+  }
+  return result
+}
+export function asignaturaInput(data, create = false) {
+  const result = {
+    nombre: text(data.nombre, 'Nombre de la asignatura', 100),
+    codigo: text(data.codigo, 'Código', 20),
+    ano_estudio: positiveId(data.ano_estudio),
+    horas_teoricas: Number(data.horas_teoricas),
+    horas_practicas: Number(data.horas_practicas),
+  }
+  if (!Number.isSafeInteger(result.horas_teoricas) || result.horas_teoricas < 0) fail('Horas teóricas deben ser mayores o iguales a 0.')
+  if (!Number.isSafeInteger(result.horas_practicas) || result.horas_practicas < 0) fail('Horas prácticas deben ser mayores o iguales a 0.')
+  if (create) {
+    result.id_carrera = positiveId(data.id_carrera)
+  } else {
+    result.id = positiveId(data.id)
+    if (data.estado !== undefined) {
+      if (!['activo', 'inactivo'].includes(data.estado)) fail('Estado no válido.')
+      result.estado = data.estado
+    }
+  }
+  return result
+}
+export function pabellonInput(data) { return { nombre: text(data.nombre, 'Nombre del pabellón', 50) } }
+export function recursoInput(data) { return { nombre: text(data.nombre, 'Nombre del recurso', 50) } }
+export function aulaInput(data, create = false) {
+  const result = {
+    codigo: text(data.codigo, 'Código del aula', 20),
+    tipo: text(data.tipo || 'aula', 'Tipo', 50),
+    capacidad: Number(data.capacidad),
+    recursos: Array.isArray(data.recursos) ? [...new Set(data.recursos.map(positiveId))] : []
+  }
+  if (!Number.isSafeInteger(result.capacidad) || result.capacidad < 1) fail('La capacidad debe ser mayor a 0.')
+  if (create) {
+    result.id_pabellon = positiveId(data.id_pabellon)
+  } else {
+    result.id = positiveId(data.id)
+    if (data.estado !== undefined) {
+      if (!['activo', 'inactivo'].includes(data.estado)) fail('Estado no válido.')
+      result.estado = data.estado
+    }
+  }
+  return result
+}
+export function seccionInput(data, create = false) {
+  const result = {
+    codigo: text(data.codigo, 'Código de la sección', 20),
+    ano_estudio: positiveId(data.ano_estudio),
+    cantidad_estudiantes: positiveId(data.cantidad_estudiantes),
+    asignaturas: Array.isArray(data.asignaturas) ? [...new Set(data.asignaturas.map(positiveId))] : []
+  }
+  if (create) {
+    result.id_carrera = positiveId(data.id_carrera)
+    result.id_periodo = positiveId(data.id_periodo)
+  } else {
+    result.id = positiveId(data.id)
+  }
+  return result
+}
+export function bloqueInput(data, create = false) {
+  const result = {
+    dia: text(data.dia, 'Día de la semana', 20),
+    hora_inicio: text(data.hora_inicio, 'Hora de inicio', 8),
+    hora_fin: text(data.hora_fin, 'Hora de fin', 8),
+    es_receso: Boolean(data.es_receso)
+  }
+  if (!['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'].includes(result.dia.toUpperCase())) fail('Día no válido.')
+  // Validates HH:mm or HH:mm:ss
+  if (!/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/.test(result.hora_inicio)) fail('Hora de inicio inválida.')
+  if (!/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/.test(result.hora_fin)) fail('Hora de fin inválida.')
+  if (result.hora_inicio >= result.hora_fin) fail('La hora de inicio debe ser anterior a la hora de fin.')
+
+  if (create) {
+    result.id_periodo = positiveId(data.id_periodo)
+  } else {
+    result.id = positiveId(data.id)
+  }
+  return result
+}
+export function disponibilidadInput(data, create = false) {
+  const result = {
+    id_docente: positiveId(data.id_docente),
+    dia: text(data.dia, 'Día de la semana', 20),
+    hora_inicio: text(data.hora_inicio, 'Hora de inicio', 8),
+    hora_fin: text(data.hora_fin, 'Hora de fin', 8)
+  }
+  if (!['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'].includes(result.dia.toUpperCase())) fail('Día no válido.')
+  if (!/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/.test(result.hora_inicio)) fail('Hora de inicio inválida.')
+  if (!/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/.test(result.hora_fin)) fail('Hora de fin inválida.')
+  if (result.hora_inicio >= result.hora_fin) fail('La hora de inicio debe ser anterior a la hora de fin.')
+
+  if (create) {
+    result.id_periodo = positiveId(data.id_periodo)
+  } else {
+    result.id = positiveId(data.id)
+  }
+  return result
+}
+export function programacionInput(data) {
+  return {
+    id_periodo: positiveId(data.id_periodo),
+    id_seccion: positiveId(data.id_seccion),
+    id_asignatura: positiveId(data.id_asignatura),
+    id_docente: positiveId(data.id_docente),
+    sesiones_semanales: Number(data.sesiones_semanales) > 0 ? Number(data.sesiones_semanales) : 1,
+    duracion_bloques: Number(data.duracion_bloques) > 0 ? Number(data.duracion_bloques) : 1,
+    requisito_laboratorio: Boolean(data.requisito_laboratorio)
+  }
+}
 export function periodInput(data) {
   const result = {
     nombre: text(data.nombre, 'Nombre del período', 50),
