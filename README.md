@@ -8,6 +8,9 @@ Base local con React, JavaScript, HTML, CSS, Node.js y cliente de Supabase.
 Sprint 1 implementado: acceso, recuperación, cierre de sesión, cuentas y períodos. SQL compartido y Edge Function móvil desplegados en Supabase; redirecciones de recuperación local configuradas. Se verificaron el acceso administrativo, las consultas y el cierre con una sesión real. Las pruebas que crean datos y la aceptación completa en teléfono se pospusieron por decisión del responsable. Consulta [docs/sprint-1.md](docs/sprint-1.md).
 La comprobación del backend no comprueba el acceso a la base de datos.
 
+Módulos H06-H12 corregidos: carreras, asignaturas, espacios, secciones, bloques, disponibilidad y programación académica. Consulta [la reparación y sus pruebas](docs/reparacion-sprint-2.md). El SQL consolidado local sustituye los scripts parciales recibidos; no volver a ejecutarlos.
+El alcance y los criterios de cierre del sprint 2 están en [docs/sprint-2.md](docs/sprint-2.md). H12 pertenece al sprint 3.
+
 ## Estructura
 
 ```text
@@ -85,15 +88,18 @@ Si cambias PORT, modifica también el proxy en frontend/vite.config.js.
 npm run lint
 npm test
 npm run build
+npm run test:smoke
 ```
 
 La compilación se guarda en frontend/dist. Para producción falta configurar HTTPS y el proxy de /api hacia el backend. Vite preview permite inspeccionar la compilación, pero no sustituye esa configuración de producción.
+
+Con los archivos SQL locales y su dependencia instalada (`npm --prefix database.local ci`), `npm run test:sql` comprueba las migraciones en memoria sin tocar Supabase.
 
 ## Base de datos y archivos locales
 
 La PWA y la aplicación React Native son proyectos separados que comparten Supabase.
 La autenticación verifica el correo de Supabase Auth contra un perfil activo en usuarios. Falta comprobar las políticas RLS y el flujo completo con cuentas reales.
-La gestión usa la RPC pwa_sprint1, aplicada en el proyecto compartido. Su migración local está en database.local/sprint-1.sql. Quien se conecte a ese mismo proyecto no necesita volver a ejecutarla. Consulta docs/sprint-1.md para otro entorno.
+La gestión usa la RPC pwa_sprint1, aplicada en el proyecto compartido. Los scripts locales originales se retiraron por decisión del responsable; no son necesarios para ejecutar la PWA contra ese proyecto. Para preparar otra base se necesita una migración actualizada del esquema. Consulta docs/sprint-1.md.
 No aplicar migraciones o cambios de roles sin comprobar la compatibilidad con la app móvil.
 
 .env, frontend/.env, backend/.env, Supabase.sql, database.local/, node_modules y dist están excluidos de Git.

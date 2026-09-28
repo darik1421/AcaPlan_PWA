@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { api } from '../../services/management'
 
 const emptyBloque = (id_periodo, dia) => ({ dia, hora_inicio: '08:00', hora_fin: '09:00', es_receso: false, id_periodo })
-const diasSeleccion = ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO']
+const diasSeleccion = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo']
 
 export default function BloquesPage({ context, onChanged }) {
     const [rows, setRows] = useState([])
@@ -13,7 +13,7 @@ export default function BloquesPage({ context, onChanged }) {
     const [message, setMessage] = useState('')
 
     // Filtros UI
-    const [filtroDia, setFiltroDia] = useState('LUNES')
+    const [filtroDia, setFiltroDia] = useState('Lunes')
 
     async function load(signal) {
         setLoading(true); setError('')

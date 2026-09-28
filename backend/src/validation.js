@@ -1,6 +1,17 @@
 import { AccessError } from './auth.js'
 
 const fail = message => { throw new AccessError(400, message) }
+const boolean = value => {
+  if (typeof value !== 'boolean') fail('Valor de casilla no válido.')
+  return value
+}
+const weekDay = value => {
+  const days = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo']
+  const day = days.find(day => day.toUpperCase() === String(value).toUpperCase())
+  if (!day) fail('Día no válido.')
+  return day
+}
+const seconds = value => value.split(':').reduce((total, part, index) => total + Number(part) * [3600, 60, 1][index], 0)
 const text = (value, label, max) => {
   if (typeof value !== 'string' || !value.trim() || value.trim().length > max) fail(`${label}: completa un valor de hasta ${max} caracteres.`)
   return value.trim()
@@ -107,16 +118,16 @@ export function seccionInput(data, create = false) {
 }
 export function bloqueInput(data, create = false) {
   const result = {
-    dia: text(data.dia, 'Día de la semana', 20),
+    dia: weekDay(data.dia),
     hora_inicio: text(data.hora_inicio, 'Hora de inicio', 8),
     hora_fin: text(data.hora_fin, 'Hora de fin', 8),
-    es_receso: Boolean(data.es_receso)
+    es_receso: boolean(data.es_receso)
   }
   if (!['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'].includes(result.dia.toUpperCase())) fail('Día no válido.')
   // Validates HH:mm or HH:mm:ss
   if (!/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/.test(result.hora_inicio)) fail('Hora de inicio inválida.')
   if (!/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/.test(result.hora_fin)) fail('Hora de fin inválida.')
-  if (result.hora_inicio >= result.hora_fin) fail('La hora de inicio debe ser anterior a la hora de fin.')
+  if (seconds(result.hora_inicio) >= seconds(result.hora_fin)) fail('La hora de inicio debe ser anterior a la hora de fin.')
 
   if (create) {
     result.id_periodo = positiveId(data.id_periodo)
@@ -128,14 +139,14 @@ export function bloqueInput(data, create = false) {
 export function disponibilidadInput(data, create = false) {
   const result = {
     id_docente: positiveId(data.id_docente),
-    dia: text(data.dia, 'Día de la semana', 20),
+    dia: weekDay(data.dia),
     hora_inicio: text(data.hora_inicio, 'Hora de inicio', 8),
     hora_fin: text(data.hora_fin, 'Hora de fin', 8)
   }
   if (!['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'].includes(result.dia.toUpperCase())) fail('Día no válido.')
   if (!/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/.test(result.hora_inicio)) fail('Hora de inicio inválida.')
   if (!/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/.test(result.hora_fin)) fail('Hora de fin inválida.')
-  if (result.hora_inicio >= result.hora_fin) fail('La hora de inicio debe ser anterior a la hora de fin.')
+  if (seconds(result.hora_inicio) >= seconds(result.hora_fin)) fail('La hora de inicio debe ser anterior a la hora de fin.')
 
   if (create) {
     result.id_periodo = positiveId(data.id_periodo)
@@ -150,9 +161,9 @@ export function programacionInput(data) {
     id_seccion: positiveId(data.id_seccion),
     id_asignatura: positiveId(data.id_asignatura),
     id_docente: positiveId(data.id_docente),
-    sesiones_semanales: Number(data.sesiones_semanales) > 0 ? Number(data.sesiones_semanales) : 1,
-    duracion_bloques: Number(data.duracion_bloques) > 0 ? Number(data.duracion_bloques) : 1,
-    requisito_laboratorio: Boolean(data.requisito_laboratorio)
+    sesiones_semanales: positiveId(data.sesiones_semanales),
+    duracion_bloques: positiveId(data.duracion_bloques),
+    requisito_laboratorio: boolean(data.requisito_laboratorio)
   }
 }
 export function periodInput(data) {

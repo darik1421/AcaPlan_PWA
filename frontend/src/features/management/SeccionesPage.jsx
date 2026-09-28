@@ -15,8 +15,8 @@ export default function SeccionesPage({ context, onChanged }) {
     const [message, setMessage] = useState('')
 
     // Extraer las carreras en las que el usuario es coordinador
-    const managedCarrerasIds = context?.permisos?.reduce((acc, p) => p.startsWith('coordinador:') ? [...acc, Number(p.split(':')[1])] : acc, []) || []
-    const isAdmin = context?.perfil?.rol === 'administrador'
+    const managedCarrerasIds = context?.carreras || []
+    const isAdmin = context?.isAdmin === true
 
     async function load(signal) {
         setLoading(true); setError('')
@@ -63,10 +63,10 @@ export default function SeccionesPage({ context, onChanged }) {
         })
     }
 
-    const availableAsignaturas = form ? asignaturas.filter(a => a.id_carrera === form.id_carrera && a.ano_estudio === form.ano_estudio) : []
+    const availableAsignaturas = form ? asignaturas.filter(a => a.id_carrera === form.id_carrera && a.ano_estudio === form.ano_estudio && (a.estado === 'activo' || form.asignaturas.includes(a.id_asignatura))) : []
 
-    // Vista general filtrando a las que es coordinador (si no es admin)
-    const visibleRows = rows.filter(r => isAdmin || managedCarrerasIds.includes(r.id_carrera))
+    // Consulta del período activo; los controles de edición respetan las carreras asignadas.
+    const visibleRows = rows.filter(r => r.id_periodo === context?.activePeriod?.id_periodo)
 
     return <section aria-labelledby="secciones-title">
         <div className="section-heading">
@@ -86,7 +86,7 @@ export default function SeccionesPage({ context, onChanged }) {
             <h3>{form.id ? 'Editar sección' : 'Nueva sección'}</h3>
             <fieldset disabled={busy}><div className="form-grid">
                 <label>Carrera
-                    <select required disabled={!!form.id} value={form.id_carrera} onChange={e => field('id_carrera', Number(e.target.value))}>
+                    <select required disabled={!!form.id} value={form.id_carrera} onChange={e => { field('id_carrera', Number(e.target.value)); field('asignaturas', []) }}>
                         {form.id && !activeCarreras.find(c => c.id_carrera === form.id_carrera) && (
                             <option value={form.id_carrera}>{carreras.find(c => c.id_carrera === form.id_carrera)?.nombre}</option>
                         )}
@@ -116,7 +116,7 @@ export default function SeccionesPage({ context, onChanged }) {
             {visibleRows.map(row => <tr key={row.id_seccion}>
                 <td>{row.carrera_nombre}</td><td>{row.ano_estudio}</td><td>{row.codigo}</td><td>{row.cantidad_estudiantes}</td>
                 <td>{row.asignaturas.length}</td>
-                {context.canManageSecciones && <td><button className="secondary" disabled={busy} onClick={() => { setForm({ ...row, id: row.id_seccion }); setMessage('') }}>Editar</button></td>}
+                {context.canManageSecciones && <td>{(isAdmin || managedCarrerasIds.includes(row.id_carrera)) && <><button className="secondary" disabled={busy} onClick={() => { setForm({ ...row, id: row.id_seccion }); setMessage('') }}>Editar</button></>}</td>}
             </tr>)}
             {!visibleRows.length && <tr><td colSpan={context.canManageSecciones ? 6 : 5}>No hay secciones visibles en tu carrera u organización.</td></tr>}
         </tbody></table></div>}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { api } from '../../services/management'
 
 const emptyForm = (id_periodo, id_seccion) => ({
@@ -21,10 +21,10 @@ export default function ProgramacionPage({ context, onChanged }) {
     const [filtroSeccion, setFiltroSeccion] = useState('')
 
     // El coordinador solo puede gestionar las carreras donde tiene permisos
-    const managedCarrerasIds = context?.permisos?.reduce((acc, p) => p.startsWith('coordinador:') ? [...acc, Number(p.split(':')[1])] : acc, []) || []
-    const isAdmin = context?.perfil?.rol === 'administrador'
+    const managedCarrerasIds = context?.carreras || []
+    const isAdmin = context?.isAdmin === true
 
-    async function load(signal) {
+    const load = useCallback(async (signal) => {
         setLoading(true); setError('')
         try {
             const [dataProg, dataSec, dataAsig, dataDocentes] = await Promise.all([
@@ -37,19 +37,19 @@ export default function ProgramacionPage({ context, onChanged }) {
                 setRows(dataProg)
                 setDocentes(dataDocentes)
                 setAsignaturas(dataAsig)
-                // Filtramos las secciones a solo aquellas visibles para este coordinador
-                const visibles = dataSec.filter(s => isAdmin || managedCarrerasIds.includes(s.id_carrera))
+                // Todos consultan el período activo; canEdit limita la escritura por carrera.
+                const visibles = dataSec.filter(s => s.id_periodo === context?.activePeriod?.id_periodo)
                 setSecciones(visibles)
-                if (visibles.length > 0 && !filtroSeccion) setFiltroSeccion(visibles[0].id_seccion)
+                setFiltroSeccion(current => visibles.some(s => s.id_seccion === Number(current)) ? current : (visibles[0]?.id_seccion || ''))
             }
         } catch (e) {
             if (!signal?.aborted) setError(e.message)
         } finally {
             if (!signal?.aborted) setLoading(false)
         }
-    }
+    }, [context?.activePeriod?.id_periodo])
 
-    useEffect(() => { const c = new AbortController(); load(c.signal); return () => c.abort() }, [])
+    useEffect(() => { const c = new AbortController(); load(c.signal); return () => c.abort() }, [load])
 
     async function save(e) {
         e.preventDefault()
@@ -76,8 +76,9 @@ export default function ProgramacionPage({ context, onChanged }) {
 
     const field = (name, value) => setForm(current => ({ ...current, [name]: value }))
 
+    const canEdit = context?.canManageSecciones && (isAdmin || managedCarrerasIds.includes(secciones.find(s => s.id_seccion === Number(filtroSeccion))?.id_carrera))
     const visibles = rows.filter(r => r.id_periodo === context?.activePeriod?.id_periodo && r.id_seccion === Number(filtroSeccion))
-    const asignaturasParaSeccion = asignaturas.filter(a => secciones.find(s => s.id_seccion === Number(filtroSeccion))?.asignaturas.includes(a.id_asignatura))
+    const asignaturasParaSeccion = asignaturas.filter(a => a.estado === 'activo' && secciones.find(s => s.id_seccion === Number(filtroSeccion))?.asignaturas.includes(a.id_asignatura))
 
     return <section aria-labelledby="prog-title" className="management-page">
         <div className="section-heading">
@@ -85,7 +86,7 @@ export default function ProgramacionPage({ context, onChanged }) {
                 <h2 id="prog-title">Programación Académica</h2>
                 <p className="muted">Define los requerimientos (asignaturas y docentes) de cada grupo para el motor de generación en {context?.activePeriod?.nombre || 'ningún periodo'}.</p>
             </div>
-            {context?.activePeriod && <button className="primary" disabled={busy || !filtroSeccion} onClick={() => { setForm(emptyForm(context.activePeriod.id_periodo, Number(filtroSeccion))); setMessage('') }}>Registrar Impartición</button>}
+            {canEdit && context?.activePeriod && <button className="primary" disabled={busy || !filtroSeccion} onClick={() => { setForm(emptyForm(context.activePeriod.id_periodo, Number(filtroSeccion))); setMessage('') }}>Registrar Impartición</button>}
         </div>
 
         {!context?.activePeriod && <div className="banner info">No hay un período académico activo definido.</div>}
@@ -117,7 +118,7 @@ export default function ProgramacionPage({ context, onChanged }) {
                 <label>Docente requerido
                     <select required value={form.id_docente} onChange={e => field('id_docente', Number(e.target.value))}>
                         <option value="">-- Asigne un Docente --</option>
-                        {docentes.map(d => <option key={d.id_docente} value={d.id_docente}>{d.nombres} {d.apellidos}</option>)}
+                        {docentes.filter(d => d.estado === 'activo').map(d => <option key={d.id_docente} value={d.id_docente}>{d.nombres} {d.apellidos}</option>)}
                     </select>
                 </label>
 
@@ -137,7 +138,7 @@ export default function ProgramacionPage({ context, onChanged }) {
                 <td>{row.sesiones_semanales} a la semana</td>
                 <td>{row.duracion_bloques} consecutivos</td>
                 <td>{row.requisito_laboratorio ? 'Sí' : 'Normal'}</td>
-                <td><button className="secondary" disabled={busy} onClick={() => remove(row.id_programacion)}>Eliminar</button></td>
+                <td>{canEdit && <button className="secondary" disabled={busy} onClick={() => remove(row.id_programacion)}>Eliminar</button>}</td>
             </tr>)}
             {!visibles.length && <tr><td colSpan="6">No se han registrado pre-asignaciones docentes para esta sección.</td></tr>}
         </tbody></table></div>}

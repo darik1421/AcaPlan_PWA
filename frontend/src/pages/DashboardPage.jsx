@@ -93,7 +93,7 @@ export default function DashboardPage() {
         {context && (
           page === 'accounts' && context.canManageAccounts ? <AccountsPage context={context} onChanged={refresh} /> :
             page === 'carreras' ? <CarrerasPage canManage={context.canManageCarreras} onChanged={refresh} /> :
-              page === 'asignaturas' ? <AsignaturasPage canManage={context.canManageAsignaturas} onChanged={refresh} /> :
+              page === 'asignaturas' ? <AsignaturasPage context={context} canManage={context.canManageAsignaturas} onChanged={refresh} /> :
                 page === 'espacios' ? <EspaciosPage canManage={context.canManageEspacios} onChanged={refresh} /> :
                   page === 'secciones' ? <SeccionesPage context={context} onChanged={refresh} /> :
                     page === 'programacion' ? <ProgramacionPage context={context} onChanged={refresh} /> :

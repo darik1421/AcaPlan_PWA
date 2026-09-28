@@ -47,7 +47,7 @@ export default function CarrerasPage({ canManage, onChanged }) {
         {form && <form className="management-form" onSubmit={save}>
             <h3>{form.id ? 'Editar carrera' : 'Nueva carrera'}</h3>
             <fieldset disabled={busy}><div className="form-grid">
-                <label>Nombre de la carrera<input required maxLength={200} value={form.nombre} onChange={e => field('nombre', e.target.value)} /></label>
+                <label>Nombre de la carrera<input required maxLength={150} value={form.nombre} onChange={e => field('nombre', e.target.value)} /></label>
                 {form.id && <label>Estado<select value={form.estado} onChange={e => field('estado', e.target.value)}><option value="activo">Activo</option><option value="inactivo">Inactivo</option></select></label>}
             </div>
                 <div className="form-actions"><button className="primary" type="submit">{busy ? 'Guardando…' : 'Guardar carrera'}</button><button className="secondary" type="button" onClick={() => setForm(null)}>Cancelar</button></div>

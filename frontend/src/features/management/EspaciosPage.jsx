@@ -8,6 +8,9 @@ export default function EspaciosPage({ canManage, onChanged }) {
     const [pabellones, setPabellones] = useState([])
     const [recursos, setRecursos] = useState([])
     const [aulas, setAulas] = useState([])
+    const [capacityFilter, setCapacityFilter] = useState('')
+    const [typeFilter, setTypeFilter] = useState('')
+    const [resourceFilter, setResourceFilter] = useState('')
 
     const [loading, setLoading] = useState(true)
     const [busy, setBusy] = useState(false)
@@ -57,6 +60,9 @@ export default function EspaciosPage({ canManage, onChanged }) {
         })
     }
 
+    const filteredAulas = aulas.filter(a => (!capacityFilter || a.capacidad >= Number(capacityFilter)) &&
+        (!typeFilter || a.tipo === typeFilter) && (!resourceFilter || a.recursos.includes(Number(resourceFilter))))
+
     return <section aria-labelledby="espacios-title">
         <div className="section-heading">
             <div><h2 id="espacios-title">Gestión de espacios</h2><p className="muted">Administración de pabellones, aulas y recursos físicos.</p></div>
@@ -73,7 +79,8 @@ export default function EspaciosPage({ canManage, onChanged }) {
 
         {/* TABS */}
         {tab === 'aulas' && <div>
-            {canManage && <button className="secondary" style={{ marginBottom: '1rem' }} disabled={busy} onClick={() => { setFormAula(emptyAula(pabellones[0]?.id_pabellon)); setMessage('') }}>Nueva aula</button>}
+            {canManage && <button className="secondary" style={{ marginBottom: '1rem' }} disabled={busy || !pabellones.length} onClick={() => { setFormAula(emptyAula(pabellones[0]?.id_pabellon)); setMessage('') }}>Nueva aula</button>}
+            {!loading && canManage && !pabellones.length && <p>Registra primero un pabellón para añadir aulas.</p>}
 
             {formAula && <form className="management-form" onSubmit={(e) => { e.preventDefault(); saveEntity('/aulas', formAula, () => setFormAula(null), formAula.id ? 'Aula actualizada' : 'Aula creada') }}>
                 <h3>{formAula.id ? 'Editar aula' : 'Nueva aula'}</h3>
@@ -103,14 +110,19 @@ export default function EspaciosPage({ canManage, onChanged }) {
                 </fieldset>
             </form>}
 
-            {loading ? <p role="status">Cargando aulas…</p> : <div className="table-scroll"><table><caption>{aulas.length} aulas registradas</caption><thead><tr><th>Pabellón</th><th>Código</th><th>Tipo</th><th>Capacidad</th><th>Recursos</th><th>Estado</th>{canManage && <th>Acciones</th>}</tr></thead><tbody>
-                {aulas.map(row => <tr key={row.id_aula}>
+            <div className="list-toolbar">
+                <label>Capacidad mínima<input type="number" min="1" value={capacityFilter} onChange={e => setCapacityFilter(e.target.value)} /></label>
+                <label>Filtrar por tipo<select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}><option value="">Todos los tipos</option>{[...new Set(aulas.map(a => a.tipo))].sort().map(tipo => <option key={tipo} value={tipo}>{tipo}</option>)}</select></label>
+                <label>Filtrar por recurso<select value={resourceFilter} onChange={e => setResourceFilter(e.target.value)}><option value="">Todos los recursos</option>{recursos.map(r => <option key={r.id_recurso} value={r.id_recurso}>{r.nombre}</option>)}</select></label>
+            </div>
+            {loading ? <p role="status">Cargando aulas…</p> : <div className="table-scroll"><table><caption>{filteredAulas.length} aulas encontradas</caption><thead><tr><th>Pabellón</th><th>Código</th><th>Tipo</th><th>Capacidad</th><th>Recursos</th><th>Estado</th>{canManage && <th>Acciones</th>}</tr></thead><tbody>
+                {filteredAulas.map(row => <tr key={row.id_aula}>
                     <td>{row.pabellon_nombre}</td><td>{row.codigo}</td><td>{row.tipo}</td><td>{row.capacidad}</td>
                     <td>{row.recursos.map(rid => recursos.find(r => r.id_recurso === rid)?.nombre).join(', ') || '-'}</td>
                     <td><span className={row.estado === 'activo' ? 'badge active' : 'badge'}>{row.estado}</span></td>
                     {canManage && <td><button className="secondary" disabled={busy} onClick={() => { setFormAula({ ...row, id: row.id_aula }); setMessage('') }}>Editar</button></td>}
                 </tr>)}
-                {!aulas.length && <tr><td colSpan={canManage ? 7 : 6}>No hay aulas registradas.</td></tr>}
+                {!filteredAulas.length && <tr><td colSpan={canManage ? 7 : 6}>No hay aulas que coincidan con los filtros.</td></tr>}
             </tbody></table></div>}
         </div>}
 

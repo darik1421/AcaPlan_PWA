@@ -3,11 +3,13 @@ import { api } from '../../services/management'
 
 const empty = (id_carrera = '') => ({ nombre: '', codigo: '', id_carrera, ano_estudio: 1, horas_teoricas: 0, horas_practicas: 0 })
 
-export default function AsignaturasPage({ canManage, onChanged }) {
+export default function AsignaturasPage({ context, canManage, onChanged }) {
     const [rows, setRows] = useState([])
     const [carreras, setCarreras] = useState([])
     const [form, setForm] = useState(null)
     const [query, setQuery] = useState('')
+    const [careerFilter, setCareerFilter] = useState('')
+    const [yearFilter, setYearFilter] = useState('')
     const [loading, setLoading] = useState(true)
     const [busy, setBusy] = useState(false)
     const [error, setError] = useState('')
@@ -48,17 +50,20 @@ export default function AsignaturasPage({ canManage, onChanged }) {
     }
 
     const filtered = rows.filter(r =>
-        r.nombre.toLowerCase().includes(query.toLowerCase()) ||
+        (!careerFilter || r.id_carrera === Number(careerFilter)) &&
+        (!yearFilter || r.ano_estudio === Number(yearFilter)) &&
+        (r.nombre.toLowerCase().includes(query.toLowerCase()) ||
         r.codigo.toLowerCase().includes(query.toLowerCase()) ||
-        r.carrera_nombre.toLowerCase().includes(query.toLowerCase())
+        r.carrera_nombre.toLowerCase().includes(query.toLowerCase()))
     )
 
-    const activeCarreras = carreras.filter(c => c.estado === 'activo')
+    const canEdit = id => canManage && (context?.isAdmin || context?.carreras?.includes(id))
+    const activeCarreras = carreras.filter(c => c.estado === 'activo' && canEdit(c.id_carrera))
 
     return <section aria-labelledby="asignaturas-title">
         <div className="section-heading">
             <div><h2 id="asignaturas-title">Gestión de asignaturas</h2><p className="muted">Oferta académica y horas requeridas.</p></div>
-            {canManage && <button className="secondary" disabled={busy} onClick={() => { setForm(empty(activeCarreras[0]?.id_carrera)); setMessage('') }}>Nueva asignatura</button>}
+            {canManage && <button className="secondary" disabled={busy || !activeCarreras.length} onClick={() => { setForm(empty(activeCarreras[0]?.id_carrera)); setMessage('') }}>Nueva asignatura</button>}
         </div>
         {error && <p role="alert" className="error">{error}</p>}
         {message && <p role="status" className="success">{message}</p>}
@@ -83,12 +88,17 @@ export default function AsignaturasPage({ canManage, onChanged }) {
                 <div className="form-actions"><button className="primary" type="submit">{busy ? 'Guardando…' : 'Guardar asignatura'}</button><button className="secondary" type="button" onClick={() => setForm(null)}>Cancelar</button></div>
             </fieldset>
         </form>}
-        <div className="list-toolbar"><label>Buscar asignaturas<input type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Código, nombre o carrera" /></label><button className="secondary" disabled={busy || loading} onClick={() => load()}>Actualizar lista</button></div>
+        <div className="list-toolbar">
+            <label>Buscar asignaturas<input type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Código, nombre o carrera" /></label>
+            <label>Filtrar por carrera<select value={careerFilter} onChange={e => setCareerFilter(e.target.value)}><option value="">Todas las carreras</option>{carreras.map(c => <option key={c.id_carrera} value={c.id_carrera}>{c.nombre}</option>)}</select></label>
+            <label>Filtrar por año<select value={yearFilter} onChange={e => setYearFilter(e.target.value)}><option value="">Todos los años</option>{[...new Set(rows.map(r => r.ano_estudio))].sort((a,b) => a-b).map(year => <option key={year} value={year}>{year}</option>)}</select></label>
+            <button className="secondary" disabled={busy || loading} onClick={() => load()}>Actualizar lista</button>
+        </div>
         {loading ? <p role="status">Cargando asignaturas…</p> : <div className="table-scroll"><table><caption>{filtered.length} asignaturas</caption><thead><tr><th>Código</th><th>Asignatura</th><th>Carrera</th><th>Año</th><th>HT</th><th>HP</th><th>Estado</th>{canManage && <th>Acciones</th>}</tr></thead><tbody>
             {filtered.map(row => <tr key={row.id_asignatura}>
                 <td>{row.codigo}</td><td>{row.nombre}</td><td>{row.carrera_nombre}</td><td>{row.ano_estudio}</td><td>{row.horas_teoricas}</td><td>{row.horas_practicas}</td>
                 <td><span className={row.estado === 'activo' ? 'badge active' : 'badge'}>{row.estado}</span></td>
-                {canManage && <td><button className="secondary" disabled={busy} aria-label={`Editar ${row.nombre}`} onClick={() => { setForm({ ...row, id: row.id_asignatura }); setMessage('') }}>Editar</button></td>}
+                {canManage && <td>{canEdit(row.id_carrera) && <button className="secondary" disabled={busy} aria-label={`Editar ${row.nombre}`} onClick={() => { setForm({ ...row, id: row.id_asignatura }); setMessage('') }}>Editar</button>}</td>}
             </tr>)}
             {!filtered.length && <tr><td colSpan={canManage ? 8 : 7}>No hay asignaturas que coincidan.</td></tr>}
         </tbody></table></div>}

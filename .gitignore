@@ -28,3 +28,4 @@ Supabase.sql
 
 # Migraciones SQL locales (no publicar)
 database.local/
+database.local.zip

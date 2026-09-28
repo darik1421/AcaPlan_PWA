@@ -33,8 +33,11 @@ no se eliminó ninguna redirección móvil. Site URL permanece en http://localho
 explícitamente su redirectTo autorizado. Al publicar, añadir la URL HTTPS exacta del despliegue.
 
 ## Migración local y base compartida
-Archivo preparado: database.local/sprint-1.sql, excluido de Git por decisión del proyecto.
-El compañero que clone el repositorio deberá recibir este archivo por separado.
+Los scripts originales database.local/sprint-1.sql y revision-previa.sql se eliminaron localmente
+el 27/09/2026 por decisión del responsable, para sustituir esa carpeta por contexto actualizado.
+La migración ya está aplicada: quien use el mismo proyecto Supabase no necesita esos archivos.
+Para preparar otro entorno se debe obtener una migración actualizada; esta documentación no
+sustituye el SQL. Cualquier contenido nuevo con ese nombre debe revisarse antes de ejecutarlo.
 Supabase.sql es solo la referencia original: no volver a ejecutarlo sobre la base existente.
 
 La nueva migración crea funciones SQL y permisos, sin cambiar los roles administrador/docente.

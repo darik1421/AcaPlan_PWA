@@ -65,7 +65,7 @@ test('Protección del último administrador se comunica como conflicto', async (
 test('Contexto informa capacidad de creación sin devolver claves', async () => {
   const { management } = setup([response({ canManageAccounts: true })])
   const result = await management.execute(req, admin, 'context', {})
-  assert.deepEqual(result, { canManageAccounts: true, canCreateAccounts: true, canManageCarreras: true, canManageAsignaturas: true, canManageEspacios: true, canManageSecciones: true, canManageBloques: true, canManageDisponibilidad: true })
+  assert.deepEqual(result, { isAdmin: true, canManageAccounts: true, canCreateAccounts: true, canManageCarreras: true, canManageAsignaturas: true, canManageEspacios: true, canManageSecciones: true, canManageBloques: true, canManageDisponibilidad: true })
   assert.ok(!JSON.stringify(result).includes('server-only-key'))
 })
 test('Valida identificadores, fechas imposibles, rangos y coordinación', () => {

@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { api } from '../../services/management'
 
 const emptyDisponibilidad = (id_docente, id_periodo, dia) => ({ id_docente, dia, hora_inicio: '08:00', hora_fin: '12:00', id_periodo })
-const diasSeleccion = ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO']
+const diasSeleccion = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo']
 
 export default function DisponibilidadPage({ context, onChanged }) {
     const [rows, setRows] = useState([])
@@ -16,7 +16,7 @@ export default function DisponibilidadPage({ context, onChanged }) {
 
     const [filtroDocente, setFiltroDocente] = useState('')
 
-    async function load(signal) {
+    const load = useCallback(async (signal) => {
         setLoading(true); setError('')
         try {
             const [dataDisp, dataDoc] = await Promise.all([
@@ -26,16 +26,16 @@ export default function DisponibilidadPage({ context, onChanged }) {
             if (!signal?.aborted) {
                 setRows(dataDisp)
                 setDocentes(dataDoc)
-                if (dataDoc.length > 0 && !filtroDocente) setFiltroDocente(dataDoc[0].id_docente)
+                setFiltroDocente(current => dataDoc.some(d => d.id_docente === Number(current)) ? current : (dataDoc[0]?.id_docente || ''))
             }
         } catch (e) {
             if (!signal?.aborted) setError(e.message)
         } finally {
             if (!signal?.aborted) setLoading(false)
         }
-    }
+    }, [])
 
-    useEffect(() => { const c = new AbortController(); load(c.signal); return () => c.abort() }, [])
+    useEffect(() => { const c = new AbortController(); load(c.signal); return () => c.abort() }, [load])
 
     async function save(e) {
         e.preventDefault()
@@ -57,7 +57,7 @@ export default function DisponibilidadPage({ context, onChanged }) {
     return <section aria-labelledby="disp-title">
         <div className="section-heading">
             <div><h2 id="disp-title">Disponibilidad Docente</h2><p className="muted">Bloques preautorizados para programar clases en {context?.activePeriod?.nombre || 'ningún periodo'}.</p></div>
-            {context?.canManageDisponibilidad && context?.activePeriod && <button className="secondary" disabled={busy || !filtroDocente} onClick={() => { setForm(emptyDisponibilidad(Number(filtroDocente), context.activePeriod.id_periodo, 'LUNES')); setMessage('') }}>Nuevo Permiso</button>}
+            {context?.canManageDisponibilidad && context?.activePeriod && <button className="secondary" disabled={busy || !filtroDocente} onClick={() => { setForm(emptyDisponibilidad(Number(filtroDocente), context.activePeriod.id_periodo, 'Lunes')); setMessage('') }}>Nuevo Permiso</button>}
         </div>
 
         {!context?.activePeriod && <div className="banner info">No hay un período académico activo.</div>}

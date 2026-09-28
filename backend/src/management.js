@@ -1,5 +1,5 @@
 import { AccessError } from './auth.js'
-import { accountInput, carreraInput, asignaturaInput, aulaInput, pabellonInput, recursoInput, seccionInput, bloqueInput, disponibilidadInput, periodInput, positiveId } from './validation.js'
+import { accountInput, carreraInput, asignaturaInput, aulaInput, pabellonInput, recursoInput, seccionInput, bloqueInput, disponibilidadInput, programacionInput, periodInput, positiveId } from './validation.js'
 
 const businessErrors = {
   ULTIMO_ADMIN: [409, 'No puedes desactivar ni cambiar el rol del último administrador activo.'],
@@ -8,6 +8,12 @@ const businessErrors = {
   DUPLICADO: [409, 'El correo o la cédula ya están registrados.'],
   DATOS_INVALIDOS: [400, 'Revisa los campos, funciones y carreras seleccionadas.'],
   AUTH_NO_EXISTE: [409, 'No se encontró la cuenta de autenticación correspondiente.'],
+  INTERVALO_OCUPADO: [409, 'El intervalo se superpone con otro del mismo día y período.'],
+  REGISTRO_EN_USO: [409, 'El registro está en uso. Revisa las asignaciones antes de modificarlo.'],
+  ASIGNATURA_INACTIVA: [409, 'La asignatura está inactiva y no admite nuevas asignaciones.'],
+  ESPACIO_INACTIVO: [409, 'El espacio está inactivo y no admite nuevas clases.'],
+  BLOQUE_RECESO: [409, 'Un receso no admite clases.'],
+  DISPONIBILIDAD_INSUFICIENTE: [409, 'Completa la disponibilidad del docente para cubrir toda la clase.'],
 }
 export function createManagement({
   url = process.env.SUPABASE_URL,
@@ -68,11 +74,18 @@ export function createManagement({
     const body = await response.json().catch(() => null)
     if (!response.ok) {
       if (body?.code === 'PGRST202' || response.status === 404) throw new AccessError(503, 'Falta aplicar la preparación SQL del Sprint 2 en Supabase.')
+      if (body?.message === 'ASIGNACIONES_AFECTADAS') {
+        let ids = []
+        try { const values = JSON.parse(body.details); if (Array.isArray(values)) ids = values.filter(Number.isSafeInteger) } catch { /* No mostrar detalles internos que no sean identificadores. */ }
+        const classes = ids.length ? ` Clases afectadas (ID): ${ids.slice(0, 20).join(', ')}${ids.length > 20 ? '…' : ''}.` : ''
+        throw new AccessError(409, `Revisa y resuelve las asignaciones existentes antes de guardar este cambio.${classes}`)
+      }
       const mapped = businessErrors[body?.message]
       if (mapped) throw new AccessError(...mapped)
-      if (body?.code === '23505') throw new AccessError(409, 'Ya existe una carrera con ese nombre.')
+      if (body?.code === '23505') throw new AccessError(409, 'Ya existe un registro con esos datos.')
+      if (body?.code === '23503') throw new AccessError(409, 'La relación seleccionada no existe o el registro está en uso. Actualiza la lista.')
       if (body?.code === '42501') throw new AccessError(403, 'No tienes permiso para esta operación.')
-      if (body?.code?.startsWith('22') || body?.code === '23514') throw new AccessError(400, 'Revisa los datos del formulario.')
+      if (body?.code?.startsWith('22') || ['23514', '23502'].includes(body?.code)) throw new AccessError(400, 'Revisa los datos del formulario.')
       const error = new AccessError(503, 'No se pudo confirmar la operación con la base de datos.')
       error.uncertain = true
       throw error
@@ -129,13 +142,14 @@ export function createManagement({
       if (route.startsWith('accounts.') && profile.rol !== 'administrador') throw new AccessError(403, 'Solo un administrador puede gestionar cuentas.')
       if (route === 'context') {
         const context = await rpc(request, 'context')
-        const canManageCarreras = profile.rol === 'administrador' || context.permisos?.includes('planificador')
-        const canManageAsignaturas = profile.rol === 'administrador' || context.permisos?.includes('coordinador')
-        const canManageEspacios = profile.rol === 'administrador' || context.permisos?.includes('planificador')
+        const isAdmin = profile.rol === 'administrador'
+        const canManageCarreras = isAdmin || Boolean(context.funciones?.includes('planificador'))
+        const canManageAsignaturas = isAdmin || Boolean(context.funciones?.includes('coordinador'))
+        const canManageEspacios = canManageCarreras
         const canManageBloques = canManageEspacios
-        const canManageSecciones = profile.rol === 'administrador' || context.permisos?.includes('coordinador')
+        const canManageSecciones = canManageAsignaturas
         const canManageDisponibilidad = canManageSecciones
-        return { ...context, canCreateAccounts: profile.rol === 'administrador' && Boolean(serviceKey), canManageCarreras, canManageAsignaturas, canManageEspacios, canManageSecciones, canManageBloques, canManageDisponibilidad }
+        return { ...context, isAdmin, canCreateAccounts: isAdmin && Boolean(serviceKey), canManageCarreras, canManageAsignaturas, canManageEspacios, canManageSecciones, canManageBloques, canManageDisponibilidad }
       }
       if (route === 'accounts.create') return createAccount(request, data)
       if (route === 'accounts.update') return rpc(request, route, accountInput(data))
@@ -165,15 +179,15 @@ export function createManagement({
       if (route === 'secciones.update') return rpc2(request, route, seccionInput(data))
       // ── Sprint 2: H10 Bloques ──
       if (route === 'bloques.list') return rpc2(request, route)
-      if (route === 'bloques.create') return rpc2(request, route, require('./validation.js').bloqueInput(data, true))
-      if (route === 'bloques.update') return rpc2(request, route, require('./validation.js').bloqueInput(data))
+      if (route === 'bloques.create') return rpc2(request, route, bloqueInput(data, true))
+      if (route === 'bloques.update') return rpc2(request, route, bloqueInput(data))
       // ── Sprint 2: H11 Disponibilidad ──
       if (['docentes.list', 'disponibilidad.list'].includes(route)) return rpc2(request, route)
       if (route === 'disponibilidad.create') return rpc2(request, route, disponibilidadInput(data, true))
       if (route === 'disponibilidad.update') return rpc2(request, route, disponibilidadInput(data))
       // ── Sprint 2: H12 Programacion ──
       if (route === 'programacion.list') return rpc2(request, route)
-      if (route === 'programacion.create') return rpc2(request, route, require('./validation.js').programacionInput(data))
+      if (route === 'programacion.create') return rpc2(request, route, programacionInput(data))
       if (route === 'programacion.delete') return rpc2(request, route, { id: positiveId(data.id) })
 
       throw new AccessError(404, 'Operación no encontrada.')
