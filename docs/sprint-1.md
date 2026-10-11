@@ -168,3 +168,45 @@ Estos son tests locales simulados; no equivalen a un despliegue ni una prueba en
   Supabase indica que verify_jwt admite firmas asimétricas; se conserva activado. Una llamada real
   autorizada a create-account continúa pendiente: el rechazo anónimo no prueba ese recorrido.
   Fuente: https://supabase.com/docs/guides/functions/auth-headers
+
+## Revisión del sprint 1 con el flujo acordado el 7 de octubre
+
+Esta revisión comienza por el sprint 1; no da por cerrado el nuevo alcance ni inicia importación o generación. H01 reúne acceso, recuperación y cierre; H03 cubre cuentas y permisos; H05 períodos.
+
+| Historia | Qué se conserva | Diferencia o comprobación pendiente |
+| --- | --- | --- |
+| H01 | Acceso con Supabase, recuperación, perfil activo y cierre | Pruebas reales de correo y perfiles diferidos siguen pendientes; las pruebas locales no los sustituyen |
+| H03 | Administración de cuentas, coordinación por carrera, planificación y aprobación | Falta la función de jefatura. El contexto del backend y la RPC pwa_sprint2 todavía permiten a coordinación editar disponibilidad. Deben adaptarse conjuntamente cuentas, API, interfaz y autorización SQL |
+| H05 | Períodos, activación única e historial | Se conserva la implementación; no se ha repetido la prueba real de concurrencia ni se han creado períodos de prueba |
+
+Primer ajuste a implementar: función de jefatura y separación de permisos. Coordinación importa su asignación y puede corregirla; jefatura registra restricciones; planificación elabora horarios. No dar por resuelto este cambio ocultando controles de pantalla. Antes de migrar, verificar la definición vigente de pwa_sprint1, su validación de funciones y los consumidores móviles. La fuente original de esa RPC no está en esta carpeta, tal como consta arriba.
+
+La cédula aún es obligatoria en el código existente. Su obligatoriedad frente a INSS continúa sin decisión institucional; no modificarla ni presentarla como criterio confirmado hasta resolverlo.
+
+Acuerdo para el sprint correspondiente: Excel como entrada principal de asignaciones e inventario, con vista previa, validación y correcciones puntuales en la aplicación. No construir captura individual como flujo principal ni un módulo de mentorías.
+
+En esta revisión no se modificaron Supabase, la aplicación móvil ni los permisos activos. La adaptación interna de varios docentes realizada antes se conserva, pero no es evidencia de cierre del sprint 1.
+
+
+### Ajuste de nombres visible completado
+
+Se utiliza Semestres en pantallas, avisos y controles de la PWA y en las pantallas equivalentes de la móvil. La web muestra Coordinadores de carrera en cuentas y sus funciones; puede mostrar Jefes de departamento si recibe ese identificador, pero todavía no permite asignar esa función.
+
+Se conservan periodos, id_periodo, las rutas y los identificadores de funciones existentes. No se ejecutó SQL ni se modificó el adaptador móvil: el cambio de etiquetas no exige renombrar tablas. Sigue pendiente revisar la definición desplegada de pwa_sprint1 antes de incorporar jefe_departamento y ajustar conjuntamente las autorizaciones de restricciones. No se declara finalizado H03 ni se pasa al sprint 2.
+
+Validación: 64 pruebas backend y 41 frontend aprobadas; lint, build y smoke de la PWA correctos. La prueba scripts/test-management.cjs de la móvil pasó. Su comprobación global de TypeScript falla en componentes de pestañas, tema y otros archivos ajenos a estas etiquetas; no se presenta la compilación móvil como aprobada. Las pruebas remotas de cuentas, correo y concurrencia continúan pendientes.
+
+### Permisos H03 adaptados — 8 de octubre de 2026
+
+Se recuperaron del Supabase compartido las definiciones vigentes de `pwa_sprint1`, `pwa_sprint2`, sus políticas y las restricciones de `pwa_permisos_usuario`. La exportación local no contiene cuentas ni claves. Se aplicó, con autorización del responsable, `database.local/sprint-1-permisos-v2.sql` en una transacción. Supabase confirmó éxito y cuatro comprobaciones posteriores dieron `true`.
+
+- Se admite `jefe_departamento` como función adicional; no se cambia el rol base ni se asignan funciones automáticamente a ninguna persona.
+- Los coordinadores conservan asignaturas, secciones y programación de sus carreras, pero dejan de editar disponibilidad. Los jefes de departamento pueden crear, editar y eliminar disponibilidad. Los administradores conservan el acceso superior autorizado.
+- La respuesta de contexto incorpora `permissionVersion: 2`; la PWA usa ese dato para habilitar la función y adaptar los controles. Las instalaciones anteriores a la migración conservan sus controles previos.
+- Se mantienen las firmas de las RPC, los semestres, los nombres de tablas y la Edge Function. El adaptador móvil conserva las funciones al editar cuentas; la prueba local reprodujo ese contrato. No se ejecutaron escrituras de prueba en producción ni una prueba en teléfono.
+
+Validación: migración local repetible y matriz de permisos aprobadas en PGlite; 66 pruebas backend y 41 frontend aprobadas, más dos pruebas nuevas de formulario aprobadas en la ejecución dirigida (7 pruebas del archivo). Lint, compilación y smoke correctos. Evidencia: `docs/evidencias/sprint1-permisos-v2.png`.
+
+Este cierre corresponde a la separación de permisos de H03. No declara completados los cambios de lógica de los demás sprints. Sigue pendiente transformar disponibilidad en restricciones comunicadas (ausencia de restricciones significa disponible), adaptar las duraciones/mallas y continuar el flujo de Excel, borradores y clases fijadas. Las pruebas reales de recuperación de contraseña y altas siguen diferidas por el alcance acordado.
+
+Depuración posterior: eliminada la rama de compatibilidad del backend que concedía controles de disponibilidad a coordinadores cuando faltaba `permissionVersion: 2`. El contexto utiliza siempre la responsabilidad vigente (jefes de departamento o administrador). Se conserva la comprobación de versión del formulario de cuentas para no ofrecer una función que una instalación sin migrar no pueda guardar. Verificación conjunta con el primer ajuste de bloques: 66 pruebas backend y 45 frontend aprobadas; lint y compilación correctos.

@@ -120,20 +120,6 @@ a { color: inherit; text-decoration: none; }
 .topbar-title { font-size: 18px; font-weight: 700; color: #1E3A8A; margin: 0; }
 .topbar-periods { font-size: 14px; color: var(--text-muted); display: flex; gap: 24px; }
 
-.topbar-right { display: flex; align-items: center; gap: 20px; }
-.search-box {
-  background: var(--bg-sidebar);
-  border: 1px solid var(--border-light);
-  border-radius: 6px;
-  padding: 8px 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--text-muted);
-}
-.search-box input { border: none; background: transparent; font-size: 13px; outline: none; }
-.topbar-icons { display: flex; gap: 16px; color: var(--text-muted); }
-
 .content-area {
   flex: 1;
   padding: 32px;

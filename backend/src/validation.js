@@ -31,11 +31,11 @@ export function accountInput(data, create = false) {
   }
   if (!['administrador', 'docente'].includes(result.rol)) fail('Rol no válido.')
   if (!['activo', 'inactivo'].includes(result.estado)) fail('Estado no válido.')
-  if (!Array.isArray(result.funciones) || result.funciones.some(f => !['coordinador', 'planificador', 'aprobador'].includes(f))) fail('Funciones no válidas.')
+  if (!Array.isArray(result.funciones) || result.funciones.some(f => !['coordinador', 'planificador', 'aprobador', 'jefe_departamento'].includes(f))) fail('Funciones no válidas.')
   if (!Array.isArray(result.carreras) || result.carreras.length > 100) fail('Carreras no válidas.')
   result.funciones = [...new Set(result.funciones)]
   result.carreras = [...new Set(result.carreras.map(positiveId))]
-  if (result.funciones.includes('coordinador') && !result.carreras.length) fail('Selecciona al menos una carrera para coordinación.')
+  if (result.funciones.includes('coordinador') && !result.carreras.length) fail('Selecciona al menos una carrera para el coordinador de carrera.')
   if (!result.funciones.includes('coordinador')) result.carreras = []
   if (create) {
     result.correo = text(data.correo, 'Correo', 100).toLowerCase()
@@ -60,6 +60,9 @@ export function carreraInput(data, create = false) {
   return result
 }
 export function asignaturaInput(data, create = false) {
+  for (const key of ['horas_teoricas', 'horas_practicas']) {
+    if (!['number', 'string'].includes(typeof data[key]) || String(data[key]).trim() === '') fail('Completa las horas del catálogo; un valor omitido no significa cero.')
+  }
   const result = {
     nombre: text(data.nombre, 'Nombre de la asignatura', 100),
     codigo: text(data.codigo, 'Código', 20),
@@ -68,6 +71,7 @@ export function asignaturaInput(data, create = false) {
     horas_practicas: Number(data.horas_practicas),
   }
   if (!Number.isSafeInteger(result.horas_teoricas) || result.horas_teoricas < 0) fail('Horas teóricas deben ser mayores o iguales a 0.')
+  if (result.ano_estudio > 10) fail('El año de estudio debe estar entre 1 y 10.')
   if (!Number.isSafeInteger(result.horas_practicas) || result.horas_practicas < 0) fail('Horas prácticas deben ser mayores o iguales a 0.')
   if (create) {
     result.id_carrera = positiveId(data.id_carrera)
@@ -102,11 +106,14 @@ export function aulaInput(data, create = false) {
   return result
 }
 export function seccionInput(data, create = false) {
+  if (!Array.isArray(data.asignaturas)) fail('Envía la lista de asignaturas del grupo; una lista omitida no significa vaciarla.')
+  const year = positiveId(data.ano_estudio)
+  if (year > 10) fail('El año de estudio debe estar entre 1 y 10.')
   const result = {
     codigo: text(data.codigo, 'Código de la sección', 20),
-    ano_estudio: positiveId(data.ano_estudio),
+    ano_estudio: year,
     cantidad_estudiantes: positiveId(data.cantidad_estudiantes),
-    asignaturas: Array.isArray(data.asignaturas) ? [...new Set(data.asignaturas.map(positiveId))] : []
+    asignaturas: [...new Set(data.asignaturas.map(positiveId))]
   }
   if (create) {
     result.id_carrera = positiveId(data.id_carrera)
@@ -166,9 +173,17 @@ export function programacionInput(data) {
     requisito_laboratorio: boolean(data.requisito_laboratorio)
   }
 }
+export function programacionDetalleInput(data, update = false) {
+  const result = programacionInput(data)
+  if (!Array.isArray(data.recursos_requeridos) || data.recursos_requeridos.length > 100) fail('Selecciona los recursos obligatorios o indica ninguno.')
+  result.recursos_requeridos = data.recursos_requeridos.map(positiveId)
+  if (new Set(result.recursos_requeridos).size !== result.recursos_requeridos.length) fail('No repitas recursos obligatorios.')
+  if (update) result.id = positiveId(data.id)
+  return result
+}
 export function periodInput(data) {
   const result = {
-    nombre: text(data.nombre, 'Nombre del período', 50),
+    nombre: text(data.nombre, 'Nombre del semestre', 50),
     ano_lectivo: Number(data.ano_lectivo),
     fecha_inicio: data.fecha_inicio,
     fecha_fin: data.fecha_fin,

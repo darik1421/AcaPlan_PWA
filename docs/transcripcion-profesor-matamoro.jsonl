@@ -1,0 +1,473 @@
+{"metadata": {"source": "audio explicación profesor matamoro.m4a.mp4", "model": "faster-whisper small", "language": "es", "duration": 2634.4533125, "automatic": true}}
+{"start": 0.0, "end": 5.5, "text": "Las preguntas que le queríamos hacer es las primeras que la hora.", "avg_logprob": -0.6543196000158786, "no_speech_prob": 0.5394148230552673}
+{"start": 5.5, "end": 9.5, "text": "Uno de los datos me regalé en mi lugar.", "avg_logprob": -0.6543196000158786, "no_speech_prob": 0.5394148230552673}
+{"start": 9.5, "end": 12.5, "text": "Y para mí no tengo.", "avg_logprob": -0.6543196000158786, "no_speech_prob": 0.5394148230552673}
+{"start": 12.5, "end": 14.5, "text": "Sí, me dieron las preguntas.", "avg_logprob": -0.6543196000158786, "no_speech_prob": 0.5394148230552673}
+{"start": 14.5, "end": 16.5, "text": "Las preguntas son como 600, ¿no?", "avg_logprob": -0.6543196000158786, "no_speech_prob": 0.5394148230552673}
+{"start": 18.5, "end": 20.5, "text": "Son pocas.", "avg_logprob": -0.6543196000158786, "no_speech_prob": 0.5394148230552673}
+{"start": 24.5, "end": 27.5, "text": "Con respecto a las horas en el Lexen,", "avg_logprob": -0.6543196000158786, "no_speech_prob": 0.5394148230552673}
+{"start": 27.5, "end": 37.5, "text": "Una asignatura que tiene 56 horas, cuánto bloque te sienta el momento recibe por semana y durante cuantas semanas y qué significa la asignatura que se tiene o aparece en cuantas horas.", "avg_logprob": -0.586818191740248, "no_speech_prob": 0.5290193557739258}
+{"start": 37.5, "end": 45.5, "text": "Porque la información no la van a recepcionar todas. Bueno, si la grabando vamos bien.", "avg_logprob": -0.586818191740248, "no_speech_prob": 0.5290193557739258}
+{"start": 45.5, "end": 52.14, "text": "Bien, no le pare pelota la hora, la hora es una cuestión para la oración de", "avg_logprob": -0.2895649899257703, "no_speech_prob": 0.553142249584198}
+{"start": 52.14, "end": 58.74, "text": "contratos y eso solo lo tiene que manejar la gente de administración de la", "avg_logprob": -0.2895649899257703, "no_speech_prob": 0.553142249584198}
+{"start": 58.74, "end": 66.7, "text": "universidad, esto es lo que le pagan a un maestro, el maestro es horario, esos 42 es", "avg_logprob": -0.2895649899257703, "no_speech_prob": 0.553142249584198}
+{"start": 66.7, "end": 72.66, "text": "una cuestión económica, a usted no les interesa, para la oración de los", "avg_logprob": -0.2895649899257703, "no_speech_prob": 0.553142249584198}
+{"start": 72.66, "end": 77.92, "text": "lo que pasa es que como este archivo se ocupa para la elaboración de contratos entonces ahí aparece", "avg_logprob": -0.2681920865569452, "no_speech_prob": 0.49430522322654724}
+{"start": 77.92, "end": 84.4, "text": "reflejada, pero no es necesario que ustedes lo den. Bien, el archivo también que se les compartió", "avg_logprob": -0.2681920865569452, "no_speech_prob": 0.49430522322654724}
+{"start": 84.4, "end": 91.52, "text": "es un archivo no terminado, como son documentos oficiales de la universidad, yo les decía a la", "avg_logprob": -0.2681920865569452, "no_speech_prob": 0.49430522322654724}
+{"start": 91.52, "end": 98.84, "text": "profesora dice que no les podía compartir una organización oficial, compartí una que posiblemente", "avg_logprob": -0.2681920865569452, "no_speech_prob": 0.49430522322654724}
+{"start": 98.84, "end": 103.84, "text": "tiene errores, tiene algunos detalles y algunas cuestiones, no que ni que tal.", "avg_logprob": -0.3367714620616338, "no_speech_prob": 0.5266619920730591}
+{"start": 103.84, "end": 113.48, "text": "Vigo, usted lo que debe de manejar es que en el turno regular, una clase se divide o una", "avg_logprob": -0.3367714620616338, "no_speech_prob": 0.5266619920730591}
+{"start": 113.48, "end": 126.84, "text": "clase tiene dos bloques semanales, cada bloque son de 45 minutos, entonces reciben ustedes.", "avg_logprob": -0.3367714620616338, "no_speech_prob": 0.5266619920730591}
+{"start": 126.84, "end": 132.2, "text": "el horario este semestre pues de ocho a nueve y media el primer bloque eso cuando", "avg_logprob": -0.37157436694417684, "no_speech_prob": 0.38479873538017273}
+{"start": 132.2, "end": 141.52, "text": "son son 90 minutos entonces no somos 80 90 para el regular y cada clase tiene", "avg_logprob": -0.37157436694417684, "no_speech_prob": 0.38479873538017273}
+{"start": 141.52, "end": 146.6, "text": "dos bloques de 90 minutos enlaces mal", "avg_logprob": -0.37157436694417684, "no_speech_prob": 0.38479873538017273}
+{"start": 147.48, "end": 152.4, "text": "entonces las de ahí más adelante van a salir otras preguntas primero vamos a", "avg_logprob": -0.37157436694417684, "no_speech_prob": 0.38479873538017273}
+{"start": 152.4, "end": 161.2, "text": "en el regular son dos bloques de 90 minutos en encuentro que es viernes sábado y domingo el", "avg_logprob": -0.381304663006622, "no_speech_prob": 0.7434735894203186}
+{"start": 161.2, "end": 166.52, "text": "viernes es un turno que no existe para el onar managua eso sólo existe en el curso ontal", "avg_logprob": -0.381304663006622, "no_speech_prob": 0.7434735894203186}
+{"start": 166.52, "end": 173.2, "text": "ya pero el viernes no es un turno que a partir ni en el sistema se reconoce les aparece como", "avg_logprob": -0.381304663006622, "no_speech_prob": 0.7434735894203186}
+{"start": 173.2, "end": 180.0, "text": "en cuenta pues bien para que no entendamos en la realización porque todavía va a quedar como", "avg_logprob": -0.381304663006622, "no_speech_prob": 0.7434735894203186}
+{"start": 180.0, "end": 191.0, "text": "dos años más de gente que está estudiando los viernes, entonces lo tienen que incluir en el programa, en el club.", "avg_logprob": -0.3321854484242362, "no_speech_prob": 0.8219748735427856}
+{"start": 191.0, "end": 201.0, "text": "Entonces, viernes a de domingo, los bloques son de una hora, 60 minutos, cada clase 60 minutos", "avg_logprob": -0.3321854484242362, "no_speech_prob": 0.8219748735427856}
+{"start": 201.0, "end": 206.0, "text": "y hay 10 minutos de diferencia entre cada uno de los clases.", "avg_logprob": -0.3321854484242362, "no_speech_prob": 0.8219748735427856}
+{"start": 206.0, "end": 212.3, "text": "Ahora, muchas de las preguntas que me hicieron, si ustedes descargaban los horarios oficiales que ahí están pegados,", "avg_logprob": -0.2605852441689403, "no_speech_prob": 0.36275675892829895}
+{"start": 212.3, "end": 219.0, "text": "se las contestaban ustedes solitos, porque ahí miran cuánto es el bloque de cada clase.", "avg_logprob": -0.2605852441689403, "no_speech_prob": 0.36275675892829895}
+{"start": 219.0, "end": 226.0, "text": "En el regular, bloque de hora y media, y cada clase tiene dos bloques.", "avg_logprob": -0.2605852441689403, "no_speech_prob": 0.36275675892829895}
+{"start": 226.0, "end": 231.0, "text": "Repito, ahí vienen las preguntas otras, pero la voy a contestar de adelantado.", "avg_logprob": -0.2605852441689403, "no_speech_prob": 0.36275675892829895}
+{"start": 231.0, "end": 239.4, "text": "Hay clases que requieren que los dos bloques sean consecutivos pero eso lo solicitan los", "avg_logprob": -0.2363703259399959, "no_speech_prob": 0.2273615449666977}
+{"start": 239.4, "end": 248.52, "text": "coordinadores de carreras. De repente las prácticas de profesionalización o el seminario", "avg_logprob": -0.2363703259399959, "no_speech_prob": 0.2273615449666977}
+{"start": 248.52, "end": 255.0, "text": "de graduación. Hay carreras que solo llevan esas dos clases en quinto año y en el último", "avg_logprob": -0.2363703259399959, "no_speech_prob": 0.2273615449666977}
+{"start": 255.0, "end": 262.84, "text": "no se me. Entonces viene el coordinador y me solicita a mí como la persona que elabora", "avg_logprob": -0.254866324365139, "no_speech_prob": 0.7384876012802124}
+{"start": 262.84, "end": 266.28, "text": "los horarios. Bueno, le solicita a su café de departamento. Mire, digale al profesor", "avg_logprob": -0.254866324365139, "no_speech_prob": 0.7384876012802124}
+{"start": 266.28, "end": 271.72, "text": "Matamoros que yo necesito que estas dos clases queden lunes y miércoles y que queden juntas.", "avg_logprob": -0.254866324365139, "no_speech_prob": 0.7384876012802124}
+{"start": 271.72, "end": 277.8, "text": "Los lunes prácticas, los dos bloques juntos y miércoles seminarios, los dos bloques", "avg_logprob": -0.254866324365139, "no_speech_prob": 0.7384876012802124}
+{"start": 277.8, "end": 287.56, "text": "Y las carreras de medicina, todas las de salud, de licenciamoría, normalmente ellos hacen", "avg_logprob": -0.3688551291175511, "no_speech_prob": 0.7402644753456116}
+{"start": 287.56, "end": 294.48, "text": "una distribución de necesidad respecto a que los bloques queden juntos.", "avg_logprob": -0.3688551291175511, "no_speech_prob": 0.7402644753456116}
+{"start": 294.48, "end": 301.6, "text": "En lo particular creo que es por boluda de los maestros, pero ellos hacen sus justificaciones", "avg_logprob": -0.3688551291175511, "no_speech_prob": 0.7402644753456116}
+{"start": 301.6, "end": 309.6, "text": "y te piden, déjame una clase para esa ecología, necesito que sea junto a los doblos.", "avg_logprob": -0.359066414496591, "no_speech_prob": 0.4287277162075043}
+{"start": 309.6, "end": 317.6, "text": "Por eso es bien, esa lo que explica, el menos profesor bien es que se lo pide al coordinador y el más profesor bien y se lo pide a la policía.", "avg_logprob": -0.359066414496591, "no_speech_prob": 0.4287277162075043}
+{"start": 317.6, "end": 321.6, "text": "Al jefe del departamento se lo solicitan, el jefe del departamento autoriza,", "avg_logprob": -0.359066414496591, "no_speech_prob": 0.4287277162075043}
+{"start": 321.6, "end": 325.6, "text": "cuáles clases pueden ir unidas y cuáles no.", "avg_logprob": -0.359066414496591, "no_speech_prob": 0.4287277162075043}
+{"start": 325.6, "end": 327.6, "text": "El jefe del departamento vea eso.", "avg_logprob": -0.359066414496591, "no_speech_prob": 0.4287277162075043}
+{"start": 327.6, "end": 333.6, "text": "Pero bien, ¿qué le tenés que decir al programa, al gestor que están ustedes elaborando?", "avg_logprob": -0.2042955724141931, "no_speech_prob": 0.5566927194595337}
+{"start": 333.6, "end": 336.6, "text": "Que son dos bloques separados.", "avg_logprob": -0.2042955724141931, "no_speech_prob": 0.5566927194595337}
+{"start": 336.6, "end": 338.6, "text": "Son dos bloques separados.", "avg_logprob": -0.2042955724141931, "no_speech_prob": 0.5566927194595337}
+{"start": 338.6, "end": 344.6, "text": "Y dejar alguna opción que permita modificarlo.", "avg_logprob": -0.2042955724141931, "no_speech_prob": 0.5566927194595337}
+{"start": 344.6, "end": 348.6, "text": "Que para tal clase estos dos bloques, pero solamente si se solicita,", "avg_logprob": -0.2042955724141931, "no_speech_prob": 0.5566927194595337}
+{"start": 348.6, "end": 352.6, "text": "si no se solicita, él lo tiene que tirar separado.", "avg_logprob": -0.2042955724141931, "no_speech_prob": 0.5566927194595337}
+{"start": 352.6, "end": 370.6, "text": "Porque pedagógicamente esa es la idea del turno regular, que te miras dos veces en la semana con un grupo de clase, eso permite hacer tareas, dejar un espacio de trabajo, de pensamiento, procesamiento de la clase.", "avg_logprob": -0.2365127405417817, "no_speech_prob": 0.5275408029556274}
+{"start": 370.6, "end": 388.6, "text": "¿Cómo saben cuáles bloques o qué, qué grupo de estudiantes tiene la cantidad necesaria para dividir la sección?", "avg_logprob": -0.489958131685853, "no_speech_prob": 0.46183234453201294}
+{"start": 388.6, "end": 400.08, "text": "Bien, eso se mira con registro académico, la matrícula por grupo se proporciona antes", "avg_logprob": -0.2508834645152092, "no_speech_prob": 0.4573153257369995}
+{"start": 400.08, "end": 406.84, "text": "de cada semestre, cuántos estudiantes están matriculados en cada grupo y los horarios no", "avg_logprob": -0.2508834645152092, "no_speech_prob": 0.4573153257369995}
+{"start": 406.84, "end": 410.72, "text": "dependen de esa distribución, no es algo que te deberían de tomar en cuenta.", "avg_logprob": -0.2508834645152092, "no_speech_prob": 0.4573153257369995}
+{"start": 410.72, "end": 416.88, "text": "En la Unanmanagua si se tomen cuenta en el RUR, en el recinto central se tomen cuenta", "avg_logprob": -0.2508834645152092, "no_speech_prob": 0.4573153257369995}
+{"start": 416.88, "end": 421.2, "text": "pero por las distancias entre pabellones, pero aquí no me fregué,", "avg_logprob": -0.3633546682737641, "no_speech_prob": 0.2141573131084442}
+{"start": 421.2, "end": 426.88, "text": "moverte del pabellón, ponerle lo que habí de, que es esta área acá al final,", "avg_logprob": -0.3633546682737641, "no_speech_prob": 0.2141573131084442}
+{"start": 426.88, "end": 431.24, "text": "y te toca allá en el ESEI, que es la última del pabellón E,", "avg_logprob": -0.3633546682737641, "no_speech_prob": 0.2141573131084442}
+{"start": 431.24, "end": 434.88, "text": "vamos, tenés 10 minutos para llegar hasta allá, o sea,", "avg_logprob": -0.3633546682737641, "no_speech_prob": 0.2141573131084442}
+{"start": 434.88, "end": 437.44, "text": "no es determinante la posición de la habla,", "avg_logprob": -0.3633546682737641, "no_speech_prob": 0.2141573131084442}
+{"start": 437.44, "end": 444.08, "text": "la posición de la habla la determina administración de la universidad.", "avg_logprob": -0.3633546682737641, "no_speech_prob": 0.2141573131084442}
+{"start": 444.08, "end": 450.08, "text": "ellos encargan a una persona y él hace la ubicación de la habla.", "avg_logprob": -0.2760939041030741, "no_speech_prob": 0.3295253813266754}
+{"start": 450.08, "end": 453.08, "text": "En los últimos semestros también lo estaba haciendo yo.", "avg_logprob": -0.2760939041030741, "no_speech_prob": 0.3295253813266754}
+{"start": 453.08, "end": 457.08, "text": "Ya me dicen cuánto tiene cabelo que yo ya le digo a él.", "avg_logprob": -0.2760939041030741, "no_speech_prob": 0.3295253813266754}
+{"start": 457.08, "end": 463.08, "text": "Lo hacemos entre los dos porque él conoce algunas condiciones específicas y lo hacemos entre los dos.", "avg_logprob": -0.2760939041030741, "no_speech_prob": 0.3295253813266754}
+{"start": 463.08, "end": 468.08, "text": "Pero para ustedes, para su director, no es determinante", "avg_logprob": -0.2760939041030741, "no_speech_prob": 0.3295253813266754}
+{"start": 468.08, "end": 473.08, "text": "ni el número de estudiantes ni la ubicación de la habla.", "avg_logprob": -0.2760939041030741, "no_speech_prob": 0.3295253813266754}
+{"start": 473.08, "end": 477.08, "text": "es automatizar todo eso. Esa era la idea.", "avg_logprob": -0.28862496384051667, "no_speech_prob": 0.7294514179229736}
+{"start": 477.08, "end": 481.08, "text": "Sí, pero lo tendrías que alimentar con la cantidad de estudiantes.", "avg_logprob": -0.28862496384051667, "no_speech_prob": 0.7294514179229736}
+{"start": 481.08, "end": 484.08, "text": "Sí, exactamente. Por ejemplo, un Excel importarle directamente", "avg_logprob": -0.28862496384051667, "no_speech_prob": 0.7294514179229736}
+{"start": 484.08, "end": 486.08, "text": "cuando el estudiante tiene por cada habla", "avg_logprob": -0.28862496384051667, "no_speech_prob": 0.7294514179229736}
+{"start": 486.08, "end": 488.08, "text": "y qué habla se puede hacer un dividir.", "avg_logprob": -0.28862496384051667, "no_speech_prob": 0.7294514179229736}
+{"start": 488.08, "end": 493.08, "text": "Sí, lo que pasa es que ahí intervienen bastantes variables.", "avg_logprob": -0.28862496384051667, "no_speech_prob": 0.7294514179229736}
+{"start": 493.08, "end": 498.08, "text": "Creo que lo compleja... lo harían un poco más complejos.", "avg_logprob": -0.28862496384051667, "no_speech_prob": 0.7294514179229736}
+{"start": 498.08, "end": 502.08, "text": "Hay hablas que tienen televisores ya instaladas.", "avg_logprob": -0.28862496384051667, "no_speech_prob": 0.7294514179229736}
+{"start": 502.08, "end": 508.08, "text": "Es que el gestor de eso, nosotros estamos poniendo un componente que tenía los pabellones", "avg_logprob": -0.2886359691619873, "no_speech_prob": 0.52643221616745}
+{"start": 508.08, "end": 513.08, "text": "y la aula y que contenía cada aula para hacer la distribución automatizada.", "avg_logprob": -0.2886359691619873, "no_speech_prob": 0.52643221616745}
+{"start": 513.08, "end": 517.08, "text": "Bueno, agregálo entonces.", "avg_logprob": -0.2886359691619873, "no_speech_prob": 0.52643221616745}
+{"start": 517.08, "end": 522.08, "text": "Lo alimenta registro académico.", "avg_logprob": -0.2886359691619873, "no_speech_prob": 0.52643221616745}
+{"start": 522.08, "end": 527.08, "text": "El número de estudiantes lo tiene que dar registro académico. La cantidad de estudiantes.", "avg_logprob": -0.2886359691619873, "no_speech_prob": 0.52643221616745}
+{"start": 527.08, "end": 536.14, "text": "¿Cómo se va a salir el alimento de la vida?", "avg_logprob": -0.47755388843203056, "no_speech_prob": 0.7988236546516418}
+{"start": 542.14, "end": 544.14, "text": "¿Pregunten las preguntas?", "avg_logprob": -0.47755388843203056, "no_speech_prob": 0.7988236546516418}
+{"start": 545.14, "end": 548.14, "text": "¿Cómo se distribuye la teoría de las prácticas?", "avg_logprob": -0.47755388843203056, "no_speech_prob": 0.7988236546516418}
+{"start": 549.14, "end": 554.14, "text": "Eso es casi lo mismo de que hay bloques, por ejemplo, vioanálisis, que se dividen en grupo.", "avg_logprob": -0.47755388843203056, "no_speech_prob": 0.7988236546516418}
+{"start": 555.14, "end": 559.14, "text": "Un grupo viene aquí en la tarde, mientras otro no ha sido de clase, otro día le toca otro grupo en la tarde, etc.", "avg_logprob": -0.47755388843203056, "no_speech_prob": 0.7988236546516418}
+{"start": 559.14, "end": 562.14, "text": "Bueno, porque la otra es pequeña, sí es metidógrafa.", "avg_logprob": -0.2760751173668301, "no_speech_prob": 0.6190598607063293}
+{"start": 566.14, "end": 572.14, "text": "Via análisis clínico y las otras carreras que reciben laboratorio,", "avg_logprob": -0.2760751173668301, "no_speech_prob": 0.6190598607063293}
+{"start": 572.14, "end": 576.14, "text": "la distribución, pero son carreras muy muy específicas.", "avg_logprob": -0.2760751173668301, "no_speech_prob": 0.6190598607063293}
+{"start": 576.14, "end": 582.14, "text": "El turno de ellos aparece en la matriz, en el excel, aparece como diurno.", "avg_logprob": -0.2760751173668301, "no_speech_prob": 0.6190598607063293}
+{"start": 583.14, "end": 588.14, "text": "Diurno es que reciben clases todo el día, siempre y cuando sea necesario.", "avg_logprob": -0.2760751173668301, "no_speech_prob": 0.6190598607063293}
+{"start": 589.14, "end": 597.14, "text": "Y normalmente se sucede con el Departamento de Ciencia, Tecnología y Salud.", "avg_logprob": -0.280666996882512, "no_speech_prob": 0.6031822562217712}
+{"start": 597.14, "end": 601.14, "text": "La carrera de agriindustria tiene turno de urgen.", "avg_logprob": -0.280666996882512, "no_speech_prob": 0.6031822562217712}
+{"start": 601.14, "end": 608.14, "text": "Pero no es todo lo semestre, es en algunos semestres específicos donde ellos lleven.", "avg_logprob": -0.280666996882512, "no_speech_prob": 0.6031822562217712}
+{"start": 608.14, "end": 624.74, "text": "de análisis clínicos, enfermería, medicina, cuál es la otra, odontología, tienen turno", "avg_logprob": -0.3581543735883854, "no_speech_prob": 0.4224497973918915}
+{"start": 624.74, "end": 637.38, "text": "diurno, entonces normalmente ellos tienen clases, si no sé si revisaron en el programa, pero", "avg_logprob": -0.3581543735883854, "no_speech_prob": 0.4224497973918915}
+{"start": 637.38, "end": 645.26, "text": "aparece una que dice parasitología, teoría y aparece otro bloque que se llama parasitología", "avg_logprob": -0.3883489900165134, "no_speech_prob": 0.423386812210083}
+{"start": 645.26, "end": 653.98, "text": "práctica. Entonces, ambas son dos bloques cada uno. Entonces ellos dividen...", "avg_logprob": -0.3883489900165134, "no_speech_prob": 0.423386812210083}
+{"start": 653.98, "end": 674.5, "text": "O un cuaderno ahí para mostrarles la distribución.", "avg_logprob": -0.412677572454725, "no_speech_prob": 0.5855132341384888}
+{"start": 674.5, "end": 689.57, "text": "Entonces, tienen una clase que aparece, clase teoría y clase práctica.", "avg_logprob": -0.412677572454725, "no_speech_prob": 0.5855132341384888}
+{"start": 689.57, "end": 701.41, "text": "Entonces ellos lo que hacen es dividir esto como legalmente debería ser dos y dos, dos", "avg_logprob": -0.22147192863317636, "no_speech_prob": 0.6626185774803162}
+{"start": 701.41, "end": 709.29, "text": "bloques cada uno, pero entonces ellos dejan un bloque de teoría y tres bloques de práctica.", "avg_logprob": -0.22147192863317636, "no_speech_prob": 0.6626185774803162}
+{"start": 709.29, "end": 715.53, "text": "Entonces qué es lo que hacen, si la carrera recibe clase en el turno matutino, en el matutino", "avg_logprob": -0.22147192863317636, "no_speech_prob": 0.6626185774803162}
+{"start": 715.53, "end": 725.29, "text": "dejan la teoría y en el turno alterno dejan los tres bloques de práctica, pero ellos hacen", "avg_logprob": -0.2212188115868813, "no_speech_prob": 0.6166977882385254}
+{"start": 725.29, "end": 731.85, "text": "la subdivisión, el maestro, aquí tienen la clase práctica, clase práctica, clase práctica,", "avg_logprob": -0.2212188115868813, "no_speech_prob": 0.6166977882385254}
+{"start": 731.85, "end": 739.17, "text": "vos en el horario se los vas a dejar con sus tres bloques de clase práctica, pero ellos", "avg_logprob": -0.2212188115868813, "no_speech_prob": 0.6166977882385254}
+{"start": 739.17, "end": 747.61, "text": "subdividen a la sección entre entre sus grupos, pero lo hace el maestro, vos solo", "avg_logprob": -0.332668496716407, "no_speech_prob": 0.7500616312026978}
+{"start": 747.61, "end": 753.45, "text": "tenés que dejar ubicar, esto es como que dejar aquí, clase de teoría, clase de teoría.", "avg_logprob": -0.332668496716407, "no_speech_prob": 0.7500616312026978}
+{"start": 753.45, "end": 758.77, "text": "Están todos en la misma sección y en la tarde el maestro divide los tres", "avg_logprob": -0.332668496716407, "no_speech_prob": 0.7500616312026978}
+{"start": 758.77, "end": 765.53, "text": "grupos, los atiende por su grupo. Entonces lo que sí tienen que tener en cuenta es", "avg_logprob": -0.332668496716407, "no_speech_prob": 0.7500616312026978}
+{"start": 765.53, "end": 771.81, "text": "que al final, yo en el programa que utilizo para esto, yo le digo que la clase teórica", "avg_logprob": -0.3744123865056921, "no_speech_prob": 0.6390919089317322}
+{"start": 771.81, "end": 781.01, "text": "es un solo bloque a la semana, y a la clase práctica yo le agrego tres bloques. Entonces", "avg_logprob": -0.3744123865056921, "no_speech_prob": 0.6390919089317322}
+{"start": 781.01, "end": 785.49, "text": "cambio, este segundo bloque de teoría lo cambio por una clase de prácticas.", "avg_logprob": -0.3744123865056921, "no_speech_prob": 0.6390919089317322}
+{"start": 785.49, "end": 788.65, "text": "¿De los tres manpas a la tarde, no para el mismo día?", "avg_logprob": -0.3744123865056921, "no_speech_prob": 0.6390919089317322}
+{"start": 788.65, "end": 791.29, "text": "Normalmente se deja el mismo día.", "avg_logprob": -0.3744123865056921, "no_speech_prob": 0.6390919089317322}
+{"start": 791.29, "end": 792.29, "text": "¿Los tres horas?", "avg_logprob": -0.3744123865056921, "no_speech_prob": 0.6390919089317322}
+{"start": 792.29, "end": 801.95, "text": "lo que tienen que saber es que por ejemplo para como se llama vianálisis clínico, el laboratorio de", "avg_logprob": -0.24665670945893886, "no_speech_prob": 0.6450718641281128}
+{"start": 801.95, "end": 809.95, "text": "vianálisis tiene dos áreas, o sea es como que hayan dos laboratorios, entonces si el mismo día se", "avg_logprob": -0.24665670945893886, "no_speech_prob": 0.6450718641281128}
+{"start": 809.95, "end": 817.33, "text": "pueden atender a dos carreras o dos años distintos, ya quita el lunes, el lunes le tocaron las tres", "avg_logprob": -0.24665670945893886, "no_speech_prob": 0.6450718641281128}
+{"start": 817.33, "end": 823.57, "text": "prácticas a primer año, pero a esa misma hora también puede estar segundo", "avg_logprob": -0.2549727430048677, "no_speech_prob": 0.6660866141319275}
+{"start": 823.57, "end": 827.25, "text": "año, ¿por qué? porque hay dos áreas, el laboratorio está dividido en dos, es como", "avg_logprob": -0.2549727430048677, "no_speech_prob": 0.6660866141319275}
+{"start": 827.25, "end": 834.9, "text": "que hay en dos laboratorios de vianálisis, no sucede eso para", "avg_logprob": -0.2549727430048677, "no_speech_prob": 0.6660866141319275}
+{"start": 834.9, "end": 840.3, "text": "ontología porque es un solo laboratorio, no sucede eso para", "avg_logprob": -0.2549727430048677, "no_speech_prob": 0.6660866141319275}
+{"start": 840.3, "end": 844.94, "text": "industria porque es un solo laboratorio, el único que tiene como que", "avg_logprob": -0.2549727430048677, "no_speech_prob": 0.6660866141319275}
+{"start": 844.94, "end": 854.54, "text": "que tuviera dos laboratorios es Vianálisis, es como la carrera de este, ya.", "avg_logprob": -0.4398995283283765, "no_speech_prob": 0.2764664590358734}
+{"start": 854.54, "end": 860.74, "text": "Que están los dos laboratorios de V5, V4 y V9, hay el NIEV y el E1.", "avg_logprob": -0.4398995283283765, "no_speech_prob": 0.2764664590358734}
+{"start": 860.74, "end": 865.78, "text": "Son cinco laboratorios de computación los que hay, ese tipo de cosas las tienen que saber,", "avg_logprob": -0.4398995283283765, "no_speech_prob": 0.2764664590358734}
+{"start": 865.78, "end": 875.78, "text": "computación son cinco laboratorios, uno a nueve, C2, B4 y B5, ahí donde es", "avg_logprob": -0.33567407623279927, "no_speech_prob": 0.6009418368339539}
+{"start": 875.78, "end": 880.38, "text": "inglés eso es ahora un laboratorio de computación, el laboratorio de inglés y", "avg_logprob": -0.33567407623279927, "no_speech_prob": 0.6009418368339539}
+{"start": 880.38, "end": 888.58, "text": "de computación. En el turno inglés tiene una carrera de", "avg_logprob": -0.33567407623279927, "no_speech_prob": 0.6009418368339539}
+{"start": 888.58, "end": 894.22, "text": "un turno regular, ellos en la mañana ahí recibe un look pero en la tarde si se", "avg_logprob": -0.33567407623279927, "no_speech_prob": 0.6009418368339539}
+{"start": 894.22, "end": 899.36, "text": "necesitas lo puedo ocupar cualquier carrera para recibir como se llama ahora", "avg_logprob": -0.425166818300883, "no_speech_prob": 0.45918598771095276}
+{"start": 899.36, "end": 906.34, "text": "ofimática, ofimática. En la tarde, los viernes, los sábados que no hay", "avg_logprob": -0.425166818300883, "no_speech_prob": 0.45918598771095276}
+{"start": 906.34, "end": 912.1, "text": "grupos de inglesa y pueden ocuparse el laboratorio.", "avg_logprob": -0.425166818300883, "no_speech_prob": 0.45918598771095276}
+{"start": 913.06, "end": 917.86, "text": "Entonces son cinco laboratorios de computación, ¿qué más?", "avg_logprob": -0.425166818300883, "no_speech_prob": 0.45918598771095276}
+{"start": 917.86, "end": 920.86, "text": "Está bueno el tema, ¿no?", "avg_logprob": -0.31957960526148477, "no_speech_prob": 0.6556097269058228}
+{"start": 920.86, "end": 925.86, "text": "El oradeo se la pide todas las semanas, las clases, las clases mantienen los mismos días", "avg_logprob": -0.31957960526148477, "no_speech_prob": 0.6556097269058228}
+{"start": 925.86, "end": 929.86, "text": "y horas durante el semestre o el sitio de asignaturas que cambian de semana,", "avg_logprob": -0.31957960526148477, "no_speech_prob": 0.6556097269058228}
+{"start": 929.86, "end": 934.86, "text": "¿se imparten por encuentro o solo durante una parte del semestre?", "avg_logprob": -0.31957960526148477, "no_speech_prob": 0.6556097269058228}
+{"start": 934.86, "end": 939.86, "text": "No, a ver, eso le estoy diciendo a Luis Amar, eso fue una de las preguntas que me dio riso,", "avg_logprob": -0.31957960526148477, "no_speech_prob": 0.6556097269058228}
+{"start": 939.86, "end": 942.86, "text": "también parece que no son estudiantes de la universidad.", "avg_logprob": -0.31957960526148477, "no_speech_prob": 0.6556097269058228}
+{"start": 942.86, "end": 950.86, "text": "cuando les han cambiado su horario, el horario es de una semana y ese cumple para las 14 semanas del semestre.", "avg_logprob": -0.21615311872391474, "no_speech_prob": 0.7068924307823181}
+{"start": 951.86, "end": 956.86, "text": "Ahora todos los semestres eso puede cambiar porque a veces el semestre tiene 15 semanas,", "avg_logprob": -0.21615311872391474, "no_speech_prob": 0.7068924307823181}
+{"start": 956.86, "end": 962.86, "text": "a veces tiene 14, a veces tiene 13, pero eso es una orientación de la gestión de London Managua", "avg_logprob": -0.21615311872391474, "no_speech_prob": 0.7068924307823181}
+{"start": 962.86, "end": 969.86, "text": "pero a mí no me interesa cuántas semanas tenga el semestre, yo hago el horario de una sola semana", "avg_logprob": -0.21615311872391474, "no_speech_prob": 0.7068924307823181}
+{"start": 969.86, "end": 978.89, "text": "y ese horario se va a repetir todo el semestre, sin importar cuántas semanas tengo.", "avg_logprob": -0.25304346127169475, "no_speech_prob": 0.4169122874736786}
+{"start": 978.89, "end": 983.89, "text": "¿Quién registra y confirma la disponibilidad de los profesores?", "avg_logprob": -0.25304346127169475, "no_speech_prob": 0.4169122874736786}
+{"start": 983.89, "end": 988.89, "text": "Por ejemplo, en el aspecto de los docentes horarios, la disponibilidad,", "avg_logprob": -0.25304346127169475, "no_speech_prob": 0.4169122874736786}
+{"start": 988.89, "end": 992.89, "text": "porque ha visto que hay docentes que imparten en varias accionaturas, varias carreras.", "avg_logprob": -0.25304346127169475, "no_speech_prob": 0.4169122874736786}
+{"start": 992.89, "end": 996.89, "text": "¿Ustedes tienen que dejar un espacio que yo le llamo restricción?", "avg_logprob": -0.25304346127169475, "no_speech_prob": 0.4169122874736786}
+{"start": 996.89, "end": 999.89, "text": "Sí, que eso no lo menciono, que por ejemplo la profesora Dolores,", "avg_logprob": -0.25304346127169475, "no_speech_prob": 0.4169122874736786}
+{"start": 999.89, "end": 1001.89, "text": "que también la clase de otro lugar...", "avg_logprob": -0.25304346127169475, "no_speech_prob": 0.4169122874736786}
+{"start": 1001.89, "end": 1006.89, "text": "Yo sé las restricciones, yo sé las pasas a mi jefe de departamento, cada jefe de departamento", "avg_logprob": -0.19363677893814288, "no_speech_prob": 0.5169147253036499}
+{"start": 1006.89, "end": 1011.89, "text": "tiene una restricción, un conjunto de restricciones respecto a los maestros horarios.", "avg_logprob": -0.19363677893814288, "no_speech_prob": 0.5169147253036499}
+{"start": 1011.89, "end": 1019.89, "text": "Entonces, en su sistema de gestión debería haber un espacio donde a la parte de cada", "avg_logprob": -0.19363677893814288, "no_speech_prob": 0.5169147253036499}
+{"start": 1019.89, "end": 1027.89, "text": "nombre de los docentes, sobre todo los horarios, poder darle una restricción específica.", "avg_logprob": -0.19363677893814288, "no_speech_prob": 0.5169147253036499}
+{"start": 1027.89, "end": 1030.89, "text": "Ese también ya lo tenemos en la lista de la implementación.", "avg_logprob": -0.19363677893814288, "no_speech_prob": 0.5169147253036499}
+{"start": 1030.89, "end": 1036.89, "text": "Pero eso lo deberían de dejar, es que yo no sé al final como lo piensen ustedes.", "avg_logprob": -0.26725933682016967, "no_speech_prob": 0.8095505237579346}
+{"start": 1036.89, "end": 1040.89, "text": "Yo creo que deberían de haber dos permisos para ese programa.", "avg_logprob": -0.26725933682016967, "no_speech_prob": 0.8095505237579346}
+{"start": 1040.89, "end": 1045.89, "text": "Uno que lo tengan los jefes de departamento que puedan agregar esas restricciones.", "avg_logprob": -0.26725933682016967, "no_speech_prob": 0.8095505237579346}
+{"start": 1045.89, "end": 1051.89, "text": "Es que los jefes de departamento van a importar también a sus propios profesores de cada asignatura y de sus semestres.", "avg_logprob": -0.26725933682016967, "no_speech_prob": 0.8095505237579346}
+{"start": 1051.89, "end": 1056.89, "text": "Ahí se van a poner al brinco porque si, lo que no quieren ellos es trabajar.", "avg_logprob": -0.26725933682016967, "no_speech_prob": 0.8095505237579346}
+{"start": 1056.89, "end": 1062.85, "text": "por eso buscan aún el clavo como yo pero pero bien por lo menos las restricciones", "avg_logprob": -0.25839269862455483, "no_speech_prob": 0.6511873602867126}
+{"start": 1062.85, "end": 1070.77, "text": "deberían de dar las ellas las restricciones para para sus docentes", "avg_logprob": -0.25839269862455483, "no_speech_prob": 0.6511873602867126}
+{"start": 1070.77, "end": 1075.09, "text": "horarios cada coordinador le alimenta a él cuáles son las restricciones por", "avg_logprob": -0.25839269862455483, "no_speech_prob": 0.6511873602867126}
+{"start": 1075.09, "end": 1082.21, "text": "ejemplo yo le tengo que decir para mi 9 docentes horarios a excepción de dos que", "avg_logprob": -0.25839269862455483, "no_speech_prob": 0.6511873602867126}
+{"start": 1082.21, "end": 1086.85, "text": "trabajan acá en la universidad todos los demás tienen restricción", "avg_logprob": -0.25839269862455483, "no_speech_prob": 0.6511873602867126}
+{"start": 1086.85, "end": 1090.73, "text": "Los docentes horarios que hay identificados lo único tienen, pero lo que sé que los", "avg_logprob": -0.32745096309125915, "no_speech_prob": 0.6224279403686523}
+{"start": 1090.73, "end": 1094.09, "text": "maestros de planta tienen un carnet de número de identificación.", "avg_logprob": -0.32745096309125915, "no_speech_prob": 0.6224279403686523}
+{"start": 1094.09, "end": 1096.73, "text": "Igual lo tienen los docentes horarios.", "avg_logprob": -0.32745096309125915, "no_speech_prob": 0.6224279403686523}
+{"start": 1096.73, "end": 1104.21, "text": "Es que el número de carnet es el número INS de nosotros.", "avg_logprob": -0.32745096309125915, "no_speech_prob": 0.6224279403686523}
+{"start": 1104.21, "end": 1110.05, "text": "El número de carnet no andas tu carnet, yo ahora no lo uso, pero el número de carnet", "avg_logprob": -0.32745096309125915, "no_speech_prob": 0.6224279403686523}
+{"start": 1110.05, "end": 1116.73, "text": "de nosotros es el INS, entonces a los docentes horarios también tienen INS, pero", "avg_logprob": -0.32745096309125915, "no_speech_prob": 0.6224279403686523}
+{"start": 1116.73, "end": 1119.73, "text": "lo pueden dejar como carnet.", "avg_logprob": -0.4083077708880107, "no_speech_prob": 0.5933886170387268}
+{"start": 1128.73, "end": 1135.73, "text": "No tiene carnet, pero el carnet cuando él se lo venera es el número de índices.", "avg_logprob": -0.4083077708880107, "no_speech_prob": 0.5933886170387268}
+{"start": 1136.73, "end": 1141.73, "text": "Pero lo podrían dejar con cédulas, eso no es relevante.", "avg_logprob": -0.4083077708880107, "no_speech_prob": 0.5933886170387268}
+{"start": 1141.73, "end": 1146.73, "text": "Si hay un valor, un ID que no se repite, es la cédula.", "avg_logprob": -0.43014560585672207, "no_speech_prob": 0.7358870506286621}
+{"start": 1146.73, "end": 1150.73, "text": "La cédula es la mejor, porque estará ganando profesores por nombre.", "avg_logprob": -0.43014560585672207, "no_speech_prob": 0.7358870506286621}
+{"start": 1150.73, "end": 1153.73, "text": "Un jefe de área puede poner un nombre y otro otro y se genera.", "avg_logprob": -0.43014560585672207, "no_speech_prob": 0.7358870506286621}
+{"start": 1153.73, "end": 1156.73, "text": "Puede hacer el mismo profesor con dos nombres diferentes y va y chocó.", "avg_logprob": -0.43014560585672207, "no_speech_prob": 0.7358870506286621}
+{"start": 1156.73, "end": 1160.73, "text": "Entonces me voy a poner identificador único y voy a jugar con cédula.", "avg_logprob": -0.43014560585672207, "no_speech_prob": 0.7358870506286621}
+{"start": 1160.73, "end": 1162.73, "text": "Y la demás te juntan.", "avg_logprob": -0.43014560585672207, "no_speech_prob": 0.7358870506286621}
+{"start": 1171.73, "end": 1179.73, "text": "¿Qué se hace cuando no se conoce la disponibilidad del docente?", "avg_logprob": -0.2790391445159912, "no_speech_prob": 0.5701956748962402}
+{"start": 1179.73, "end": 1182.73, "text": "¿Cómo?", "avg_logprob": -0.2790391445159912, "no_speech_prob": 0.5701956748962402}
+{"start": 1182.73, "end": 1187.73, "text": "Por ejemplo...", "avg_logprob": -0.2790391445159912, "no_speech_prob": 0.5701956748962402}
+{"start": 1187.73, "end": 1196.73, "text": "Los docentes de plata tenemos que tener disponibilidad en cualquier turno, en cualquier horario.", "avg_logprob": -0.2790391445159912, "no_speech_prob": 0.5701956748962402}
+{"start": 1196.73, "end": 1199.73, "text": "Un docente de plata no debe de poner restricción.", "avg_logprob": -0.2790391445159912, "no_speech_prob": 0.5701956748962402}
+{"start": 1199.73, "end": 1200.73, "text": "¿Y los de oro?", "avg_logprob": -0.2790391445159912, "no_speech_prob": 0.5701956748962402}
+{"start": 1200.73, "end": 1209.41, "text": "algunos los ponen pero caso específico y aún así eso es un rollo", "avg_logprob": -0.31975586453209753, "no_speech_prob": 0.3348717987537384}
+{"start": 1209.41, "end": 1213.37, "text": "es más se ha dicho en 20.000 reuniones que ningún docente de planta puede estar", "avg_logprob": -0.31975586453209753, "no_speech_prob": 0.3348717987537384}
+{"start": 1213.37, "end": 1217.45, "text": "pidiendo un horario específico se maneja igual de los de planta", "avg_logprob": -0.31975586453209753, "no_speech_prob": 0.3348717987537384}
+{"start": 1217.45, "end": 1222.41, "text": "entonces en el caso de los horarios los horarios si tienen restricciones pero", "avg_logprob": -0.31975586453209753, "no_speech_prob": 0.3348717987537384}
+{"start": 1222.41, "end": 1226.21, "text": "solamente si lo pasan si no te pasan entonces", "avg_logprob": -0.31975586453209753, "no_speech_prob": 0.3348717987537384}
+{"start": 1226.21, "end": 1231.21, "text": "Yo tengo un docente, Pedro, Romero,", "avg_logprob": -0.21025847734474554, "no_speech_prob": 0.5789589285850525}
+{"start": 1231.21, "end": 1235.21, "text": "él no tiene ninguna restricción,", "avg_logprob": -0.21025847734474554, "no_speech_prob": 0.5789589285850525}
+{"start": 1235.21, "end": 1238.21, "text": "porque él puede trabajar en la mañana, en la tarde, en la noche,", "avg_logprob": -0.21025847734474554, "no_speech_prob": 0.5789589285850525}
+{"start": 1238.21, "end": 1241.21, "text": "los viernes, los sábados, los domingos, donde le caiga.", "avg_logprob": -0.21025847734474554, "no_speech_prob": 0.5789589285850525}
+{"start": 1241.21, "end": 1244.21, "text": "Como yo soy el que le asigno,", "avg_logprob": -0.21025847734474554, "no_speech_prob": 0.5789589285850525}
+{"start": 1244.21, "end": 1247.21, "text": "yo como coordinador le asigno, qué grupo va a tener,", "avg_logprob": -0.21025847734474554, "no_speech_prob": 0.5789589285850525}
+{"start": 1247.21, "end": 1250.21, "text": "entonces yo trato de dejarlo a él,", "avg_logprob": -0.21025847734474554, "no_speech_prob": 0.5789589285850525}
+{"start": 1250.21, "end": 1253.21, "text": "pero eso ya lo hace el coordinador, no es parte del horario,", "avg_logprob": -0.21025847734474554, "no_speech_prob": 0.5789589285850525}
+{"start": 1253.21, "end": 1259.21, "text": "Yo trato de dejarlo a él que no venga en la mañana, en la tarde o en la noche, porque es mala onda estar en la semana.", "avg_logprob": -0.2898846707602804, "no_speech_prob": 0.7308661341667175}
+{"start": 1259.21, "end": 1265.21, "text": "Entonces yo le trato de dejar clase en viernes y sábado o si lo dejo en dos días, que le queden en dos días.", "avg_logprob": -0.2898846707602804, "no_speech_prob": 0.7308661341667175}
+{"start": 1265.21, "end": 1271.21, "text": "Entonces yo lo hago, así como podría haber una asignación. Eso ya va en el Excel.", "avg_logprob": -0.2898846707602804, "no_speech_prob": 0.7308661341667175}
+{"start": 1271.21, "end": 1280.21, "text": "Pedro Romero ya lleva, tiene estas cuatro clases, dos son de sábado, dos son de domingo, para que no venga toda la semana.", "avg_logprob": -0.2898846707602804, "no_speech_prob": 0.7308661341667175}
+{"start": 1283.21, "end": 1289.93, "text": "en el caso de ese profesor también tiene el mismo sistema que puede poner la restricción.", "avg_logprob": -0.3395331082957806, "no_speech_prob": 0.5990241765975952}
+{"start": 1289.93, "end": 1297.81, "text": "Sí, lo que te decía es que lo que sí deberían de hacer es que si usted le danos permiso", "avg_logprob": -0.3395331082957806, "no_speech_prob": 0.5990241765975952}
+{"start": 1297.81, "end": 1305.13, "text": "de poner las restricciones a los coordinadores, se va a volver un desastre, se va a volver", "avg_logprob": -0.3395331082957806, "no_speech_prob": 0.5990241765975952}
+{"start": 1305.13, "end": 1310.89, "text": "un clavo. Las restricciones deberían de tener permiso solo a los jefes de departamento.", "avg_logprob": -0.3395331082957806, "no_speech_prob": 0.5990241765975952}
+{"start": 1310.89, "end": 1315.89, "text": "Los coordinadores se los pasamos a los jefes y los jefes meten las restricciones.", "avg_logprob": -0.23813395423348993, "no_speech_prob": 0.49819573760032654}
+{"start": 1315.89, "end": 1321.89, "text": "No dejen que el coordinador sólo pueda jalar o hacer la asignación.", "avg_logprob": -0.23813395423348993, "no_speech_prob": 0.49819573760032654}
+{"start": 1321.89, "end": 1322.89, "text": "Ya te lo voy a decir.", "avg_logprob": -0.23813395423348993, "no_speech_prob": 0.49819573760032654}
+{"start": 1322.89, "end": 1324.89, "text": "Ya puedo decir, este profesor tiene esta clase.", "avg_logprob": -0.23813395423348993, "no_speech_prob": 0.49819573760032654}
+{"start": 1324.89, "end": 1326.89, "text": "Este profesor tiene esta clase.", "avg_logprob": -0.23813395423348993, "no_speech_prob": 0.49819573760032654}
+{"start": 1326.89, "end": 1331.89, "text": "Yo como coordinador tengo a quince maestros y tengo que hacer la asignación de esos quince maestros.", "avg_logprob": -0.23813395423348993, "no_speech_prob": 0.49819573760032654}
+{"start": 1331.89, "end": 1336.89, "text": "El otro coordinador tiene cuatro, hace la asignación de sus cuatro y así.", "avg_logprob": -0.23813395423348993, "no_speech_prob": 0.49819573760032654}
+{"start": 1336.89, "end": 1345.13, "text": "Es decir, que cada coordinador solo haga la asignación de los docentes y las clases que van a...", "avg_logprob": -0.36266900991138656, "no_speech_prob": 0.6760859489440918}
+{"start": 1345.13, "end": 1353.13, "text": "... y las restricciones dejan un permiso especial, no sé, alguna contraseña a algo, o un permiso específico", "avg_logprob": -0.36266900991138656, "no_speech_prob": 0.6760859489440918}
+{"start": 1353.13, "end": 1356.13, "text": "que solo lo puedan hacer los jefes de departamento.", "avg_logprob": -0.36266900991138656, "no_speech_prob": 0.6760859489440918}
+{"start": 1356.13, "end": 1360.25, "text": "de las funciones como, por ejemplo, el que nos dio la oposición de hablar de la última", "avg_logprob": -0.5067496670143945, "no_speech_prob": 0.6484242081642151}
+{"start": 1360.25, "end": 1365.79, "text": "hora, tenemos que pensar en dejarlo de uso de vistas públicas, porque si se le está", "avg_logprob": -0.5067496670143945, "no_speech_prob": 0.6484242081642151}
+{"start": 1365.79, "end": 1371.29, "text": "dando, por ejemplo, supongo que ustedes clasen la oposición de Samar también se da a", "avg_logprob": -0.5067496670143945, "no_speech_prob": 0.6484242081642151}
+{"start": 1371.29, "end": 1375.77, "text": "usted de algo, pero usted le pone que no puede dar clasen la última hora para darle", "avg_logprob": -0.5067496670143945, "no_speech_prob": 0.6484242081642151}
+{"start": 1375.77, "end": 1379.21, "text": "el chance de que se mueva, y ella es la que en la última hora, entonces ella,", "avg_logprob": -0.5067496670143945, "no_speech_prob": 0.6484242081642151}
+{"start": 1379.21, "end": 1382.69, "text": "la oposición de Samar, podría haber que la última hora ya esté restringida", "avg_logprob": -0.5067496670143945, "no_speech_prob": 0.6484242081642151}
+{"start": 1382.69, "end": 1391.57, "text": "es que que lo miremos está bien pero no que lo podamos editar o sea que lo miremos y yo miro la", "avg_logprob": -0.28081861734390257, "no_speech_prob": 0.6273033022880554}
+{"start": 1391.57, "end": 1400.45, "text": "restricción este profesor no puede dar clases no puede dar clases en el último bloque de la mañana", "avg_logprob": -0.28081861734390257, "no_speech_prob": 0.6273033022880554}
+{"start": 1400.45, "end": 1408.01, "text": "puede cualquier día pero no en el último bloque de la mañana correcto ahí es donde voy yo que", "avg_logprob": -0.28081861734390257, "no_speech_prob": 0.6273033022880554}
+{"start": 1408.01, "end": 1412.81, "text": "pero que la restricción solo se la pueda asignar los tres jefes de departamento", "avg_logprob": -0.3373465194976587, "no_speech_prob": 0.42562663555145264}
+{"start": 1412.81, "end": 1417.77, "text": "cualquiera de los tres, que acceso a poner una restricción a un maestro", "avg_logprob": -0.3373465194976587, "no_speech_prob": 0.42562663555145264}
+{"start": 1417.77, "end": 1419.61, "text": "solo tengan los jefes de departamento.", "avg_logprob": -0.3373465194976587, "no_speech_prob": 0.42562663555145264}
+{"start": 1419.61, "end": 1422.01, "text": "¿Cuánto role al de existente realmente?", "avg_logprob": -0.3373465194976587, "no_speech_prob": 0.42562663555145264}
+{"start": 1422.01, "end": 1426.01, "text": "Por ejemplo esta administración, que sería...", "avg_logprob": -0.3373465194976587, "no_speech_prob": 0.42562663555145264}
+{"start": 1426.01, "end": 1427.61, "text": "¿Cómo es que se le dicen?", "avg_logprob": -0.3373465194976587, "no_speech_prob": 0.42562663555145264}
+{"start": 1427.61, "end": 1429.41, "text": "Administrativo.", "avg_logprob": -0.3373465194976587, "no_speech_prob": 0.42562663555145264}
+{"start": 1429.41, "end": 1431.01, "text": "¿Qué es la parte de la aula que hacemos?", "avg_logprob": -0.3373465194976587, "no_speech_prob": 0.42562663555145264}
+{"start": 1431.01, "end": 1432.61, "text": "No, no, no.", "avg_logprob": -0.3373465194976587, "no_speech_prob": 0.42562663555145264}
+{"start": 1432.61, "end": 1434.21, "text": "¿El rol de los docentes?", "avg_logprob": -0.3373465194976587, "no_speech_prob": 0.42562663555145264}
+{"start": 1434.21, "end": 1436.21, "text": "El rol de los docentes.", "avg_logprob": -0.3373465194976587, "no_speech_prob": 0.42562663555145264}
+{"start": 1436.21, "end": 1443.21, "text": "Están los jefes de área, los coordinadores de carrera, los jefes de departamento", "avg_logprob": -0.3941967519124349, "no_speech_prob": 0.42968839406967163}
+{"start": 1443.21, "end": 1447.46, "text": "y arriba de eso está la Secretaría Académica.", "avg_logprob": -0.3941967519124349, "no_speech_prob": 0.42968839406967163}
+{"start": 1447.46, "end": 1452.46, "text": "Sí, se podría decir.", "avg_logprob": -0.3941967519124349, "no_speech_prob": 0.42968839406967163}
+{"start": 1452.46, "end": 1458.46, "text": "En el nuevo, ¿cómo se llama ésta?", "avg_logprob": -0.3941967519124349, "no_speech_prob": 0.42968839406967163}
+{"start": 1458.46, "end": 1465.46, "text": "El director del CUR, registro académico", "avg_logprob": -0.3941967519124349, "no_speech_prob": 0.42968839406967163}
+{"start": 1465.46, "end": 1472.46, "text": "y jefes de departamento, debajo de los jefes de departamento y los coordinadores de carrera,", "avg_logprob": -0.47356539964675903, "no_speech_prob": 0.6549364328384399}
+{"start": 1472.46, "end": 1483.46, "text": "que no tienen ningún poder, solo los locos creen que tienen poder, pero realmente somos cachimberbo y nosotros.", "avg_logprob": -0.47356539964675903, "no_speech_prob": 0.6549364328384399}
+{"start": 1483.46, "end": 1488.46, "text": "Entonces solamente los jefes de departamento pueden hacer esa información del lado?", "avg_logprob": -0.47356539964675903, "no_speech_prob": 0.6549364328384399}
+{"start": 1488.46, "end": 1490.46, "text": "Sí.", "avg_logprob": -0.47356539964675903, "no_speech_prob": 0.6549364328384399}
+{"start": 1490.46, "end": 1495.26, "text": "Por ejemplo, esta pregunta la había respondida en el parque de que eran los grupos y los subgrupos", "avg_logprob": -0.3657466493001798, "no_speech_prob": 0.5759226083755493}
+{"start": 1495.26, "end": 1498.98, "text": "que, por ejemplo, en una de las secciones podían tener 6 estudiantes, pero también se puede", "avg_logprob": -0.3657466493001798, "no_speech_prob": 0.5759226083755493}
+{"start": 1498.98, "end": 1502.42, "text": "dividir en sus grupos. ¿Quién decide cuántos subgrupos habrá y cuántos estudiantes", "avg_logprob": -0.3657466493001798, "no_speech_prob": 0.5759226083755493}
+{"start": 1502.42, "end": 1504.74, "text": "tendrá cada uno? Que eso no implicó que eran profesores.", "avg_logprob": -0.3657466493001798, "no_speech_prob": 0.5759226083755493}
+{"start": 1504.74, "end": 1508.62, "text": "Los profesores lo hacen. Todos los subgrupos lo hacen los profesores.", "avg_logprob": -0.3657466493001798, "no_speech_prob": 0.5759226083755493}
+{"start": 1508.62, "end": 1512.86, "text": "Lo hacen los coordinadores. Al final el coordinador le dice al profesor, mirad,", "avg_logprob": -0.3657466493001798, "no_speech_prob": 0.5759226083755493}
+{"start": 1512.86, "end": 1516.78, "text": "este grupo lo vas a dividir entre sus grupos. Pero eso se divide por esto.", "avg_logprob": -0.3657466493001798, "no_speech_prob": 0.5759226083755493}
+{"start": 1516.78, "end": 1517.78, "text": "Por los bloques.", "avg_logprob": -0.3657466493001798, "no_speech_prob": 0.5759226083755493}
+{"start": 1517.78, "end": 1521.62, "text": "por los bloques. Entonces, dependiendo de cuántos bloques", "avg_logprob": -0.356742432134019, "no_speech_prob": 0.8014785647392273}
+{"start": 1521.62, "end": 1526.3, "text": "tengan para impartir la clase, así se vive en su grupo.", "avg_logprob": -0.356742432134019, "no_speech_prob": 0.8014785647392273}
+{"start": 1526.3, "end": 1528.22, "text": "¿Pueden tener distinto docente?", "avg_logprob": -0.356742432134019, "no_speech_prob": 0.8014785647392273}
+{"start": 1528.22, "end": 1530.14, "text": "Es su grupo.", "avg_logprob": -0.356742432134019, "no_speech_prob": 0.8014785647392273}
+{"start": 1530.14, "end": 1530.9, "text": "¿Cómo? ¿Cómo?", "avg_logprob": -0.356742432134019, "no_speech_prob": 0.8014785647392273}
+{"start": 1530.9, "end": 1532.42, "text": "¿Pueden tener distinto docente?", "avg_logprob": -0.356742432134019, "no_speech_prob": 0.8014785647392273}
+{"start": 1532.42, "end": 1535.78, "text": "Sí, porque como son dos clases, por ello te estás diciendo,", "avg_logprob": -0.356742432134019, "no_speech_prob": 0.8014785647392273}
+{"start": 1535.78, "end": 1538.3, "text": "aquí clases teóricas y clases prácticas.", "avg_logprob": -0.356742432134019, "no_speech_prob": 0.8014785647392273}
+{"start": 1538.3, "end": 1541.02, "text": "Entonces, la clase teórica la puedes dar a Isamar", "avg_logprob": -0.356742432134019, "no_speech_prob": 0.8014785647392273}
+{"start": 1541.02, "end": 1543.94, "text": "y la clase práctica la doy yo.", "avg_logprob": -0.356742432134019, "no_speech_prob": 0.8014785647392273}
+{"start": 1543.94, "end": 1546.14, "text": "¿Y si corren a la misma tema?", "avg_logprob": -0.356742432134019, "no_speech_prob": 0.8014785647392273}
+{"start": 1546.14, "end": 1552.86, "text": "Sí, ya la coordinación la hacemos entre nosotros, la de Isamar le tocaría atender un grupo de práctica", "avg_logprob": -0.29350472522038284, "no_speech_prob": 0.23117661476135254}
+{"start": 1552.86, "end": 1558.14, "text": "y va atiendo los otros dos grupos de práctica, ya a la hora de la clase como tal.", "avg_logprob": -0.29350472522038284, "no_speech_prob": 0.23117661476135254}
+{"start": 1558.14, "end": 1562.14, "text": "¿Se pueden realizar prácticas simultáneamente y no hablas diferentes?", "avg_logprob": -0.29350472522038284, "no_speech_prob": 0.23117661476135254}
+{"start": 1562.14, "end": 1571.14, "text": "No, no lo tenemos. Nuestro diseño curricular no está definido así.", "avg_logprob": -0.29350472522038284, "no_speech_prob": 0.23117661476135254}
+{"start": 1571.14, "end": 1577.34, "text": "Los componentes selectivos estaban para eso, perdón, los octativos que van dentro de la carrera.", "avg_logprob": -0.23076995917126142, "no_speech_prob": 0.3631565272808075}
+{"start": 1577.34, "end": 1584.14, "text": "Ustedes llevaron octativos, pero los octativos son dos opciones, dos alíder.", "avg_logprob": -0.23076995917126142, "no_speech_prob": 0.3631565272808075}
+{"start": 1584.14, "end": 1588.84, "text": "Lo que pasa es que como no hay espacio de aula, entonces no se podía hacer aquí,", "avg_logprob": -0.23076995917126142, "no_speech_prob": 0.3631565272808075}
+{"start": 1588.84, "end": 1592.14, "text": "pero nuestra facultad así se trabaja como debe ser.", "avg_logprob": -0.23076995917126142, "no_speech_prob": 0.3631565272808075}
+{"start": 1592.14, "end": 1599.14, "text": "Entonces la mitad del grupo va a recibir esta clase, este octativo A y el otro va a recibir el octativo B", "avg_logprob": -0.23076995917126142, "no_speech_prob": 0.3631565272808075}
+{"start": 1599.14, "end": 1604.46, "text": "y es al mismo tiempo, son simultáneos, aunque tengan dos nombres distintos", "avg_logprob": -0.31800592690706253, "no_speech_prob": 0.5938701033592224}
+{"start": 1604.46, "end": 1607.46, "text": "y que tengan dos maestros distintos, es la misma clase", "avg_logprob": -0.31800592690706253, "no_speech_prob": 0.5938701033592224}
+{"start": 1607.46, "end": 1611.02, "text": "y es el mismo crédito estudiantil, pero en el caso nuestro no ha tenido", "avg_logprob": -0.31800592690706253, "no_speech_prob": 0.5938701033592224}
+{"start": 1611.02, "end": 1615.82, "text": "porque solo se le da un octativo nada más.", "avg_logprob": -0.31800592690706253, "no_speech_prob": 0.5938701033592224}
+{"start": 1615.82, "end": 1617.58, "text": "¿Crees que eso cambia el futuro?", "avg_logprob": -0.31800592690706253, "no_speech_prob": 0.5938701033592224}
+{"start": 1617.58, "end": 1623.58, "text": "No, no va a cambiar, dijeron que en el 2028 nos van a construir el edificio de dos plantas", "avg_logprob": -0.31800592690706253, "no_speech_prob": 0.5938701033592224}
+{"start": 1623.58, "end": 1626.74, "text": "y lo más probable es que no se construya en el 2028,", "avg_logprob": -0.31800592690706253, "no_speech_prob": 0.5938701033592224}
+{"start": 1626.74, "end": 1632.52, "text": "hasta que no vayan más hablas, si hay una condicionante importante para los sábados y los", "avg_logprob": -0.2824055602617353, "no_speech_prob": 0.655726432800293}
+{"start": 1632.52, "end": 1637.0, "text": "domingos, y si me gustaría que lo dejaran en cuenta, sobre todo porque si se va a ocupar", "avg_logprob": -0.2824055602617353, "no_speech_prob": 0.655726432800293}
+{"start": 1637.0, "end": 1643.3, "text": "el programa de ustedes, para que uno trabaje. El sábado y el domingo tenemos en el instituto", "avg_logprob": -0.2824055602617353, "no_speech_prob": 0.655726432800293}
+{"start": 1643.3, "end": 1651.88, "text": "y aquí, y ese si es un rollón, rollón, rollón, y hay que tener claro cuáles hay", "avg_logprob": -0.2824055602617353, "no_speech_prob": 0.655726432800293}
+{"start": 1651.88, "end": 1657.96, "text": "hasta Ciencias Económicas, Contabilidad, Administración, pero hay grupos de Ciencias", "avg_logprob": -0.24740568362176418, "no_speech_prob": 0.4419252872467041}
+{"start": 1657.96, "end": 1665.2, "text": "Económicas que están aquí. Entonces, si metenlo de ubicación que el profesor que", "avg_logprob": -0.24740568362176418, "no_speech_prob": 0.4419252872467041}
+{"start": 1665.2, "end": 1672.2, "text": "está allá no tenga una clase consecutiva aquí, porque eso sí ha sido un problema.", "avg_logprob": -0.24740568362176418, "no_speech_prob": 0.4419252872467041}
+{"start": 1672.2, "end": 1680.64, "text": "A mí no me lo pasan. Por ejemplo, me pasó este semestre. Yo hago la organización", "avg_logprob": -0.24740568362176418, "no_speech_prob": 0.4419252872467041}
+{"start": 1680.64, "end": 1683.52, "text": "con respecto a lo que tenían en el primer semestre.", "avg_logprob": -0.20808020170698774, "no_speech_prob": 0.6012923121452332}
+{"start": 1683.52, "end": 1688.6, "text": "Y hago trato de dejar que si un profesor tiene dos clases allá y una aquí,", "avg_logprob": -0.20808020170698774, "no_speech_prob": 0.6012923121452332}
+{"start": 1688.6, "end": 1693.12, "text": "entonces que salga de sus dos clases allá y que le quede un espacio,", "avg_logprob": -0.20808020170698774, "no_speech_prob": 0.6012923121452332}
+{"start": 1693.12, "end": 1697.12, "text": "al menos un bloque para que se mueva para acá y venga a dar la otra clase aquí.", "avg_logprob": -0.20808020170698774, "no_speech_prob": 0.6012923121452332}
+{"start": 1697.12, "end": 1702.36, "text": "Pero se trajeron dos grupos de allá y a mí no me dijeron.", "avg_logprob": -0.20808020170698774, "no_speech_prob": 0.6012923121452332}
+{"start": 1702.36, "end": 1706.4, "text": "Se trajeron dos grupos para acá, dos grupos de quinto año y yo no sabía.", "avg_logprob": -0.20808020170698774, "no_speech_prob": 0.6012923121452332}
+{"start": 1706.4, "end": 1709.92, "text": "Y esa mierda me paratotodicto el horario.", "avg_logprob": -0.20808020170698774, "no_speech_prob": 0.6012923121452332}
+{"start": 1709.92, "end": 1713.8, "text": "porque pues querer mover en el sábado, sobre todo es...", "avg_logprob": -0.38872080002356013, "no_speech_prob": 0.36223989725112915}
+{"start": 1713.8, "end": 1722.0, "text": "los horarios del regular me rebalan, diría, en el Buenicaragüencer,", "avg_logprob": -0.38872080002356013, "no_speech_prob": 0.36223989725112915}
+{"start": 1722.0, "end": 1729.12, "text": "no me generan ningún problema, ya, a excepción de odontología y haurindustria,", "avg_logprob": -0.38872080002356013, "no_speech_prob": 0.36223989725112915}
+{"start": 1729.12, "end": 1732.08, "text": "que siempre hacen unos chinamos, ¿no?", "avg_logprob": -0.38872080002356013, "no_speech_prob": 0.36223989725112915}
+{"start": 1733.52, "end": 1736.4, "text": "Pero de ahí todo el horario del regular es fácil,", "avg_logprob": -0.38872080002356013, "no_speech_prob": 0.36223989725112915}
+{"start": 1736.4, "end": 1738.92, "text": "el horario del sábado es complicado por eso.", "avg_logprob": -0.38872080002356013, "no_speech_prob": 0.36223989725112915}
+{"start": 1738.92, "end": 1742.92, "text": "Un solo maestro mueve toditito el horario.", "avg_logprob": -0.28283996324913174, "no_speech_prob": 0.39719972014427185}
+{"start": 1742.92, "end": 1746.92, "text": "Ahora tengo otra pregunta con respecto a esa nueva información.", "avg_logprob": -0.28283996324913174, "no_speech_prob": 0.39719972014427185}
+{"start": 1746.92, "end": 1752.92, "text": "¿El horario que se le da a los que imparten que hacen al instituto está dentro del mismo pdf que han oído el horario?", "avg_logprob": -0.28283996324913174, "no_speech_prob": 0.39719972014427185}
+{"start": 1752.92, "end": 1757.92, "text": "¿Pero cómo saben cuáles son los que van allá?", "avg_logprob": -0.28283996324913174, "no_speech_prob": 0.39719972014427185}
+{"start": 1757.92, "end": 1763.92, "text": "Por eso. Yo ya tenía una lista del primer semestre de qué grupos estaban recibiendo allá.", "avg_logprob": -0.28283996324913174, "no_speech_prob": 0.39719972014427185}
+{"start": 1763.92, "end": 1769.6, "text": "yo comienzo el segundo semestre trabajando con esa lista, esa lista se las tienen que proporcionar a", "avg_logprob": -0.17676566310764588, "no_speech_prob": 0.5787052512168884}
+{"start": 1769.6, "end": 1778.2, "text": "ustedes o al que vaya a trabajar con el programa esa persona tiene que agregar cuáles son los", "avg_logprob": -0.17676566310764588, "no_speech_prob": 0.5787052512168884}
+{"start": 1778.2, "end": 1782.84, "text": "grupos que están recibiendo clase en el instituto, tengo entendido como soy metido y camino", "avg_logprob": -0.17676566310764588, "no_speech_prob": 0.5787052512168884}
+{"start": 1782.84, "end": 1787.76, "text": "con los jefes tengo entendido que el próximo año se va a procurar traer a todos los grupos", "avg_logprob": -0.17676566310764588, "no_speech_prob": 0.5787052512168884}
+{"start": 1787.76, "end": 1791.84, "text": "que se pueda de allá para acá y los primeros años mandarlos a recibir al", "avg_logprob": -0.2912611162990605, "no_speech_prob": 0.6810519099235535}
+{"start": 1791.84, "end": 1797.12, "text": "instituto. Perdón, no es sábado y domingo, es solo sábado, solo sábado,", "avg_logprob": -0.2912611162990605, "no_speech_prob": 0.6810519099235535}
+{"start": 1797.12, "end": 1804.4, "text": "solo los de sábado porque en domingo hay espacios todavía. Entonces los grupos de", "avg_logprob": -0.2912611162990605, "no_speech_prob": 0.6810519099235535}
+{"start": 1804.4, "end": 1807.76, "text": "primer año, todos los grupos de primer año que van a entrar el próximo año", "avg_logprob": -0.2912611162990605, "no_speech_prob": 0.6810519099235535}
+{"start": 1807.76, "end": 1814.04, "text": "van para el instituto y no creo que los traigan a todos pero la mayor parte", "avg_logprob": -0.2912611162990605, "no_speech_prob": 0.6810519099235535}
+{"start": 1814.04, "end": 1819.16, "text": "de grupo. Pero sí debe de haber un apartado donde volvemos a decir, estos son los grupos", "avg_logprob": -0.4368805239180557, "no_speech_prob": 0.7170543074607849}
+{"start": 1819.16, "end": 1823.72, "text": "que están en el instituto, sobre todo para el turno de sabatín.", "avg_logprob": -0.4368805239180557, "no_speech_prob": 0.7170543074607849}
+{"start": 1823.72, "end": 1836.99, "text": "¿Qué tienen hecho? ¿Qué pudieran hacer?", "avg_logprob": -0.4368805239180557, "no_speech_prob": 0.7170543074607849}
+{"start": 1836.99, "end": 1842.78, "text": "Pues de momento solamente los registros de aula, los que obtienen cada componente,", "avg_logprob": -0.4368805239180557, "no_speech_prob": 0.7170543074607849}
+{"start": 1842.78, "end": 1847.42, "text": "los pabellones, divisiones, etcétera. Por ejemplo, ¿qué sección contiene", "avg_logprob": -0.4368805239180557, "no_speech_prob": 0.7170543074607849}
+{"start": 1847.42, "end": 1850.74, "text": "televisor, abanico, del show, etcétera?", "avg_logprob": -0.4368805239180557, "no_speech_prob": 0.7170543074607849}
+{"start": 1850.74, "end": 1852.74, "text": "Los panico deben de tener todo.", "avg_logprob": -0.4366892795477595, "no_speech_prob": 0.6034448742866516}
+{"start": 1852.74, "end": 1855.74, "text": "Sí, pero cosa más relevante, como pueden ver los data shows,", "avg_logprob": -0.4366892795477595, "no_speech_prob": 0.6034448742866516}
+{"start": 1855.74, "end": 1859.74, "text": "qué sección tienen el data show, qué sección contiene aire acondicionado,", "avg_logprob": -0.4366892795477595, "no_speech_prob": 0.6034448742866516}
+{"start": 1859.74, "end": 1863.74, "text": "qué sección contiene computadoras, conectores, etcétera, cosa es relevante.", "avg_logprob": -0.4366892795477595, "no_speech_prob": 0.6034448742866516}
+{"start": 1863.74, "end": 1868.74, "text": "¿Puedes ejecutarlo ahorita?", "avg_logprob": -0.4366892795477595, "no_speech_prob": 0.6034448742866516}
+{"start": 1868.74, "end": 1870.74, "text": "No, no.", "avg_logprob": -0.4366892795477595, "no_speech_prob": 0.6034448742866516}
+{"start": 1870.74, "end": 1873.74, "text": "Es que sí, es que hay que actualizar con lo que hay que hacer.", "avg_logprob": -0.4366892795477595, "no_speech_prob": 0.6034448742866516}
+{"start": 1873.74, "end": 1876.74, "text": "No te tuvimos totalmente porque eran problemas de lógica como tal,", "avg_logprob": -0.4366892795477595, "no_speech_prob": 0.6034448742866516}
+{"start": 1876.74, "end": 1879.74, "text": "los que teníamos necesitábamos saber bastantes cosas.", "avg_logprob": -0.4366892795477595, "no_speech_prob": 0.6034448742866516}
+{"start": 1879.74, "end": 1887.28, "text": "Pero eso el sábado no lo sabíamos, cómo se trabaja, cómo se divide en los grupos no lo sabíamos.", "avg_logprob": -0.40290270196764094, "no_speech_prob": 0.4063061773777008}
+{"start": 1887.28, "end": 1894.28, "text": "Recuerden que deberíamos ver el proyecto terminamos el 31 de octubre, entre más a tiempo vemos el proyecto,", "avg_logprob": -0.40290270196764094, "no_speech_prob": 0.4063061773777008}
+{"start": 1894.28, "end": 1900.28, "text": "podemos ir viendo qué cosas van a encaminar, qué falta, cómo funciona, cómo corre.", "avg_logprob": -0.40290270196764094, "no_speech_prob": 0.4063061773777008}
+{"start": 1900.28, "end": 1905.28, "text": "¿Avancen, revanten? Creo que para la próxima semana así podríamos tenerla.", "avg_logprob": -0.40290270196764094, "no_speech_prob": 0.4063061773777008}
+{"start": 1905.28, "end": 1907.28, "text": "Ya con esto podemos ganar bastante.", "avg_logprob": -0.40290270196764094, "no_speech_prob": 0.4063061773777008}
+{"start": 1907.28, "end": 1912.08, "text": "porque no va a ser que hasta el final veamos el proyecto y al final pues no te muestran tanto de gente.", "avg_logprob": -0.34727044738068874, "no_speech_prob": 0.48840007185935974}
+{"start": 1912.08, "end": 1914.28, "text": "Si, usted dice para retroalimentación.", "avg_logprob": -0.34727044738068874, "no_speech_prob": 0.48840007185935974}
+{"start": 1914.28, "end": 1919.28, "text": "Pero si, ya la próxima semana si le podemos mostrar algo relevante, bastante relevante.", "avg_logprob": -0.34727044738068874, "no_speech_prob": 0.48840007185935974}
+{"start": 1920.28, "end": 1925.28, "text": "Díganme para la otra semana, lunes o martes para allá de apartarles el tiento.", "avg_logprob": -0.34727044738068874, "no_speech_prob": 0.48840007185935974}
+{"start": 1925.28, "end": 1928.28, "text": "El martes pues de las 10 de la mañana.", "avg_logprob": -0.34727044738068874, "no_speech_prob": 0.48840007185935974}
+{"start": 1928.28, "end": 1932.28, "text": "El lunes si ustedes me dicen a las 8, a las 8, a la hora que ustedes me dicen.", "avg_logprob": -0.34727044738068874, "no_speech_prob": 0.48840007185935974}
+{"start": 1932.28, "end": 1936.28, "text": "El lunes no tengo problema para que mire más, que logran avanzar.", "avg_logprob": -0.34727044738068874, "no_speech_prob": 0.48840007185935974}
+{"start": 1936.28, "end": 1942.28, "text": "y si tiene, lógicamente cuando vayan metiendo todas estas cosas les van a surgir otra duda", "avg_logprob": -0.24465507329112351, "no_speech_prob": 0.5583838224411011}
+{"start": 1942.28, "end": 1945.28, "text": "entonces para que miremos como van", "avg_logprob": -0.24465507329112351, "no_speech_prob": 0.5583838224411011}
+{"start": 1945.28, "end": 1947.28, "text": "yo me comprometí a apoyarle", "avg_logprob": -0.24465507329112351, "no_speech_prob": 0.5583838224411011}
+{"start": 1947.28, "end": 1952.28, "text": "estoy haciendo por esta señora aunque me camine enojado", "avg_logprob": -0.24465507329112351, "no_speech_prob": 0.5583838224411011}
+{"start": 1952.28, "end": 1958.28, "text": "pero bueno, me comprometí a apoyarle pero también mi tiempo es saturado", "avg_logprob": -0.24465507329112351, "no_speech_prob": 0.5583838224411011}
+{"start": 1958.28, "end": 1963.28, "text": "bastante saturado y peor ahora que todos estamos corriendo porque nos limitaron", "avg_logprob": -0.24465507329112351, "no_speech_prob": 0.5583838224411011}
+{"start": 1963.28, "end": 1968.28, "text": "y tenemos que terminar, entonces díenme cuál de los dos días para ya dejarlo...", "avg_logprob": -0.3221482810974121, "no_speech_prob": 0.576815664768219}
+{"start": 1968.28, "end": 1970.28, "text": "Es Marta, estaría mejor.", "avg_logprob": -0.3221482810974121, "no_speech_prob": 0.576815664768219}
+{"start": 1972.28, "end": 1974.28, "text": "A las diez, a las once, ¿a qué hora?", "avg_logprob": -0.3221482810974121, "no_speech_prob": 0.576815664768219}
+{"start": 1974.28, "end": 1976.28, "text": "A las diez, sí.", "avg_logprob": -0.3221482810974121, "no_speech_prob": 0.576815664768219}
+{"start": 1981.28, "end": 1986.28, "text": "¿Cómo se revisan las propuestas y cambios posteriores después de que se postre los primeros?", "avg_logprob": -0.3221482810974121, "no_speech_prob": 0.576815664768219}
+{"start": 1986.28, "end": 1988.28, "text": "El borrador.", "avg_logprob": -0.3221482810974121, "no_speech_prob": 0.576815664768219}
+{"start": 1988.28, "end": 1989.28, "text": "El borrador de la Dario.", "avg_logprob": -0.3221482810974121, "no_speech_prob": 0.576815664768219}
+{"start": 1989.28, "end": 1994.28, "text": "El borrador, yo lo que hago es enviarlo a los jefes del departamento.", "avg_logprob": -0.3221482810974121, "no_speech_prob": 0.576815664768219}
+{"start": 1994.28, "end": 2002.44, "text": "ellos lo envían a los grupos, los maestros revisan y si encuentran algún choque o algo se lo reportan al", "avg_logprob": -0.20630289795242737, "no_speech_prob": 0.6686977744102478}
+{"start": 2002.44, "end": 2011.44, "text": "jefe del departamento. Mira, cada departamento tiene su propia dinámica, por ejemplo el profesor", "avg_logprob": -0.20630289795242737, "no_speech_prob": 0.6686977744102478}
+{"start": 2011.44, "end": 2017.36, "text": "elige, no tiene ningún problema y lo manda al profesor de plantas y profesores horarios,", "avg_logprob": -0.20630289795242737, "no_speech_prob": 0.6686977744102478}
+{"start": 2017.36, "end": 2022.08, "text": "hay dos grupos de WhatsApp, entonces él manda a los borradores a los dos grupos y como yo soy", "avg_logprob": -0.20630289795242737, "no_speech_prob": 0.6686977744102478}
+{"start": 2022.08, "end": 2026.72, "text": "de ese departamento, entonces a veces ni siquiera lo espero que lo mande él, lo mando yo, a", "avg_logprob": -0.29721595566062364, "no_speech_prob": 0.8816509246826172}
+{"start": 2026.72, "end": 2033.28, "text": "profesores de revises, todos los profesores deben de revisar que no lo hacen, pero deberían", "avg_logprob": -0.29721595566062364, "no_speech_prob": 0.8816509246826172}
+{"start": 2033.28, "end": 2039.24, "text": "de revisar y reportan una incidencia. Mire, profesores, a mí me quedo en Sabao a la misma", "avg_logprob": -0.29721595566062364, "no_speech_prob": 0.8816509246826172}
+{"start": 2039.24, "end": 2045.8, "text": "hora, en dos grupos, un ejemplo. Mire, fíjese que yo estoy en el instituto de Sabao y me", "avg_logprob": -0.29721595566062364, "no_speech_prob": 0.8816509246826172}
+{"start": 2045.8, "end": 2050.28, "text": "sale a primera hora en el instituto y en el segundo bloque es en Lundán, y ustedes", "avg_logprob": -0.29721595566062364, "no_speech_prob": 0.8816509246826172}
+{"start": 2050.28, "end": 2056.86, "text": "y allá te ponen la excusa, pero lógicamente es correcto reportar ese tipo de incidencia,", "avg_logprob": -0.27913734500224774, "no_speech_prob": 0.8018724918365479}
+{"start": 2056.86, "end": 2063.6, "text": "entonces cuando las recogen, los jefes de departamento me las pasan a mí y yo hago las correcciones.", "avg_logprob": -0.27913734500224774, "no_speech_prob": 0.8018724918365479}
+{"start": 2065.88, "end": 2071.24, "text": "O sea, se envía el borrador a los docentes, los docentes revisen y los jefes de departamento", "avg_logprob": -0.27913734500224774, "no_speech_prob": 0.8018724918365479}
+{"start": 2071.24, "end": 2073.64, "text": "recogen todas las incidencias para hacer las modificaciones.", "avg_logprob": -0.27913734500224774, "no_speech_prob": 0.8018724918365479}
+{"start": 2073.64, "end": 2078.92, "text": "En el caso de un morario ya publicado y ahora tener una incidencia, se actualiza,", "avg_logprob": -0.27913734500224774, "no_speech_prob": 0.8018724918365479}
+{"start": 2078.92, "end": 2080.92, "text": "¿Tiene que volver a pasar por revisión?", "avg_logprob": -0.3304526649289212, "no_speech_prob": 0.3283151388168335}
+{"start": 2082.62, "end": 2085.62, "text": "Si tuviera una incidencia,", "avg_logprob": -0.3304526649289212, "no_speech_prob": 0.3283151388168335}
+{"start": 2085.62, "end": 2088.42, "text": "al final, los horarios definitivos", "avg_logprob": -0.3304526649289212, "no_speech_prob": 0.3283151388168335}
+{"start": 2088.42, "end": 2091.32, "text": "que nos publiquen registro académico.", "avg_logprob": -0.3304526649289212, "no_speech_prob": 0.3283151388168335}
+{"start": 2091.32, "end": 2094.82, "text": "Es que esta obligación es de registro académico.", "avg_logprob": -0.3304526649289212, "no_speech_prob": 0.3283151388168335}
+{"start": 2094.82, "end": 2099.12, "text": "Pero, como ellos viven satura, viven llorando", "avg_logprob": -0.3304526649289212, "no_speech_prob": 0.3283151388168335}
+{"start": 2099.12, "end": 2101.22, "text": "que no pueden hacer más.", "avg_logprob": -0.3304526649289212, "no_speech_prob": 0.3283151388168335}
+{"start": 2101.22, "end": 2105.02, "text": "Entonces, por eso buscaron gente externa que los hiciera.", "avg_logprob": -0.3304526649289212, "no_speech_prob": 0.3283151388168335}
+{"start": 2105.02, "end": 2108.62, "text": "Entonces, pero registro académico es quien publica", "avg_logprob": -0.3304526649289212, "no_speech_prob": 0.3283151388168335}
+{"start": 2108.62, "end": 2114.34, "text": "los horarios definitivos. Si ya ha publicado los horarios definitivos, hay una incidencia,", "avg_logprob": -0.2946503609418869, "no_speech_prob": 0.7264225482940674}
+{"start": 2114.34, "end": 2120.1, "text": "siempre me la reportan a mí, pero yo voy a registro y hago el cambio en los horarios", "avg_logprob": -0.2946503609418869, "no_speech_prob": 0.7264225482940674}
+{"start": 2120.1, "end": 2124.22, "text": "que tiene registro, para que registro los públicos de nuevo.", "avg_logprob": -0.2946503609418869, "no_speech_prob": 0.7264225482940674}
+{"start": 2124.22, "end": 2128.06, "text": "Pero si no pasa por revisión de los profesores de nuevo.", "avg_logprob": -0.2946503609418869, "no_speech_prob": 0.7264225482940674}
+{"start": 2128.06, "end": 2133.78, "text": "No, ya no, ya solo registro académico los públicos, se vuelven a enviar, si miren", "avg_logprob": -0.2946503609418869, "no_speech_prob": 0.7264225482940674}
+{"start": 2133.78, "end": 2141.94, "text": "un tal detalle y se vuelven a inviar, pero ya publicado, o sea, no es para estar haciendo", "avg_logprob": -0.2971554285771138, "no_speech_prob": 0.7345883846282959}
+{"start": 2141.94, "end": 2151.86, "text": "cambio, porque ¿qué es lo que pasaba antes? Allá por el 2012, no, 2013, cada vez que los", "avg_logprob": -0.2971554285771138, "no_speech_prob": 0.7345883846282959}
+{"start": 2151.86, "end": 2157.24, "text": "publicaba y lo enviaba a los profesores, volvían a mandarte otra cosa, volvían a mandarte", "avg_logprob": -0.2971554285771138, "no_speech_prob": 0.7345883846282959}
+{"start": 2157.24, "end": 2161.42, "text": "otra cosa, volvían a mandarte otra cosa, de repente llegaba, ya estábamos en la", "avg_logprob": -0.2971554285771138, "no_speech_prob": 0.7345883846282959}
+{"start": 2161.42, "end": 2171.54, "text": "primera semana de clase y está haciendo cambios. Entonces, cuando yo mando dos borradores,", "avg_logprob": -0.26049185704581346, "no_speech_prob": 0.5856345891952515}
+{"start": 2171.54, "end": 2178.06, "text": "primer borrador o único borrador, que ese es de revisión, y después yo ya mando borrador", "avg_logprob": -0.26049185704581346, "no_speech_prob": 0.5856345891952515}
+{"start": 2178.06, "end": 2184.22, "text": "final. Si en el borrador final no me hacen ningún comentario, yo se los entrego a registro", "avg_logprob": -0.26049185704581346, "no_speech_prob": 0.5856345891952515}
+{"start": 2184.22, "end": 2191.9, "text": "y registro publica horario definitiva, listo, en tres etapas y se deja un tiempo prudencial", "avg_logprob": -0.2922059851579177, "no_speech_prob": 0.4939892888069153}
+{"start": 2191.9, "end": 2198.02, "text": "para eso, pues se deja en dos, tres días para que las personas revisen. A veces la organización", "avg_logprob": -0.2922059851579177, "no_speech_prob": 0.4939892888069153}
+{"start": 2198.02, "end": 2210.14, "text": "está contra el cacho y cuando eso sucede es problemático. Dejen de tener, ¿cómo se", "avg_logprob": -0.2922059851579177, "no_speech_prob": 0.4939892888069153}
+{"start": 2210.14, "end": 2219.3, "text": "se llama esto. Eso de los bloques de clase y todos deberían dejarlo de forma de que se", "avg_logprob": -0.3184360686101412, "no_speech_prob": 0.8142759203910828}
+{"start": 2219.3, "end": 2226.86, "text": "pueda editar, porque como está la normativa docente, es así, dos bloques para regular", "avg_logprob": -0.3184360686101412, "no_speech_prob": 0.8142759203910828}
+{"start": 2226.86, "end": 2233.42, "text": "en la semana y uno para encuentro, pero a veces eso cambia. Y ahorita yo me encontré", "avg_logprob": -0.3184360686101412, "no_speech_prob": 0.8142759203910828}
+{"start": 2233.42, "end": 2238.5, "text": "un chisme que posiblemente en encuentro el próximo año haya un cambio. Las clases", "avg_logprob": -0.3184360686101412, "no_speech_prob": 0.8142759203910828}
+{"start": 2238.5, "end": 2246.5, "text": "que sean bimestrales, van a recibir tres clases en un bimestre y las otras tres clases en el otro bimestre,", "avg_logprob": -0.31220562921630013, "no_speech_prob": 0.5151193141937256}
+{"start": 2246.5, "end": 2251.5, "text": "o sea, dividir en dos el semestre. ¿Me estaban comentando eso?", "avg_logprob": -0.31220562921630013, "no_speech_prob": 0.5151193141937256}
+{"start": 2251.5, "end": 2253.5, "text": "¿Hacen entrevistas en seis clases durante el semestre?", "avg_logprob": -0.31220562921630013, "no_speech_prob": 0.5151193141937256}
+{"start": 2253.5, "end": 2257.5, "text": "Sí, es lo común. Debe de existir un espacio para seis.", "avg_logprob": -0.31220562921630013, "no_speech_prob": 0.5151193141937256}
+{"start": 2257.5, "end": 2263.5, "text": "Lo que hay, deben de crear un espacio para componentes electivos.", "avg_logprob": -0.31220562921630013, "no_speech_prob": 0.5151193141937256}
+{"start": 2263.5, "end": 2272.6, "text": "Los electivos van a parte, no van dentro del grupo, pero debe de crear un espacio para", "avg_logprob": -0.25433375626802446, "no_speech_prob": 0.7830283045768738}
+{"start": 2272.6, "end": 2276.52, "text": "componentes de electivo por los choquetes de los maestros que dan esos componentes de", "avg_logprob": -0.25433375626802446, "no_speech_prob": 0.7830283045768738}
+{"start": 2276.52, "end": 2277.52, "text": "electivo.", "avg_logprob": -0.25433375626802446, "no_speech_prob": 0.7830283045768738}
+{"start": 2277.52, "end": 2284.96, "text": "Eso normalmente se dejan en el último bloque del sábado y en el regular, en la mañana", "avg_logprob": -0.25433375626802446, "no_speech_prob": 0.7830283045768738}
+{"start": 2284.96, "end": 2290.24, "text": "se dejan los martes a última hora, en la tarde los jueves a última hora, sábado", "avg_logprob": -0.25433375626802446, "no_speech_prob": 0.7830283045768738}
+{"start": 2290.24, "end": 2296.38, "text": "domingo se dejan a última hora entonces se debe dejar un espacio que sea fuera de", "avg_logprob": -0.21518027340924298, "no_speech_prob": 0.6151212453842163}
+{"start": 2296.38, "end": 2302.56, "text": "todos los grupos de clase ya y para poner el profesor y el nombre y así no no", "avg_logprob": -0.21518027340924298, "no_speech_prob": 0.6151212453842163}
+{"start": 2302.56, "end": 2309.42, "text": "vaya a chocar si el profesor tiene otras clases deben de agregarlo es más", "avg_logprob": -0.21518027340924298, "no_speech_prob": 0.6151212453842163}
+{"start": 2309.42, "end": 2318.82, "text": "pueden crear como una bueno yo en el programa lo creo el grupo como tal", "avg_logprob": -0.21518027340924298, "no_speech_prob": 0.6151212453842163}
+{"start": 2318.82, "end": 2327.82, "text": "El componente menciona a mí uno de los selectivos, Salud y Bienestar, no sé cómo se llama, Salud y Bienestar.", "avg_logprob": -0.33283204208185646, "no_speech_prob": 0.5826404094696045}
+{"start": 2327.82, "end": 2331.82, "text": "Entonces lo creo como que fuera un grupo, como que fuera una carrera.", "avg_logprob": -0.33283204208185646, "no_speech_prob": 0.5826404094696045}
+{"start": 2331.82, "end": 2342.82, "text": "Y así no solamente un espacio que es el sado a última hora, y ahí le digo la clase y el profesor.", "avg_logprob": -0.33283204208185646, "no_speech_prob": 0.5826404094696045}
+{"start": 2342.82, "end": 2350.82, "text": "Y son cinco componentes electivo los que se ofrecen, o sea, cinco espacios.", "avg_logprob": -0.27214029875763673, "no_speech_prob": 0.6785512566566467}
+{"start": 2350.82, "end": 2353.82, "text": "Eso es como un ente electivo, nunca son los mismos, ¿verdad?", "avg_logprob": -0.27214029875763673, "no_speech_prob": 0.6785512566566467}
+{"start": 2353.82, "end": 2354.82, "text": "A veces sí, a veces no.", "avg_logprob": -0.27214029875763673, "no_speech_prob": 0.6785512566566467}
+{"start": 2354.82, "end": 2356.82, "text": "Por el momento se están manteniendo.", "avg_logprob": -0.27214029875763673, "no_speech_prob": 0.6785512566566467}
+{"start": 2356.82, "end": 2360.82, "text": "Es probable que puedan cambiar de nombre para el próximo año.", "avg_logprob": -0.27214029875763673, "no_speech_prob": 0.6785512566566467}
+{"start": 2363.82, "end": 2366.82, "text": "Se han cambiado tres veces, ¿verdad?", "avg_logprob": -0.27214029875763673, "no_speech_prob": 0.6785512566566467}
+{"start": 2366.82, "end": 2377.57, "text": "Puede producir en el sistema cuando hay varias soluciones posibles o válidas.", "avg_logprob": -0.27214029875763673, "no_speech_prob": 0.6785512566566467}
+{"start": 2377.57, "end": 2382.13, "text": "Por ejemplo, evitar hueco a los estudiantes, concentrar las clases de un docente en menos", "avg_logprob": -0.316055464644392, "no_speech_prob": 0.5211958289146423}
+{"start": 2382.13, "end": 2386.69, "text": "el día, o repartir a una asignatura durante la semana.", "avg_logprob": -0.316055464644392, "no_speech_prob": 0.5211958289146423}
+{"start": 2386.69, "end": 2389.01, "text": "Los huecos de los estudiantes, los primeros.", "avg_logprob": -0.316055464644392, "no_speech_prob": 0.5211958289146423}
+{"start": 2389.01, "end": 2391.69, "text": "¿Los huecos de los estudiantes?", "avg_logprob": -0.316055464644392, "no_speech_prob": 0.5211958289146423}
+{"start": 2391.69, "end": 2398.45, "text": "Si, no puedo dejarles a ustedes que reciban una clase a primera hora, dejarles a segunda", "avg_logprob": -0.316055464644392, "no_speech_prob": 0.5211958289146423}
+{"start": 2398.45, "end": 2402.17, "text": "hora libre y después a tercera hora otra clase.", "avg_logprob": -0.316055464644392, "no_speech_prob": 0.5211958289146423}
+{"start": 2402.17, "end": 2404.49, "text": "Se evitan los huecos en el horario.", "avg_logprob": -0.316055464644392, "no_speech_prob": 0.5211958289146423}
+{"start": 2404.49, "end": 2412.93, "text": "los huecos es lo primordial, que no hayan huecos en el horario y que si te puedo sacar temprano", "avg_logprob": -0.22237058446325106, "no_speech_prob": 0.33585381507873535}
+{"start": 2412.93, "end": 2420.21, "text": "te saco temprano, la prioridad son los estudiantes, no los docentes, hay sección de las restricciones", "avg_logprob": -0.22237058446325106, "no_speech_prob": 0.33585381507873535}
+{"start": 2420.21, "end": 2427.85, "text": "de los docentes horarios pues que eso sí está por encima pero de ahí ya en el horario", "avg_logprob": -0.22237058446325106, "no_speech_prob": 0.33585381507873535}
+{"start": 2427.85, "end": 2432.85, "text": "como tal evitar los huecos entre horarios.", "avg_logprob": -0.47007404552416854, "no_speech_prob": 0.5169629454612732}
+{"start": 2432.85, "end": 2438.23, "text": "Si podemos ver que tengamos tres bloques, y el bloque de inmediato es justo el impacto", "avg_logprob": -0.47007404552416854, "no_speech_prob": 0.5169629454612732}
+{"start": 2438.23, "end": 2441.85, "text": "del profesor horario que tiene la restringida esa hora.", "avg_logprob": -0.47007404552416854, "no_speech_prob": 0.5169629454612732}
+{"start": 2441.85, "end": 2446.85, "text": "Entonces el programa te tiene que mover a otro de los profesores a ese hueco.", "avg_logprob": -0.47007404552416854, "no_speech_prob": 0.5169629454612732}
+{"start": 2451.85, "end": 2455.85, "text": "Es que, a ver, miren, puede suceder esto.", "avg_logprob": -0.47007404552416854, "no_speech_prob": 0.5169629454612732}
+{"start": 2455.85, "end": 2458.85, "text": "¿Cuántos espacios hay de lunes a jueves?", "avg_logprob": -0.23218919256682036, "no_speech_prob": 0.4604020416736603}
+{"start": 2458.85, "end": 2463.85, "text": "Hablemos de lo común.", "avg_logprob": -0.23218919256682036, "no_speech_prob": 0.4604020416736603}
+{"start": 2463.85, "end": 2469.85, "text": "Los grupos de diurnos son poquititos.", "avg_logprob": -0.23218919256682036, "no_speech_prob": 0.4604020416736603}
+{"start": 2469.85, "end": 2473.85, "text": "En esos grupos de diurnos o carreras de diurno", "avg_logprob": -0.23218919256682036, "no_speech_prob": 0.4604020416736603}
+{"start": 2473.85, "end": 2476.85, "text": "deben de permitir que vayan todo el día.", "avg_logprob": -0.23218919256682036, "no_speech_prob": 0.4604020416736603}
+{"start": 2476.85, "end": 2481.85, "text": "Por ejemplo, ahorita la industria recibe clases, lunes y martes nada más.", "avg_logprob": -0.23218919256682036, "no_speech_prob": 0.4604020416736603}
+{"start": 2481.85, "end": 2487.51, "text": "pero recibe de las ocho hasta las cinco y veinte, en las tardes cinco y cincuenta, en las tardes,", "avg_logprob": -0.36657639771453604, "no_speech_prob": 0.6435772776603699}
+{"start": 2487.51, "end": 2495.01, "text": "recibe todo el día, en dos días, porque miércoles, jueves y diarnos, van a prácticas a las empresas.", "avg_logprob": -0.36657639771453604, "no_speech_prob": 0.6435772776603699}
+{"start": 2495.01, "end": 2501.01, "text": "Pero bien, eso son atípicos. Lo común es esto, ¿no? Tres bloques,", "avg_logprob": -0.36657639771453604, "no_speech_prob": 0.6435772776603699}
+{"start": 2501.01, "end": 2506.21, "text": "bloques uno, bloques dos, bloques tres. Entonces, si son cuatro días, ¿cuántos bloques tengo?", "avg_logprob": -0.36657639771453604, "no_speech_prob": 0.6435772776603699}
+{"start": 2506.21, "end": 2514.81, "text": "tengo 12, ¿no? 3x4, 12. Pero de repente te aparece una clase que sólo tiene 5", "avg_logprob": -0.34757255212120386, "no_speech_prob": 0.46067339181900024}
+{"start": 2514.81, "end": 2525.03, "text": "componentes. Por 2, lo que cada día cuánto son? 10. O sea, de los 12 espacios te va a", "avg_logprob": -0.34757255212120386, "no_speech_prob": 0.46067339181900024}
+{"start": 2525.03, "end": 2537.69, "text": "acaparar 10. ¿Bien? A la antigua, como matemático. ¿Qué días los dejo salir temprano? Eso lo", "avg_logprob": -0.34757255212120386, "no_speech_prob": 0.46067339181900024}
+{"start": 2537.69, "end": 2547.81, "text": "hago yo, lo defino yo como ejecutor del programa. Si es de la mañana, si es del matutino, entonces", "avg_logprob": -0.22220344049856067, "no_speech_prob": 0.6897260546684265}
+{"start": 2547.81, "end": 2553.57, "text": "los martes a última hora hay un componente electivo, que si ellos están en clase no", "avg_logprob": -0.22220344049856067, "no_speech_prob": 0.6897260546684265}
+{"start": 2553.57, "end": 2562.01, "text": "lo pueden recibir, entonces el primero que les quito es eso, el del componente electivo.", "avg_logprob": -0.22220344049856067, "no_speech_prob": 0.6897260546684265}
+{"start": 2562.01, "end": 2567.25, "text": "Ahora los estudiantes de la mañana hay bastantes que viajan, entonces cuál otro", "avg_logprob": -0.22220344049856067, "no_speech_prob": 0.6897260546684265}
+{"start": 2567.25, "end": 2573.69, "text": "día me sirve quitarle el huevo, porque si ellos van a viajar, que salgan temprano aquí,", "avg_logprob": -0.2828356314982687, "no_speech_prob": 0.5907208919525146}
+{"start": 2573.69, "end": 2582.85, "text": "les de tiempo ir a traer sus peleros y jalarse para su casa. Pero yo lo hago, eso no lo hace", "avg_logprob": -0.2828356314982687, "no_speech_prob": 0.5907208919525146}
+{"start": 2582.85, "end": 2589.65, "text": "el programa, y si yo con tantos años de experiencia haciéndolo, he venido definiendo", "avg_logprob": -0.2828356314982687, "no_speech_prob": 0.5907208919525146}
+{"start": 2589.65, "end": 2599.09, "text": "esas cosas. También puede ser la solicitud del coordinador. A veces el coordinador te dice", "avg_logprob": -0.23557469986452914, "no_speech_prob": 0.8100805878639221}
+{"start": 2599.09, "end": 2605.61, "text": "de que los miércoles ellos tienen definido que se yo hacer una práctica con ellos o hacer", "avg_logprob": -0.23557469986452914, "no_speech_prob": 0.8100805878639221}
+{"start": 2605.61, "end": 2610.41, "text": "ferias con ellos. Entonces les quito el marty, les quito el miércoles, si es el coordinador", "avg_logprob": -0.23557469986452914, "no_speech_prob": 0.8100805878639221}
+{"start": 2610.41, "end": 2615.09, "text": "los solicito, que sean los dos días que sale temprano, pero eso solo si llevan cinco", "avg_logprob": -0.23557469986452914, "no_speech_prob": 0.8100805878639221}
+{"start": 2615.09, "end": 2622.09, "text": "componente, porque si llevan seis ocupan todos los espacios, no hay nada que hacer.", "avg_logprob": -0.4432952916249633, "no_speech_prob": 0.21623294055461884}
+{"start": 2622.09, "end": 2628.48, "text": "¿Algo más?", "avg_logprob": -0.4432952916249633, "no_speech_prob": 0.21623294055461884}

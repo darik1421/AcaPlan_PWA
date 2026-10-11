@@ -3,7 +3,7 @@ import { useAuth } from '../features/auth/AuthContext'
 import { api } from '../services/management'
 import {
   Building2, BookOpen, Users, LayoutGrid, Calendar,
-  Layers, Clock, Search, Bell, Settings, User, LogOut, BookA, ClipboardList
+  Layers, Clock, User, LogOut, BookA, ClipboardList
 } from 'lucide-react'
 
 import AccountsPage from '../features/management/AccountsPage'
@@ -13,7 +13,7 @@ import AsignaturasPage from '../features/management/AsignaturasPage'
 import EspaciosPage from '../features/management/EspaciosPage'
 import SeccionesPage from '../features/management/SeccionesPage'
 import ProgramacionPage from '../features/management/ProgramacionPage'
-import BloquesPage from '../features/management/BloquesPage'
+import CuadriculasPage from '../features/management/CuadriculasPage'
 import DisponibilidadPage from '../features/management/DisponibilidadPage'
 import '../features/management/management.css'
 
@@ -49,14 +49,14 @@ export default function DashboardPage() {
         </div>
       </div>
       <nav className="sidebar-nav">
-        <button className={page === 'periods' ? 'selected' : ''} onClick={() => setPage('periods')}><Calendar size={18} /> Periodos</button>
-        <button className={page === 'carreras' ? 'selected' : ''} onClick={() => setPage('carreras')}><Layers size={18} /> Áreas</button>
+        <button className={page === 'periods' ? 'selected' : ''} onClick={() => setPage('periods')}><Calendar size={18} /> Semestres</button>
+        <button className={page === 'carreras' ? 'selected' : ''} onClick={() => setPage('carreras')}><Layers size={18} /> Carreras</button>
         <button className={page === 'asignaturas' ? 'selected' : ''} onClick={() => setPage('asignaturas')}><BookOpen size={18} /> Asignaturas</button>
         <button className={page === 'espacios' ? 'selected' : ''} onClick={() => setPage('espacios')}><Building2 size={18} /> Aulas y Recursos</button>
-        <button className={page === 'secciones' ? 'selected' : ''} onClick={() => setPage('secciones')}><Users size={18} /> Grupos Secciones</button>
+        <button className={page === 'secciones' ? 'selected' : ''} onClick={() => setPage('secciones')}><Users size={18} /> Grupos</button>
         <button className={page === 'programacion' ? 'selected' : ''} onClick={() => setPage('programacion')}><ClipboardList size={18} /> Demanda de carga</button>
-        <button className={page === 'bloques' ? 'selected' : ''} onClick={() => setPage('bloques')}><LayoutGrid size={18} /> Bloques Diarios</button>
-        <button className={page === 'disponibilidad' ? 'selected' : ''} onClick={() => setPage('disponibilidad')}><Clock size={18} /> Disponibilidad</button>
+        <button className={page === 'bloques' ? 'selected' : ''} onClick={() => setPage('bloques')}><LayoutGrid size={18} /> Bloques y recesos</button>
+        <button className={page === 'disponibilidad' ? 'selected' : ''} onClick={() => setPage('disponibilidad')}><Clock size={18} /> Restricciones</button>
         {context?.canManageAccounts && <button className={page === 'accounts' ? 'selected' : ''} onClick={() => setPage('accounts')}><User size={18} /> Gestión de Cuentas</button>}
       </nav>
       <div style={{ padding: '24px' }}>
@@ -71,18 +71,7 @@ export default function DashboardPage() {
         <div className="topbar-left">
           <h2 className="topbar-title">UNAN-Managua CUR-Chontales</h2>
           <div className="topbar-periods">
-            <span>{context?.activePeriod ? `Período Activo: ${context.activePeriod.nombre}` : 'Sin período activo'}</span>
-          </div>
-        </div>
-        <div className="topbar-right">
-          <div className="search-box">
-            <Search size={16} />
-            <input placeholder="Buscar..." disabled />
-          </div>
-          <div className="topbar-icons">
-            <Bell size={20} />
-            <Settings size={20} />
-            <User size={20} />
+            <span>{context?.activePeriod ? `Semestre Activo: ${context.activePeriod.nombre}` : 'Sin semestre activo'}</span>
           </div>
         </div>
       </header>
@@ -96,9 +85,9 @@ export default function DashboardPage() {
               page === 'asignaturas' ? <AsignaturasPage context={context} canManage={context.canManageAsignaturas} onChanged={refresh} /> :
                 page === 'espacios' ? <EspaciosPage canManage={context.canManageEspacios} onChanged={refresh} /> :
                   page === 'secciones' ? <SeccionesPage context={context} onChanged={refresh} /> :
-                    page === 'programacion' ? <ProgramacionPage context={context} onChanged={refresh} /> :
-                      page === 'bloques' ? <BloquesPage context={context} onChanged={refresh} /> :
-                        page === 'disponibilidad' ? <DisponibilidadPage context={context} onChanged={refresh} /> :
+                    page === 'programacion' ? <ProgramacionPage context={context} /> :
+                      page === 'bloques' ? <CuadriculasPage context={context} /> :
+                        page === 'disponibilidad' ? <DisponibilidadPage context={context} /> :
                           <PeriodsPage canManage={context.canManagePeriods} onChanged={refresh} />
         )}
       </main>

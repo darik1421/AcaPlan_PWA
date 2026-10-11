@@ -21,34 +21,34 @@ export function createApp({ authenticateRequest = authenticate, management = cre
       'POST /api/carreras': 'carreras.create',
       'PATCH /api/carreras': 'carreras.update',
       'GET /api/asignaturas': 'asignaturas.list',
-      'POST /api/asignaturas': 'asignaturas.create',
+
       'PATCH /api/asignaturas': 'asignaturas.update',
       'GET /api/pabellones': 'pabellones.list',
-      'POST /api/pabellones': 'pabellones.create',
       'GET /api/recursos': 'recursos.list',
-      'POST /api/recursos': 'recursos.create',
       'GET /api/aulas': 'aulas.list',
-      'POST /api/aulas': 'aulas.create',
       'PATCH /api/aulas': 'aulas.update',
       'GET /api/secciones': 'secciones.list',
-      'POST /api/secciones': 'secciones.create',
       'PATCH /api/secciones': 'secciones.update',
       'GET /api/bloques': 'bloques.list',
-      'POST /api/bloques': 'bloques.create',
-      'PATCH /api/bloques': 'bloques.update',
+      'GET /api/cuadriculas': 'grids.list',
+      'POST /api/cuadriculas': 'grids.save',
+      'GET /api/grupos-turnos': 'groupGrids.list',
+      'POST /api/grupos-turnos': 'groupGrids.save',
       'GET /api/docentes': 'docentes.list',
+      'GET /api/restricciones': 'restrictions.list',
+      'POST /api/restricciones': 'restrictions.save',
       'GET /api/disponibilidad': 'disponibilidad.list',
-      'POST /api/disponibilidad': 'disponibilidad.create',
-      'PATCH /api/disponibilidad': 'disponibilidad.update',
       'GET /api/programacion': 'programacion.list',
-      'POST /api/programacion': 'programacion.create',
-      'POST /api/programacion/delete': 'programacion.delete',
+      'GET /api/programacion/resumen': 'programacion.report',
+      'GET /api/programacion/detalle': 'programacion.detalle.list',
+      'GET /api/importacion/plantilla': 'import.template',
+      'GET /api/importacion/historial': 'import.history',
     }
     const route = routes[`${request.method} ${path}`]
     if (route) {
       try {
         const profile = await authenticateRequest(request)
-        const data = request.method === 'GET' ? {} : await readBody(request)
+        const data = request.method === 'GET' ? {} : await readBody(request, 16384)
         const result = await management.execute(request, profile, route, data)
         response.writeHead(200)
         response.end(JSON.stringify(result))

@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
 import { api } from '../../services/management'
+import GruposTurnos from './GruposTurnos'
 
-const emptySeccion = (id_carrera, id_periodo) => ({ codigo: '', id_carrera, id_periodo, ano_estudio: 1, cantidad_estudiantes: 30, asignaturas: [] })
 
 export default function SeccionesPage({ context, onChanged }) {
     const [rows, setRows] = useState([])
     const [carreras, setCarreras] = useState([])
     const [asignaturas, setAsignaturas] = useState([])
 
+    const [configurations, setConfigurations] = useState([])
     const [form, setForm] = useState(null)
     const [loading, setLoading] = useState(true)
     const [busy, setBusy] = useState(false)
@@ -21,15 +22,16 @@ export default function SeccionesPage({ context, onChanged }) {
     async function load(signal) {
         setLoading(true); setError('')
         try {
-            const [dataSecciones, dataCarreras, dataAsig] = await Promise.all([
+            const [dataSecciones, dataCarreras, dataAsig, dataConfigurations] = await Promise.all([
                 api('/secciones', { signal }),
                 api('/carreras', { signal }),
-                api('/asignaturas', { signal })
+                api('/asignaturas', { signal }), api('/cuadriculas', { signal })
             ])
             if (!signal?.aborted) {
                 setRows(dataSecciones)
                 setCarreras(dataCarreras)
                 setAsignaturas(dataAsig)
+                setConfigurations(dataConfigurations)
             }
         } catch (e) {
             if (!signal?.aborted) setError(e.message)
@@ -40,15 +42,20 @@ export default function SeccionesPage({ context, onChanged }) {
 
     useEffect(() => { const c = new AbortController(); load(c.signal); return () => c.abort() }, [])
 
+    const periodId = context?.activePeriod?.id_periodo
+    const scope = JSON.stringify(context?.carreras || [])
+    useEffect(() => { setForm(null); setMessage(''); setError('') }, [periodId, context?.canManageSecciones, isAdmin, scope])
+    const canEditForm = form && context?.canManageSecciones && form.id_periodo === periodId && (isAdmin || managedCarrerasIds.includes(form.id_carrera))
+
     const activeCarreras = carreras.filter(c => c.estado === 'activo' && (isAdmin || managedCarrerasIds.includes(c.id_carrera)))
 
     async function save(e) {
         e.preventDefault()
-        if (busy) return
+        if (busy || !canEditForm) return
         setBusy(true); setError(''); setMessage('')
         try {
-            await api('/secciones', { method: form.id ? 'PATCH' : 'POST', data: form })
-            setMessage(form.id ? 'Sección actualizada.' : 'Sección registrada.')
+            await api('/secciones', { method: 'PATCH', data: form })
+            setMessage('Grupo actualizado.')
             setForm(null); await load(); onChanged()
         } catch (err) { setError(err.message) }
         finally { setBusy(false) }
@@ -65,25 +72,19 @@ export default function SeccionesPage({ context, onChanged }) {
 
     const availableAsignaturas = form ? asignaturas.filter(a => a.id_carrera === form.id_carrera && a.ano_estudio === form.ano_estudio && (a.estado === 'activo' || form.asignaturas.includes(a.id_asignatura))) : []
 
-    // Consulta del período activo; los controles de edición respetan las carreras asignadas.
-    const visibleRows = rows.filter(r => r.id_periodo === context?.activePeriod?.id_periodo)
-
     return <section aria-labelledby="secciones-title">
         <div className="section-heading">
-            <div><h2 id="secciones-title">Secciones Académicas</h2><p className="muted">Grupos para el período {context?.activePeriod?.nombre || 'vigente'}.</p></div>
-            {context?.canManageSecciones && context?.activePeriod && <button className="secondary" disabled={busy || activeCarreras.length === 0} onClick={() => {
-                setForm(emptySeccion(activeCarreras[0]?.id_carrera, context.activePeriod.id_periodo));
-                setMessage('')
-            }}>Nueva sección</button>}
+            <div><h2 id="secciones-title">Grupos académicos</h2><p className="muted">Grupos para el semestre {context?.activePeriod?.nombre || 'vigente'}.</p></div>
         </div>
 
-        {!context?.activePeriod && <div className="banner info">No hay un período académico activo definido.</div>}
+        <p className="notice">Los grupos se recibirán con los datos académicos del coordinador. La plantilla definitiva está pendiente. Aquí puedes consultar y corregir grupos existentes y asignarles los bloques de su turno; no se inventa su cantidad de estudiantes.</p>
+        {!context?.activePeriod && <div className="banner info">No hay un semestre académico activo definido.</div>}
 
-        {error && <p role="alert" className="error">{error}</p>}
+        {error && <p role="alert" className="error">{error} <button className="secondary" disabled={busy||loading} onClick={()=>load()}>Recargar grupos</button></p>}
         {message && <p role="status" className="success">{message}</p>}
 
-        {form && <form className="management-form" onSubmit={save}>
-            <h3>{form.id ? 'Editar sección' : 'Nueva sección'}</h3>
+        {canEditForm && <form className="management-form" onSubmit={save}>
+            <h3>Corregir grupo</h3>
             <fieldset disabled={busy}><div className="form-grid">
                 <label>Carrera
                     <select required disabled={!!form.id} value={form.id_carrera} onChange={e => { field('id_carrera', Number(e.target.value)); field('asignaturas', []) }}>
@@ -93,12 +94,12 @@ export default function SeccionesPage({ context, onChanged }) {
                         {activeCarreras.map(c => <option key={c.id_carrera} value={c.id_carrera}>{c.nombre}</option>)}
                     </select>
                 </label>
-                <label>Código se sección (Ej. GRUPO-A)<input required maxLength={20} value={form.codigo} onChange={e => field('codigo', e.target.value)} /></label>
+                <label>Código del grupo<input required maxLength={20} value={form.codigo} onChange={e => field('codigo', e.target.value)} /></label>
                 <label>Año de estudio<input type="number" min="1" max="10" required value={form.ano_estudio} onChange={e => { field('ano_estudio', Number(e.target.value)); field('asignaturas', []) }} /></label>
-                <label>Cantidad aprox. estudiantes<input type="number" min="1" required value={form.cantidad_estudiantes} onChange={e => field('cantidad_estudiantes', Number(e.target.value))} /></label>
+                <label>Cantidad de estudiantes<input type="number" min="1" required value={form.cantidad_estudiantes} onChange={e => field('cantidad_estudiantes', Number(e.target.value))} /></label>
 
                 <div style={{ gridColumn: '1 / -1' }}>
-                    <strong>Asignaturas del bloque (deben estar en la misma carrera y año)</strong>
+                    <strong>Asignaturas del grupo (misma carrera y año)</strong>
                     <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
                         {availableAsignaturas.map(a => <label key={a.id_asignatura} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'normal' }}>
                             <input type="checkbox" checked={form.asignaturas.includes(a.id_asignatura)} onChange={() => toggleAsignatura(a.id_asignatura)} />
@@ -108,17 +109,10 @@ export default function SeccionesPage({ context, onChanged }) {
                     </div>
                 </div>
             </div>
-                <div className="form-actions"><button className="primary" type="submit">{busy ? 'Guardando…' : 'Guardar sección'}</button><button className="secondary" type="button" onClick={() => setForm(null)}>Cancelar</button></div>
+                <div className="form-actions"><button className="primary" type="submit">{busy ? 'Guardando…' : 'Guardar grupo'}</button><button className="secondary" type="button" onClick={() => setForm(null)}>Cancelar</button></div>
             </fieldset>
         </form>}
 
-        {loading ? <p role="status">Cargando…</p> : <div className="table-scroll"><table><caption>{visibleRows.length} secciones en {context?.activePeriod?.nombre}</caption><thead><tr><th>Carrera</th><th>Año</th><th>Sección</th><th>Estudiantes</th><th>Cant. Asignaturas</th>{context.canManageSecciones && <th>Acciones</th>}</tr></thead><tbody>
-            {visibleRows.map(row => <tr key={row.id_seccion}>
-                <td>{row.carrera_nombre}</td><td>{row.ano_estudio}</td><td>{row.codigo}</td><td>{row.cantidad_estudiantes}</td>
-                <td>{row.asignaturas.length}</td>
-                {context.canManageSecciones && <td>{(isAdmin || managedCarrerasIds.includes(row.id_carrera)) && <><button className="secondary" disabled={busy} onClick={() => { setForm({ ...row, id: row.id_seccion }); setMessage('') }}>Editar</button></>}</td>}
-            </tr>)}
-            {!visibleRows.length && <tr><td colSpan={context.canManageSecciones ? 6 : 5}>No hay secciones visibles en tu carrera u organización.</td></tr>}
-        </tbody></table></div>}
+        {loading ? <p role="status">Cargando grupos…</p> : !error && context?.activePeriod && <GruposTurnos key={periodId} context={context} groups={rows} configurations={configurations} onEdit={row => { setForm({...row,id:row.id_seccion}); setMessage(''); setError('') }}/>}
     </section>
 }

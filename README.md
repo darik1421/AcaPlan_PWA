@@ -4,6 +4,8 @@ Aplicación web progresiva para la gestión de horarios académicos de la UNAN-M
 
 ## Estado actual
 
+La PWA está en adaptación al flujo acordado en octubre. Se conservan los catálogos y se sustituyen las operaciones anteriores por etapas; los cierres de septiembre que se citan abajo son antecedentes. Para conocer las funciones activas y las retiradas, consulta primero [la actualización del Sprint 2](docs/sprint-2.md).
+
 Base local con React, JavaScript, HTML, CSS, Node.js y cliente de Supabase.
 Sprint 1 implementado: acceso, recuperación, cierre de sesión, cuentas y períodos. SQL compartido y Edge Function móvil desplegados en Supabase; redirecciones de recuperación local configuradas. Se verificaron el acceso administrativo, las consultas y el cierre con una sesión real. Las pruebas que crean datos y la aceptación completa en teléfono se pospusieron por decisión del responsable. Consulta [docs/sprint-1.md](docs/sprint-1.md).
 La comprobación del backend no comprueba el acceso a la base de datos.
@@ -107,3 +109,5 @@ Supabase.sql es un esquema local de referencia, no una migración automática.
 Los dos .gitignore se conservan: el de la raíz aplica a todo el repositorio y el del frontend añade reglas locales.
 
 La documentación de contexto está en AcaPlan.txt y las historias y sprints en AcaPlan_PWA_Historias_y_Planificacion_SCRUM.docx.
+
+Adaptación vigente al 9 de octubre de 2026: el flujo acordado utiliza sesiones regulares de 90 minutos formadas por dos bloques de 45. Las configuraciones por turno y sus vínculos con grupos están disponibles; el resumen comprueba posiciones temporales, sin generar horarios. Se retiraron los formularios y las rutas de escritura del modelo anterior, la pantalla de preferencias y la confirmación de importaciones antiguas. El ejemplo XLSX y su historial se consultan dentro de programación. Las plantillas definitivas, la persistencia adaptada, las restricciones comunicadas y el motor generador siguen pendientes. Consulta [el estado actual](docs/sprint-2.md) y [el traspaso para continuar](docs/AcaPlan_PWA_Traspaso_para_Gemini.docx). El registro del [Sprint 3 anterior](docs/sprint-3.md) es histórico, no una certificación del flujo nuevo.

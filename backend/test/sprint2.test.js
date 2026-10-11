@@ -2,23 +2,23 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { createManagement } from '../src/management.js'
 import { bloqueInput, disponibilidadInput, programacionInput } from '../src/validation.js'
+const grid={id_periodo:1,nombre:'Mañana',turno:'matutino',bloques:[{dia:'Lunes',hora_inicio:'08:00',hora_fin:'08:45',es_receso:false}]}
 const request = { headers: { authorization: 'Bearer test' } }
 const block = { id: 1, id_periodo: 1, dia: 'LUNES', hora_inicio: '08:00', hora_fin: '09:00', es_receso: false }
 const program = { id_periodo: 1, id_seccion: 1, id_asignatura: 1, id_docente: 1, sesiones_semanales: 2, duracion_bloques: 1, requisito_laboratorio: false }
 
-test('Bloques y programación alcanzan la RPC con módulos ES y datos normalizados', async () => {
+test('Configuraciones por turno alcanzan su RPC con datos normalizados', async () => {
  const calls=[]
  const management=createManagement({url:'https://example.test',key:'public',fetchImpl:async(url,options)=>{
   calls.push({url,...JSON.parse(options.body)}); return Response.json({ok:true})
  }})
- for(const [route,data] of [['bloques.create',block],['bloques.update',block],['programacion.create',program]]) {
+ for(const [route,data] of [['grids.save',grid],['grids.save',{...grid,id:1,version:1}]]) {
   assert.deepEqual(await management.execute(request,{rol:'administrador'},route,data),{ok:true})
  }
- assert.equal(calls.length,3)
- assert.equal(calls[0].payload.dia,'Lunes')
+ assert.equal(calls.length,2)
+ assert.equal(calls[0].payload.bloques[0].dia,'Lunes')
  assert.equal(calls[1].payload.id,1)
- assert.equal(calls[2].payload.sesiones_semanales,2)
- assert.ok(calls.every(c=>c.url.endsWith('/rpc/pwa_sprint2')))
+ assert.ok(calls.every(c=>c.url.endsWith('/rpc/pwa_cuadriculas_api')))
 })
 
 test('Contexto reconoce funciones y carreras del sprint 1 para cada rol', async () => {
@@ -49,13 +49,25 @@ test('Valida enteros, booleanos y horas sin coerciones silenciosas', () => {
 test('Los errores de solapamiento e integridad se comunican sin marcarlos como fallos de red', async () => {
  for(const [body,status] of [[{message:'INTERVALO_OCUPADO'},409],[{code:'23503'},409],[{code:'23502'},400]]) {
   const management=createManagement({url:'https://example.test',key:'public',fetchImpl:async()=>Response.json(body,{status:400})})
-  await assert.rejects(management.execute(request,{rol:'administrador'},'bloques.create',block),e=>e.status===status && !e.uncertain)
+  await assert.rejects(management.execute(request,{rol:'administrador'},'grids.save',grid),e=>e.status===status && !e.uncertain)
  }
 })
 
 test('Identifica las clases afectadas sin exponer detalles arbitrarios de PostgreSQL', async () => {
  for (const [details,fragment] of [['[12,34]','12, 34'],['información interna','Revisa y resuelve']]) {
   const management=createManagement({url:'https://example.test',key:'public',fetchImpl:async()=>Response.json({message:'ASIGNACIONES_AFECTADAS',details},{status:400})})
-  await assert.rejects(management.execute(request,{rol:'administrador'},'bloques.create',block),e=>e.status===409 && e.message.includes(fragment) && !e.message.includes('información interna'))
+  await assert.rejects(management.execute(request,{rol:'administrador'},'grids.save',grid),e=>e.status===409 && e.message.includes(fragment) && !e.message.includes('información interna'))
  }
+})
+
+test('Una validación SQL antigua no recomienda restaurar reglas descartadas',async()=>{
+ for(const message of ['BLOQUE_NO_LECTIVO','CARGA_INCOMPATIBLE','DISPONIBILIDAD_INSUFICIENTE']) {
+  const management=createManagement({url:'https://example.test',key:'public',fetchImpl:async()=>Response.json({message},{status:400})})
+  await assert.rejects(management.execute(request,{rol:'administrador'},'grids.save',grid),error=>error.message.includes('modelo anterior')&&!error.message.includes('80 minutos')&&!error.uncertain)
+ }
+})
+
+test('La protección de turnos en uso se comunica como conflicto, no como fallo de red',async()=>{
+ const management=createManagement({url:'https://example.test',key:'public',fetchImpl:async()=>Response.json({message:'TURNO_CON_CLASES'},{status:400})})
+ await assert.rejects(management.execute(request,{rol:'administrador'},'grids.save',grid),e=>e.status===409&&e.message.includes('grupos con clases registradas')&&!e.uncertain)
 })

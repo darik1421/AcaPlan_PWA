@@ -3,6 +3,27 @@ import { once } from 'node:events'
 import test from 'node:test'
 import { createApp } from '../src/app.js'
 
+test('Las operaciones retiradas no alcanzan Supabase aunque se llamen directamente',async()=>{
+ const calls=[]
+ const app=createApp({authenticateRequest:async()=>({rol:'administrador'}),management:{execute:async(...args)=>{calls.push(args);return []}}})
+ app.listen(0,'127.0.0.1');await once(app,'listening')
+ const base=`http://127.0.0.1:${app.address().port}/api`
+ try{
+  for(const [path,method] of [
+   ['/asignaturas','POST'],['/pabellones','POST'],['/recursos','POST'],['/aulas','POST'],['/secciones','POST'],['/bloques','POST'],['/bloques','PATCH'],
+   ['/disponibilidad','POST'],['/disponibilidad','PATCH'],['/programacion/detalle','POST'],['/programacion/detalle','PATCH'],
+   ['/importacion/vista-previa','POST'],['/importacion/confirmar','POST'],['/planificacion/reglas/guardar','POST'],
+   ['/planificacion/comprobar','POST'],['/programacion','POST'],['/programacion/delete','POST'],
+  ]){
+   const result=await fetch(base+path,{method,headers:{'Content-Type':'application/json'},body:'{}'})
+   assert.ok([404,405].includes(result.status),`${method} ${path}: ${result.status}`)
+  }
+  assert.equal(calls.length,0)
+  assert.equal((await fetch(base+'/aulas',{method:'PATCH',headers:{'Content-Type':'application/json'},body:'{}'})).status,200)
+  assert.equal(calls.length,1)
+ }finally{app.closeAllConnections();await new Promise(resolve=>app.close(resolve))}
+})
+
 test('Salud, métodos no admitidos y rutas inexistentes', async () => {
   const app = createApp()
   app.listen(0, '127.0.0.1')
@@ -54,7 +75,7 @@ test('Sin sesión no se ejecuta ninguna ruta de gestión',async()=>{
   app.listen(0,'127.0.0.1');await once(app,'listening')
   const base=`http://127.0.0.1:${app.address().port}`
   try {
-    for(const [path,method] of [['/workspace','GET'],['/accounts','GET'],['/accounts','POST'],['/accounts','PATCH'],['/periods','GET'],['/periods','POST'],['/periods/active','POST']]){
+    for(const [path,method] of [['/workspace','GET'],['/accounts','GET'],['/accounts','POST'],['/accounts','PATCH'],['/periods','GET'],['/periods','POST'],['/periods/active','POST'],['/programacion/resumen','GET'],['/programacion/detalle','GET'],['/importacion/plantilla','GET'],['/importacion/historial','GET']]){
       assert.equal((await fetch(base+'/api'+path,{method})).status,401)
     }
   } finally {app.closeAllConnections();await new Promise(resolve=>app.close(resolve))}

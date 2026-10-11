@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { api } from '../../services/management'
 import { useAuth } from '../auth/AuthContext'
 const empty = () => ({ nombre: '', correo: '', cedula: '', password: '', rol: 'docente', estado: 'activo', funciones: [], carreras: [] })
-const functions = [['coordinador','Coordinación'], ['planificador','Planificación'], ['aprobador','Aprobación']]
+const functions = [['coordinador','Coordinadores de carrera'], ['planificador','Planificación'], ['aprobador','Aprobación'], ['jefe_departamento','Jefes de departamento']]
 export default function AccountsPage({ context, onChanged }) {
   const { profile, retry } = useAuth()
   const [rows,setRows] = useState([])
@@ -55,10 +55,11 @@ export default function AccountsPage({ context, onChanged }) {
       </div>
       {form.id && <p className="muted">El correo se conserva para mantener la vinculación con Supabase Auth.</p>}
       <fieldset className="choice-group"><legend>Funciones adicionales</legend>
-        {functions.map(([id,label])=><label className="check-label" key={id}><input type="checkbox" checked={form.funciones.includes(id)} onChange={()=>toggle('funciones',id)}/>{label}</label>)}
+        {functions.filter(([id]) => id !== 'jefe_departamento' || context.permissionVersion >= 2 || form.funciones.includes(id)).map(([id,label])=><label className="check-label" key={id}><input type="checkbox" checked={form.funciones.includes(id)} onChange={()=>toggle('funciones',id)}/>{label}</label>)}
       </fieldset>
-      <p className="muted">Planificación permite gestionar períodos. Las acciones de coordinación y aprobación se desarrollarán en sus sprints.</p>
-      {form.funciones.includes('coordinador') && <fieldset className="choice-group"><legend>Carreras bajo coordinación (selecciona al menos una)</legend>
+      <p className="muted">Los coordinadores de carrera gestionan la asignación académica de sus carreras. Planificación permite gestionar semestres; aprobación identifica a quienes revisan el horario.</p>
+      {context.permissionVersion >= 2 && <p className="muted">Los jefes de departamento registran las restricciones docentes. Los coordinadores de carrera pueden consultarlas. Los administradores conservan su acceso de gestión.</p>}
+      {form.funciones.includes('coordinador') && <fieldset className="choice-group"><legend>Carreras asignadas (selecciona al menos una)</legend>
         {!context.catalogoCarreras.length && <p className="notice">No hay carreras registradas. Primero deben incorporarse al catálogo.</p>}
         {context.catalogoCarreras.map(c=><label className="check-label" key={c.id_carrera}><input type="checkbox" checked={form.carreras.includes(c.id_carrera)} onChange={()=>toggle('carreras',c.id_carrera)}/>{c.nombre}</label>)}
       </fieldset>}
@@ -67,7 +68,7 @@ export default function AccountsPage({ context, onChanged }) {
     </form>}
     <div className="list-toolbar"><label>Buscar cuentas<input type="search" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Nombre, correo o cédula"/></label><button className="secondary" disabled={busy || loading} onClick={()=>load()}>Actualizar lista</button></div>
     {loading ? <p role="status">Cargando cuentas…</p> : <div className="table-scroll"><table><caption>{filtered.length} cuentas</caption><thead><tr><th>Persona</th><th>Rol y funciones</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>
-      {filtered.map(row=><tr key={row.id_usuario}><td><strong>{row.nombre}</strong><span className="cell-detail">{row.correo}</span></td><td>{row.rol}<span className="cell-detail">{row.funciones.join(', ') || 'Sin funciones adicionales'}</span></td><td><span className={row.estado === 'activo' ? 'badge active':'badge'}>{row.estado}</span></td><td><button className="secondary" disabled={busy} aria-label={`Editar cuenta de ${row.nombre}`} onClick={()=>{setForm({...row,id:row.id_usuario,password:''});setMessage('')}}>Editar</button></td></tr>)}
+      {filtered.map(row=><tr key={row.id_usuario}><td><strong>{row.nombre}</strong><span className="cell-detail">{row.correo}</span></td><td>{row.rol}<span className="cell-detail">{row.funciones.map(value => ({ coordinador: 'Coordinadores de carrera', planificador: 'Planificación', aprobador: 'Aprobación', jefe_departamento: 'Jefes de departamento' })[value] || value).join(', ') || 'Sin funciones adicionales'}</span></td><td><span className={row.estado === 'activo' ? 'badge active':'badge'}>{row.estado}</span></td><td><button className="secondary" disabled={busy} aria-label={`Editar cuenta de ${row.nombre}`} onClick={()=>{setForm({...row,id:row.id_usuario,password:''});setMessage('')}}>Editar</button></td></tr>)}
       {!filtered.length && <tr><td colSpan={4}>No hay cuentas que coincidan.</td></tr>}
     </tbody></table></div>}
   </section>

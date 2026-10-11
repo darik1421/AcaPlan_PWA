@@ -1,11 +1,11 @@
 import { AccessError } from './auth.js'
-export async function readBody(request) {
+export async function readBody(request, maxBytes = 16384) {
   if (!request.headers['content-type']?.toLowerCase().startsWith('application/json')) throw new AccessError(415, 'Se requiere JSON.')
   const chunks = []
   let size = 0
   for await (const chunk of request.iterator({ destroyOnReturn: false })) {
     size += chunk.length
-    if (size > 16384) {
+    if (size > maxBytes) {
       request.resume()
       throw new AccessError(413, 'El formulario supera el tamaño permitido.')
     }

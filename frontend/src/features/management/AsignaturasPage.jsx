@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../../services/management'
 
-const empty = (id_carrera = '') => ({ nombre: '', codigo: '', id_carrera, ano_estudio: 1, horas_teoricas: 0, horas_practicas: 0 })
 
 export default function AsignaturasPage({ context, canManage, onChanged }) {
     const [rows, setRows] = useState([])
@@ -35,15 +34,18 @@ export default function AsignaturasPage({ context, canManage, onChanged }) {
 
     useEffect(() => { const c = new AbortController(); load(c.signal); return () => c.abort() }, [])
 
+    const careerScope = JSON.stringify(context?.carreras || [])
+    useEffect(() => { setForm(null); setMessage('') }, [canManage, context?.isAdmin, careerScope])
+
     const field = (name, value) => setForm(current => ({ ...current, [name]: value }))
 
     async function save(event) {
         event.preventDefault()
-        if (busy) return
+        if (busy || !form?.id || !canEdit(form.id_carrera)) return
         setBusy(true); setError(''); setMessage('')
         try {
-            await api('/asignaturas', { method: form.id ? 'PATCH' : 'POST', data: form })
-            setMessage(form.id ? 'Asignatura actualizada.' : 'Asignatura registrada.')
+            await api('/asignaturas', { method: 'PATCH', data: form })
+            setMessage('Asignatura actualizada.')
             setForm(null); await load(); onChanged()
         } catch (e) { setError(e.message) }
         finally { setBusy(false) }
@@ -62,13 +64,14 @@ export default function AsignaturasPage({ context, canManage, onChanged }) {
 
     return <section aria-labelledby="asignaturas-title">
         <div className="section-heading">
-            <div><h2 id="asignaturas-title">Gestión de asignaturas</h2><p className="muted">Oferta académica y horas requeridas.</p></div>
-            {canManage && <button className="secondary" disabled={busy || !activeCarreras.length} onClick={() => { setForm(empty(activeCarreras[0]?.id_carrera)); setMessage('') }}>Nueva asignatura</button>}
+            <div><h2 id="asignaturas-title">Gestión de asignaturas</h2><p className="muted">Consulta de asignaturas y corrección de los datos recibidos.</p></div>
         </div>
+        <p className="muted">Los coordinadores de carrera proporcionarán las asignaturas y sus docentes mediante Excel. La importación definitiva está pendiente; aquí puedes consultar y corregir los registros existentes.</p>
+        <p className="muted">Las horas teóricas y prácticas son datos del catálogo; no determinan automáticamente la duración de las clases. La regla general de matutino y vespertino es de dos sesiones de 90 minutos por semana.</p>
         {error && <p role="alert" className="error">{error}</p>}
         {message && <p role="status" className="success">{message}</p>}
-        {form && <form className="management-form" onSubmit={save}>
-            <h3>{form.id ? 'Editar asignatura' : 'Nueva asignatura'}</h3>
+        {form && canEdit(form.id_carrera) && <form className="management-form" onSubmit={save}>
+            <h3>Corregir asignatura</h3>
             <fieldset disabled={busy}><div className="form-grid">
                 <label>Carrera
                     <select required disabled={!!form.id} value={form.id_carrera} onChange={e => field('id_carrera', Number(e.target.value))}>
@@ -81,8 +84,8 @@ export default function AsignaturasPage({ context, canManage, onChanged }) {
                 <label>Código<input required maxLength={20} value={form.codigo} onChange={e => field('codigo', e.target.value)} /></label>
                 <label>Nombre de la asignatura<input required maxLength={100} value={form.nombre} onChange={e => field('nombre', e.target.value)} /></label>
                 <label>Año de estudio<input type="number" min="1" max="10" required value={form.ano_estudio} onChange={e => field('ano_estudio', Number(e.target.value))} /></label>
-                <label>Horas teóricas<input type="number" min="0" required value={form.horas_teoricas} onChange={e => field('horas_teoricas', Number(e.target.value))} /></label>
-                <label>Horas prácticas<input type="number" min="0" required value={form.horas_practicas} onChange={e => field('horas_practicas', Number(e.target.value))} /></label>
+                <label>Horas teóricas<input type="number" min="0" required value={form.horas_teoricas} onChange={e => field('horas_teoricas', e.target.value)} /></label>
+                <label>Horas prácticas<input type="number" min="0" required value={form.horas_practicas} onChange={e => field('horas_practicas', e.target.value)} /></label>
                 {form.id && <label>Estado<select value={form.estado} onChange={e => field('estado', e.target.value)}><option value="activo">Activo</option><option value="inactivo">Inactivo</option></select></label>}
             </div>
                 <div className="form-actions"><button className="primary" type="submit">{busy ? 'Guardando…' : 'Guardar asignatura'}</button><button className="secondary" type="button" onClick={() => setForm(null)}>Cancelar</button></div>
@@ -94,7 +97,7 @@ export default function AsignaturasPage({ context, canManage, onChanged }) {
             <label>Filtrar por año<select value={yearFilter} onChange={e => setYearFilter(e.target.value)}><option value="">Todos los años</option>{[...new Set(rows.map(r => r.ano_estudio))].sort((a,b) => a-b).map(year => <option key={year} value={year}>{year}</option>)}</select></label>
             <button className="secondary" disabled={busy || loading} onClick={() => load()}>Actualizar lista</button>
         </div>
-        {loading ? <p role="status">Cargando asignaturas…</p> : <div className="table-scroll"><table><caption>{filtered.length} asignaturas</caption><thead><tr><th>Código</th><th>Asignatura</th><th>Carrera</th><th>Año</th><th>HT</th><th>HP</th><th>Estado</th>{canManage && <th>Acciones</th>}</tr></thead><tbody>
+        {loading ? <p role="status">Cargando asignaturas…</p> : <div className="table-scroll"><table><caption>{filtered.length} asignaturas</caption><thead><tr><th>Código</th><th>Asignatura</th><th>Carrera</th><th>Año</th><th>Horas teóricas</th><th>Horas prácticas</th><th>Estado</th>{canManage && <th>Acciones</th>}</tr></thead><tbody>
             {filtered.map(row => <tr key={row.id_asignatura}>
                 <td>{row.codigo}</td><td>{row.nombre}</td><td>{row.carrera_nombre}</td><td>{row.ano_estudio}</td><td>{row.horas_teoricas}</td><td>{row.horas_practicas}</td>
                 <td><span className={row.estado === 'activo' ? 'badge active' : 'badge'}>{row.estado}</span></td>

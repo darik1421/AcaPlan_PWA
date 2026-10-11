@@ -1,0 +1,30 @@
+import {cleanup,fireEvent,render,screen,waitFor} from '@testing-library/react'
+import {afterEach,test,expect,vi} from 'vitest'
+import ImportacionPage from '../src/features/management/ImportacionPage'
+const mocks=vi.hoisted(()=>({api:vi.fn()}))
+vi.mock('../src/services/management',()=>({api:mocks.api}))
+afterEach(()=>{cleanup();mocks.api.mockReset();vi.restoreAllMocks();vi.unstubAllGlobals()})
+test('Conserva el ejemplo descargable sin captura ni confirmación de archivos',async()=>{
+ mocks.api.mockResolvedValue({base64:btoa('example'),archivo:'AcaPlan.xlsx'})
+ const create=vi.fn(()=> 'blob:example')
+ vi.stubGlobal('URL',Object.assign(class {},{createObjectURL:create,revokeObjectURL:vi.fn()}))
+ const click=vi.spyOn(HTMLAnchorElement.prototype,'click').mockImplementation(()=>{})
+ const view=render(<ImportacionPage/> )
+ expect(view.container.querySelector('input[type="file"]')).toBeNull()
+ expect(screen.queryByRole('button',{name:'Confirmar lote completo'})).toBeNull()
+ fireEvent.click(screen.getByRole('button',{name:'Descargar ejemplo XLSX'}))
+ await waitFor(()=>expect(click).toHaveBeenCalledOnce())
+ expect(mocks.api).toHaveBeenCalledWith('/importacion/plantilla')
+ expect(create).toHaveBeenCalledOnce()
+})
+test('El historial anterior se consulta al abrir y no permite confirmar lotes pendientes',async()=>{
+ mocks.api.mockResolvedValue([{id:1,archivo:'Anterior.xlsx',estado:'preview',creado:'2026-10-01T12:00:00Z'}])
+ render(<ImportacionPage/> )
+ expect(mocks.api).not.toHaveBeenCalled()
+ const detail=screen.getByText('Mis importaciones anteriores').closest('details')
+ detail.open=true;fireEvent(detail,new Event('toggle'))
+ await screen.findByText('Anterior.xlsx')
+ expect(screen.getByText('Vista previa anterior')).toBeTruthy()
+ expect(screen.queryByRole('button',{name:/Confirmar/})).toBeNull()
+ expect(mocks.api.mock.calls.every(([,options])=>!options?.method)).toBe(true)
+})

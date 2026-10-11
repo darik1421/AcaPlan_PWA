@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../../services/management'
 
-const emptyAula = (id_pabellon) => ({ codigo: '', tipo: 'aula', capacidad: 30, id_pabellon, recursos: [] })
 
 export default function EspaciosPage({ canManage, onChanged }) {
     const [tab, setTab] = useState('aulas')
@@ -19,8 +18,6 @@ export default function EspaciosPage({ canManage, onChanged }) {
 
     // Formularios
     const [formAula, setFormAula] = useState(null)
-    const [formPabellon, setFormPabellon] = useState(null)
-    const [formRecurso, setFormRecurso] = useState(null)
 
     async function load(signal) {
         setLoading(true); setError('')
@@ -43,10 +40,10 @@ export default function EspaciosPage({ canManage, onChanged }) {
     useEffect(() => { const c = new AbortController(); load(c.signal); return () => c.abort() }, [])
 
     async function saveEntity(endpoint, payload, resetForm, successMsg) {
-        if (busy) return
+        if (busy || !canManage || !payload.id) return
         setBusy(true); setError(''); setMessage('')
         try {
-            await api(endpoint, { method: payload.id ? 'PATCH' : 'POST', data: payload })
+            await api(endpoint, { method: 'PATCH', data: payload })
             setMessage(successMsg)
             resetForm(); await load(); onChanged()
         } catch (e) { setError(e.message) }
@@ -68,6 +65,7 @@ export default function EspaciosPage({ canManage, onChanged }) {
             <div><h2 id="espacios-title">Gestión de espacios</h2><p className="muted">Administración de pabellones, aulas y recursos físicos.</p></div>
         </div>
 
+        <p className="notice">El inventario se cargará desde Excel cuando se defina su plantilla. Por ahora puedes consultar los datos existentes y corregir aulas registradas.</p>
         <nav className="workspace-nav" aria-label="Espacios">
             <button className={tab === 'aulas' ? 'selected' : ''} onClick={() => setTab('aulas')}>Aulas y Laboratorios</button>
             <button className={tab === 'pabellones' ? 'selected' : ''} onClick={() => setTab('pabellones')}>Pabellones</button>
@@ -79,11 +77,9 @@ export default function EspaciosPage({ canManage, onChanged }) {
 
         {/* TABS */}
         {tab === 'aulas' && <div>
-            {canManage && <button className="secondary" style={{ marginBottom: '1rem' }} disabled={busy || !pabellones.length} onClick={() => { setFormAula(emptyAula(pabellones[0]?.id_pabellon)); setMessage('') }}>Nueva aula</button>}
-            {!loading && canManage && !pabellones.length && <p>Registra primero un pabellón para añadir aulas.</p>}
 
-            {formAula && <form className="management-form" onSubmit={(e) => { e.preventDefault(); saveEntity('/aulas', formAula, () => setFormAula(null), formAula.id ? 'Aula actualizada' : 'Aula creada') }}>
-                <h3>{formAula.id ? 'Editar aula' : 'Nueva aula'}</h3>
+            {formAula && canManage && <form className="management-form" onSubmit={(e) => { e.preventDefault(); saveEntity('/aulas', formAula, () => setFormAula(null), 'Aula actualizada') }}>
+                <h3>Corregir aula</h3>
                 <fieldset disabled={busy}><div className="form-grid">
                     <label>Pabellón
                         <select required disabled={!!formAula.id} value={formAula.id_pabellon} onChange={e => setFormAula(c => ({ ...c, id_pabellon: Number(e.target.value) }))}>
@@ -127,24 +123,12 @@ export default function EspaciosPage({ canManage, onChanged }) {
         </div>}
 
         {tab === 'pabellones' && <div>
-            {canManage && <button className="secondary" style={{ marginBottom: '1rem' }} disabled={busy} onClick={() => { setFormPabellon({ nombre: '' }); setMessage('') }}>Nuevo pabellón</button>}
-            {formPabellon && <form className="management-form" onSubmit={(e) => { e.preventDefault(); saveEntity('/pabellones', formPabellon, () => setFormPabellon(null), 'Pabellón creado') }}>
-                <h3>Nuevo pabellón</h3>
-                <fieldset disabled={busy}><div className="form-grid">
-                    <label>Nombre<input required maxLength={50} value={formPabellon.nombre} onChange={e => setFormPabellon(c => ({ ...c, nombre: e.target.value }))} /></label>
-                </div><div className="form-actions"><button className="primary" type="submit">{busy ? 'Guardando…' : 'Guardar'}</button><button className="secondary" type="button" onClick={() => setFormPabellon(null)}>Cancelar</button></div></fieldset>
-            </form>}
+
             {loading ? <p role="status">Cargando pabellones…</p> : <ul>{pabellones.map(p => <li key={p.id_pabellon}>{p.nombre}</li>)}{!pabellones.length && <li>Vacío.</li>}</ul>}
         </div>}
 
         {tab === 'recursos' && <div>
-            {canManage && <button className="secondary" style={{ marginBottom: '1rem' }} disabled={busy} onClick={() => { setFormRecurso({ nombre: '' }); setMessage('') }}>Nuevo recurso</button>}
-            {formRecurso && <form className="management-form" onSubmit={(e) => { e.preventDefault(); saveEntity('/recursos', formRecurso, () => setFormRecurso(null), 'Recurso creado') }}>
-                <h3>Nuevo recurso</h3>
-                <fieldset disabled={busy}><div className="form-grid">
-                    <label>Nombre del recurso (Ej. Proyector, Aire Acondicionado)<input required maxLength={50} value={formRecurso.nombre} onChange={e => setFormRecurso(c => ({ ...c, nombre: e.target.value }))} /></label>
-                </div><div className="form-actions"><button className="primary" type="submit">{busy ? 'Guardando…' : 'Guardar'}</button><button className="secondary" type="button" onClick={() => setFormRecurso(null)}>Cancelar</button></div></fieldset>
-            </form>}
+
             {loading ? <p role="status">Cargando recursos…</p> : <ul>{recursos.map(p => <li key={p.id_recurso}>{p.nombre}</li>)}{!recursos.length && <li>Vacío.</li>}</ul>}
         </div>}
     </section>
