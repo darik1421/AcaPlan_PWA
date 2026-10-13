@@ -24,6 +24,10 @@ export function validateSchedule({ clases, secciones, asignaturas, docentes, aul
   const restrictions = []
   if (!Array.isArray(restricciones)) issue('RESTRICCIONES_SIN_CARGAR', 'Falta consultar las restricciones comunicadas. Una consulta ausente no equivale a una lista vacía.', [])
   else for (const restriction of restricciones) {
+    if (restriction?.activa === false) continue
+    if (restriction?.activa !== undefined && restriction.activa !== true) {
+      issue('RESTRICCION_INVALIDA', 'El estado de una restricción no es válido.', []); continue
+    }
     const start = seconds(restriction?.hora_inicio), end = seconds(restriction?.hora_fin)
     if (!restriction || !teachers.has(restriction.id_docente) || !Number.isSafeInteger(restriction.id_periodo) || restriction.id_periodo < 1 ||
       !['Lunes','Martes','Miercoles','Jueves','Viernes','Sabado','Domingo'].includes(restriction.dia) || start === null || end === null || start >= end) {

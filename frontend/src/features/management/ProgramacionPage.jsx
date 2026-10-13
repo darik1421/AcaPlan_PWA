@@ -39,8 +39,8 @@ export default function ProgramacionPage({ context }) {
     return <section aria-labelledby="prog-title" className="management-page">
         <div className="section-heading">
             <div>
-                <h2 id="prog-title">Programación Académica</h2>
-                <p className="muted">Consulta las asignaturas y los docentes registrados para cada grupo en {context?.activePeriod?.nombre || 'ningún semestre'}.</p>
+                <h2 id="prog-title">Asignaturas y docentes recibidos</h2>
+                <p className="muted">Consulta las asignaturas y los docentes registrados para cada año de carrera en {context?.activePeriod?.nombre || 'ningún semestre'}.</p>
             </div>
         </div>
 
@@ -51,15 +51,15 @@ export default function ProgramacionPage({ context }) {
         {error && <div><p role="alert" className="error">{error}</p><button className="secondary" disabled={loading} onClick={() => load()}>Reintentar asignaciones</button></div>}
 
         {context?.activePeriod && <div className="list-toolbar">
-            <label>Grupo a consultar:
+            <label>Año de carrera a consultar:
                 <select value={filtroSeccion} onChange={e => { setFiltroSeccion(e.target.value) }}>
-                    {secciones.map(d => <option key={d.id_seccion} value={d.id_seccion}>{d.codigo} · {d.carrera_nombre}</option>)}
-                    {!secciones.length && <option value="">Sin grupos disponibles</option>}
+                    {secciones.map(d => <option key={d.id_seccion} value={d.id_seccion}>{d.carrera_nombre} · {d.ano_estudio ? `Año ${d.ano_estudio}` : 'Año pendiente'} · {d.codigo}</option>)}
+                    {!secciones.length && <option value="">Sin años de carrera registrados</option>}
                 </select>
             </label>
         </div>}
 
-        {loading ? <p role="status" style={{ marginTop: '1rem' }}>Cargando asignaciones…</p> : !error && context?.activePeriod && <div className="table-scroll" style={{ marginTop: '1rem' }}><table><caption>Asignaciones registradas para el grupo seleccionado</caption><thead><tr><th>Asignatura</th><th>Docente</th><th>Sesiones del registro anterior</th><th>Bloques del registro anterior</th><th>Laboratorio</th></tr></thead><tbody>
+        {loading ? <p role="status" style={{ marginTop: '1rem' }}>Cargando asignaciones…</p> : !error && context?.activePeriod && <div className="table-scroll" style={{ marginTop: '1rem' }}><table><caption>Asignaciones registradas para el año de carrera seleccionado</caption><thead><tr><th>Asignatura</th><th>Docente</th><th>Sesiones del registro anterior</th><th>Bloques del registro anterior</th><th>Laboratorio</th></tr></thead><tbody>
             {visibles.map(row => <tr key={row.id_programacion}>
                 <td><strong style={{ fontSize: '1em' }}>{row.asignatura_nombre}</strong></td>
                 <td>{row.docente_nombres} {row.docente_apellidos}</td>
@@ -67,7 +67,7 @@ export default function ProgramacionPage({ context }) {
                 <td>{row.duracion_bloques} consecutivos</td>
                 <td>{row.requisito_laboratorio ? 'Sí' : 'No requerido'}</td>
             </tr>)}
-            {!visibles.length && <tr><td colSpan="5">No se han registrado pre-asignaciones docentes para este grupo.</td></tr>}
+            {!visibles.length && <tr><td colSpan="5">No se han registrado pre-asignaciones docentes para este año de carrera.</td></tr>}
         </tbody></table></div>}
         <ProgramacionResumen key={context?.activePeriod?.id_periodo || 'sin-periodo'} activePeriodId={context?.activePeriod?.id_periodo} revision={0} />
     </section>

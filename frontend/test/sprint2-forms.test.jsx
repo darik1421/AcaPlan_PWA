@@ -66,7 +66,7 @@ test('Grupos permite asignar el turno del semestre y no muestra configuraciones 
 })
 test('Programación consulta solo grupos del semestre sin ofrecer alta manual',async()=>{
  mockData();render(<ProgramacionPage context={{...base,isAdmin:true,carreras:[]}}/> )
- await waitFor(()=>expect(screen.getByLabelText('Grupo a consultar:').options).toHaveLength(2))
+ await waitFor(()=>expect(screen.getByLabelText('Año de carrera a consultar:').options).toHaveLength(2))
  expect(screen.queryByRole('option',{name:/OTRO-PERIODO/})).toBeNull()
  expect(screen.queryByRole('button',{name:'Registrar Impartición'})).toBeNull()
  expect(mocks.api.mock.calls.every(([,options])=>!options?.method)).toBe(true)
@@ -149,4 +149,14 @@ test('Asignaturas corrige sin alta manual y descarta el formulario al perder su 
  view.rerender(<AsignaturasPage context={{...base,carreras:[2]}} canManage onChanged={vi.fn()}/> )
  expect(screen.queryByRole('button',{name:'Guardar asignatura'})).toBeNull()
  expect(mocks.api.mock.calls.some(([,options])=>options?.method==='POST')).toBe(false)
+})
+
+test('La corrección de aula se descarta al perder el permiso y no reaparece al recuperarlo',async()=>{
+ mocks.api.mockImplementation(async path=>({'/pabellones':[{id_pabellon:1,nombre:'B'}],'/recursos':[], '/aulas':[{id_aula:1,id_pabellon:1,codigo:'B4',pabellon_nombre:'B',tipo:'laboratorio',capacidad:30,recursos:[],estado:'activo'}]}[path]||[]))
+ const view=render(<EspaciosPage canManage onChanged={vi.fn()}/>)
+ fireEvent.click(await screen.findByRole('button',{name:'Editar'}))
+ view.rerender(<EspaciosPage canManage={false} onChanged={vi.fn()}/>)
+ view.rerender(<EspaciosPage canManage onChanged={vi.fn()}/>)
+ expect(screen.queryByRole('heading',{name:'Corregir aula'})).toBeNull()
+ expect(mocks.api.mock.calls.some(([,options])=>options?.method==='PATCH')).toBe(false)
 })

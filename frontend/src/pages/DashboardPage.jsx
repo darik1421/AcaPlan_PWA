@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../features/auth/AuthContext'
 import { api } from '../services/management'
 import {
-  Building2, BookOpen, Users, LayoutGrid, Calendar,
+  Building2, BookOpen, Calendar,
   Layers, Clock, User, LogOut, BookA, ClipboardList
 } from 'lucide-react'
 
@@ -11,8 +11,7 @@ import PeriodsPage from '../features/management/PeriodsPage'
 import CarrerasPage from '../features/management/CarrerasPage'
 import AsignaturasPage from '../features/management/AsignaturasPage'
 import EspaciosPage from '../features/management/EspaciosPage'
-import SeccionesPage from '../features/management/SeccionesPage'
-import ProgramacionPage from '../features/management/ProgramacionPage'
+import AsignacionAcademicaPage from '../features/management/AsignacionAcademicaPage'
 import CuadriculasPage from '../features/management/CuadriculasPage'
 import DisponibilidadPage from '../features/management/DisponibilidadPage'
 import '../features/management/management.css'
@@ -20,7 +19,8 @@ import '../features/management/management.css'
 export default function DashboardPage() {
   const { profile, logout } = useAuth()
   const [closing, setClosing] = useState(false)
-  const [context, setContext] = useState(null)
+  const [workspace, setWorkspace] = useState(null)
+  const context = workspace?.profile === profile ? workspace.data : null
   const [error, setError] = useState('')
   const [revision, setRevision] = useState(0)
   const [page, setPage] = useState('periods')
@@ -32,8 +32,8 @@ export default function DashboardPage() {
     const controller = new AbortController()
     setError('')
     api('/workspace', { signal: controller.signal }).then(data => {
-      if (!controller.signal.aborted) setContext(data)
-    }).catch(e => { if (!controller.signal.aborted) { setError(e.message); setContext(null) } })
+      if (!controller.signal.aborted) setWorkspace({profile, data})
+    }).catch(e => { if (!controller.signal.aborted) { setError(e.message); setWorkspace(null) } })
     return () => controller.abort()
   }, [revision, profile])
 
@@ -53,9 +53,7 @@ export default function DashboardPage() {
         <button className={page === 'carreras' ? 'selected' : ''} onClick={() => setPage('carreras')}><Layers size={18} /> Carreras</button>
         <button className={page === 'asignaturas' ? 'selected' : ''} onClick={() => setPage('asignaturas')}><BookOpen size={18} /> Asignaturas</button>
         <button className={page === 'espacios' ? 'selected' : ''} onClick={() => setPage('espacios')}><Building2 size={18} /> Aulas y Recursos</button>
-        <button className={page === 'secciones' ? 'selected' : ''} onClick={() => setPage('secciones')}><Users size={18} /> Grupos</button>
-        <button className={page === 'programacion' ? 'selected' : ''} onClick={() => setPage('programacion')}><ClipboardList size={18} /> Demanda de carga</button>
-        <button className={page === 'bloques' ? 'selected' : ''} onClick={() => setPage('bloques')}><LayoutGrid size={18} /> Bloques y recesos</button>
+        <button className={page === 'programacion' ? 'selected' : ''} onClick={() => setPage('programacion')}><ClipboardList size={18} /> Asignación académica</button>
         <button className={page === 'disponibilidad' ? 'selected' : ''} onClick={() => setPage('disponibilidad')}><Clock size={18} /> Restricciones</button>
         {context?.canManageAccounts && <button className={page === 'accounts' ? 'selected' : ''} onClick={() => setPage('accounts')}><User size={18} /> Gestión de Cuentas</button>}
       </nav>
@@ -71,7 +69,7 @@ export default function DashboardPage() {
         <div className="topbar-left">
           <h2 className="topbar-title">UNAN-Managua CUR-Chontales</h2>
           <div className="topbar-periods">
-            <span>{context?.activePeriod ? `Semestre Activo: ${context.activePeriod.nombre}` : 'Sin semestre activo'}</span>
+            <span>{context?.activePeriod ? `Semestre Activo: ${context.activePeriod.nombre}` : context ? 'Sin semestre activo' : 'Semestre pendiente de consulta'}</span>
           </div>
         </div>
       </header>
@@ -84,11 +82,10 @@ export default function DashboardPage() {
             page === 'carreras' ? <CarrerasPage canManage={context.canManageCarreras} onChanged={refresh} /> :
               page === 'asignaturas' ? <AsignaturasPage context={context} canManage={context.canManageAsignaturas} onChanged={refresh} /> :
                 page === 'espacios' ? <EspaciosPage canManage={context.canManageEspacios} onChanged={refresh} /> :
-                  page === 'secciones' ? <SeccionesPage context={context} onChanged={refresh} /> :
-                    page === 'programacion' ? <ProgramacionPage context={context} /> :
-                      page === 'bloques' ? <CuadriculasPage context={context} /> :
+                    page === 'programacion' ? <AsignacionAcademicaPage context={context} onChanged={refresh} /> :
                         page === 'disponibilidad' ? <DisponibilidadPage context={context} /> :
-                          <PeriodsPage canManage={context.canManagePeriods} onChanged={refresh} />
+                          <><PeriodsPage canManage={context.canManagePeriods} onChanged={refresh} />
+                          {context.canManageBloques && <details><summary>Configuración de tiempos del semestre</summary><p>El encargado configura las horas de clase y los descansos de cada turno antes de organizar los horarios.</p><CuadriculasPage context={context}/></details>}</>
         )}
       </main>
     </div>

@@ -71,3 +71,15 @@ test('La protección de turnos en uso se comunica como conflicto, no como fallo 
  const management=createManagement({url:'https://example.test',key:'public',fetchImpl:async()=>Response.json({message:'TURNO_CON_CLASES'},{status:400})})
  await assert.rejects(management.execute(request,{rol:'administrador'},'grids.save',grid),e=>e.status===409&&e.message.includes('grupos con clases registradas')&&!e.uncertain)
 })
+
+test('El conflicto de turno muestra únicamente IDs positivos de las clases afectadas',async()=>{
+ for(const details of ['[12,34,-1,0,"secreto"]','dato interno']) {
+  const management=createManagement({url:'https://example.test',key:'public',fetchImpl:async()=>Response.json({message:'TURNO_CON_CLASES',details},{status:400})})
+  await assert.rejects(management.execute(request,{rol:'administrador'},'grids.save',grid),error=>{
+   assert.equal(error.status,409)
+   assert.equal(error.message.includes('12, 34'),details.startsWith('['))
+   assert.ok(!error.message.includes('secreto')&&!error.message.includes('dato interno')&&!error.message.includes('-1'))
+   return true
+  })
+ }
+})

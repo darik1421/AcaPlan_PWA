@@ -27,11 +27,12 @@ export default function CuadriculasPage({context}) {
   catch(e){setError(e.message)}finally{setBusy(false)}
  }
  return <section aria-labelledby="grids-title">
-  <div className="section-heading"><div><h2 id="grids-title">Bloques y recesos</h2><p>Define las horas de cada turno para {context?.activePeriod?.nombre||'un semestre activo'}.</p></div>
+  <div className="section-heading"><div><h2 id="grids-title">Tiempos de los turnos</h2><p>Define las horas de cada turno para {context?.activePeriod?.nombre||'un semestre activo'}.</p></div>
    {period&&editable&&<button className="secondary" disabled={busy} onClick={()=>{setForm({nombre:'',turno:turn,id_periodo:period,bloques:[block()]});setError('');setMessage('')}}>Añadir configuración de turno</button>}
   </div>
   <p className="muted">Matutino y vespertino: bloques de 45 minutos; dos seguidos forman una sesión de 90. Nocturno y encuentros: bloques de 60 minutos. El nocturno no lleva recesos. Registra el viernes dentro de encuentros cuando corresponda.</p>
-  <p className="notice">Asigna la configuración a cada grupo desde Grupos. Si un grupo ya tiene clases, no se pueden cambiar los tiempos ni el turno de su configuración; sí puedes corregir el nombre. La generación de horarios sigue pendiente.</p>
+  <p className="notice">El turno de cada año de carrera se revisa en Asignación académica → Años de carrera y turnos. Si un grupo ya tiene clases, no se pueden cambiar los tiempos ni el turno de su configuración; sí puedes corregir el nombre. La generación de horarios sigue pendiente.</p>
+  <p className="muted">Los descansos son intervalos sin clase: impiden asignar clases durante ese tiempo y no cuentan como huecos. No son asignaturas ni implican añadir una fila «Receso» al horario que se publique.</p>
   <label>Turno a consultar<select disabled={busy} value={turn} onChange={e=>setTurn(e.target.value)}>{Object.entries(turns).map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label>
   {!period&&<p className="notice">Activa un semestre para configurar sus bloques y recesos.</p>}
   {error&&<p role="alert" className="error">{error}</p>}{message&&<p role="status" className="success">{message}</p>}

@@ -1,3 +1,17 @@
+# Estado de adaptación del Sprint 3 — 11 de octubre de 2026
+
+Avance parcial, no cierre del Sprint 3 ni declaración de cierre de los sprints 1 y 2. Se completó el bloque de registro de restricciones ya iniciado; corresponde volver a los pendientes de integración del Sprint 2 antes de abrir más funcionalidades.
+
+## Registro de intervalos no disponibles
+
+Se desplegó `database.local/sprint-3-restricciones-comunicadas.sql`: tabla separada y RPC, sin convertir ni borrar disponibilidad histórica. GET/POST `/api/restricciones` conecta la PWA mediante el JWT del usuario. Jefes y administradores registran/corrigen/retiran; coordinadores y docentes consultan. Se valida intervalo, identidad inmutable, estado explícito y versión; se conservan autor y último editor. No hay borrado físico.
+
+`RestriccionesPanel.jsx` diferencia las restricciones nuevas de la consulta histórica y exige recargar tras un guardado fallido. El diagnóstico local ignora las retiradas. La tabla y RPC no modifican ni bloquean todavía escrituras en horarios: falta la integración transaccional y su consumo móvil. Clases juntas y excepciones autorizadas siguen pendientes. No se ejecutaron altas ficticias en producción.
+
+Pruebas: 95 backend, 56 interfaz, SQL local de roles/RLS/versiones, lint, compilación y arranque. Evidencia de despliegue: `docs/evidencias/sprint3-restricciones-registro.png`. No certifica pruebas de usuario real.
+
+## Registro histórico anterior
+
 # Sprint 3: programación, importación y conflictos
 
 Actualización local del 11 de octubre: el validador JavaScript ya usa reglas por turno y restricciones comunicadas; se retiraron los pesos antiguos y los recesos ajenos al grupo. Esto no modifica las funciones SQL descritas en el registro histórico siguiente ni certifica el Sprint 3. Ver el estado vigente en `sprint-2.md` y el Word de traspaso.

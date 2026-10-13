@@ -190,3 +190,12 @@ test('Disponibilidad histórica no se interpreta como restricciones ni reemplaza
  delete data.restricciones
  assert.ok(codes(data).includes('RESTRICCIONES_SIN_CARGAR'))
 })
+
+test('Las restricciones retiradas no bloquean y un estado ambiguo no se admite',()=>{
+ const data=snapshot();data.restricciones=[{id_docente:4,id_periodo:1,dia:'Lunes',hora_inicio:'08:00',hora_fin:'09:00',activa:false}]
+ assert.equal(validateSchedule(data).completo,true)
+ data.restricciones[0].activa=true
+ assert.ok(codes(data).includes('RESTRICCION_DOCENTE'))
+ data.restricciones[0].activa='false'
+ assert.ok(codes(data).includes('RESTRICCION_INVALIDA'))
+})

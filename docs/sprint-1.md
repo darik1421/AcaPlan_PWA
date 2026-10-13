@@ -1,25 +1,16 @@
-# Sprint 1 — Acceso, cuentas y períodos
+# Sprint 1 — Acceso, cuentas y semestres
 
-## Estado
-H01 (inicio de sesión), H02 (recuperación), H03 (cuentas y funciones), H04 (salida)
-y H05 (períodos) están implementadas. El diseño es provisional, pendiente de Figma.
-La migración compartida y la Edge Function móvil se desplegaron el 26/09/2026.
-El incremento está listo para demostración con el alcance implementado y las comprobaciones autorizadas.
-La aceptación completa no se da por aprobada: el responsable decidió posponer las pruebas que crean
-cuentas/períodos temporales. También quedan la entrega real de correo, la concurrencia con conexiones
-independientes y la ejecución en teléfono. No se presentan esas pruebas como realizadas.
+## Estado revisado el 11 de octubre de 2026
 
-| Historia | Implementación y evidencia | Validación real pendiente |
+La planificación vigente agrupa inicio, recuperación y cierre de sesión en H01 (las antiguas H02 y H04 no son historias independientes). Completan este sprint H03 y H05. No se declara cerrado.
+
+| Historia | Evidencia disponible | Pendiente de aceptación |
 | --- | --- | --- |
-| H01 Acceso | Inicio administrativo real, perfil compartido, API protegida y pruebas de rechazo | Docente y cuenta inactiva reales |
-| H02 Recuperación | Formularios, respuestas sin enumerar cuentas, redirecciones guardadas y pruebas del flujo | Recepción del correo, enlace usado/vencido y cambio de contraseña real |
-| H03 Cuentas | Alta/edición/permisos, consulta administrativa real, pruebas del backend y de RLS | Altas/ediciones reales y recorrido móvil |
-| H04 Salida | Cierre real, retorno al acceso, apertura posterior sin panel; pruebas sin conexión y respuesta tardía | Regresión en otros navegadores |
-| H05 Períodos | Consulta real, formularios, validación y pruebas SQL de activación única/historial | Solicitudes simultáneas en conexiones PostgreSQL independientes |
+| H01 Acceso y sesión | Autenticación, recuperación y salida implementadas; pruebas de sesión y permisos. Al cambiar el perfil, el panel oculta inmediatamente el contexto anterior mientras consulta el nuevo. | Correo de recuperación real y enlace usado/vencido; recorridos con docente y cuenta inactiva. |
+| H03 Cuentas y funciones | Administración protegida, jefes y coordinadores diferenciados; pruebas backend/SQL. Un error de carga no muestra una lista vacía ni permite editar datos anteriores. Se descarta un alta abierta si deja de estar disponible la creación. | Confirmar identificación cédula/INSS: la implementación aún exige cédula por el contrato compartido. Altas y edición reales y comprobación móvil. |
+| H05 Semestres | Formularios, validación de fechas y activación única en SQL. Pérdida de permiso descarta el formulario; errores de carga ofrecen reintento y no se confunden con ausencia de semestres. | Activación concurrente con conexiones PostgreSQL independientes; verificación completa de preservación de versiones cuando se implemente el nuevo flujo de horarios. |
 
-La clave administrativa del backend se comprobó mediante una consulta de solo lectura (HTTP 200).
-La RPC pwa_sprint1 está desplegada. Se modificaron esquema y permisos; no se crearon cuentas
-ni se enviaron correos durante la verificación remota.
+Verificación de este incremento: 96 pruebas backend y 60 interfaz, lint, compilación y arranque correctos. No se crearon cuentas ni semestres de prueba en producción, conforme a la decisión del responsable. Las pruebas automáticas no sustituyen la aceptación real pendiente.
 
 ## Configuración
 - frontend/.env: VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY (clave pública).

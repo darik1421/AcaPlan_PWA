@@ -79,3 +79,36 @@ test('Error de duplicado conserva el formulario para corregirlo', async () => {
   expect((await screen.findByRole('alert')).textContent).toContain('ya están registrados')
   expect(screen.getByLabelText('Nombre completo').value).toBe('Persona de prueba')
 })
+
+test('Un fallo al cargar semestres no se presenta como una lista vacía y permite reintentar', async () => {
+  mocks.api.mockRejectedValueOnce(new Error('Sin conexión')).mockResolvedValue([period])
+  render(<PeriodsPage canManage onChanged={vi.fn()}/>)
+  await screen.findByRole('alert')
+  expect(screen.queryByText('Aún no hay semestres académicos registrados.')).toBeNull()
+  expect(screen.getByRole('button',{name:'Nuevo semestre'}).disabled).toBe(true)
+  fireEvent.click(screen.getByRole('button',{name:'Actualizar lista'}))
+  await screen.findByText('Semestre de prueba')
+  expect(screen.getByRole('button',{name:'Nuevo semestre'}).disabled).toBe(false)
+})
+
+test('Retirar el permiso descarta la edición del semestre aunque después se recupere', async () => {
+  mocks.api.mockResolvedValue([period])
+  const view=render(<PeriodsPage canManage onChanged={vi.fn()}/>)
+  fireEvent.click(await screen.findByRole('button',{name:'Editar Semestre de prueba'}))
+  fireEvent.change(screen.getByLabelText('Nombre'),{target:{value:'Cambio no guardado'}})
+  view.rerender(<PeriodsPage canManage={false} onChanged={vi.fn()}/>)
+  view.rerender(<PeriodsPage canManage onChanged={vi.fn()}/>)
+  expect(screen.queryByRole('button',{name:'Guardar semestre'})).toBeNull()
+  expect(mocks.api).toHaveBeenCalledTimes(1)
+})
+
+test('Si falla actualizar cuentas se retira la lista anterior y no ofrece editarla', async () => {
+  mocks.api.mockResolvedValueOnce([account]).mockRejectedValueOnce(new Error('Sin conexión'))
+  accounts()
+  await screen.findByText('Cuenta de prueba')
+  fireEvent.click(screen.getByRole('button',{name:'Actualizar lista'}))
+  await screen.findByRole('alert')
+  expect(screen.queryByText('Cuenta de prueba')).toBeNull()
+  expect(screen.queryByText('No hay cuentas que coincidan.')).toBeNull()
+  expect(screen.getByRole('button',{name:'Nueva cuenta'}).disabled).toBe(true)
+})

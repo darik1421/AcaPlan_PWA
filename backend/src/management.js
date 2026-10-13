@@ -93,11 +93,12 @@ export function createManagement({
     const body = await response.json().catch(() => null)
     if (!response.ok) {
       if (body?.code === 'PGRST202' || response.status === 404) throw new AccessError(503, ['pwa_sprint2', 'pwa_cuadriculas_api', 'pwa_grupos_turnos_api'].includes(functionName) ? 'Falta aplicar la preparación SQL del Sprint 2 en Supabase.' : 'Falta aplicar la preparación SQL correspondiente del Sprint 3 en Supabase.')
-      if (body?.message === 'ASIGNACIONES_AFECTADAS') {
+      if (['ASIGNACIONES_AFECTADAS', 'TURNO_CON_CLASES'].includes(body?.message)) {
         let ids = []
-        try { const values = JSON.parse(body.details); if (Array.isArray(values)) ids = values.filter(Number.isSafeInteger) } catch { /* No mostrar detalles internos que no sean identificadores. */ }
+        try { const values = JSON.parse(body.details); if (Array.isArray(values)) ids = values.filter(value => Number.isSafeInteger(value) && value > 0) } catch { /* No mostrar detalles internos que no sean identificadores. */ }
         const classes = ids.length ? ` Clases afectadas (ID): ${ids.slice(0, 20).join(', ')}${ids.length > 20 ? '…' : ''}.` : ''
-        throw new AccessError(409, `Revisa y resuelve las asignaciones existentes antes de guardar este cambio.${classes}`)
+        const explanation = body.message === 'TURNO_CON_CLASES' ? businessErrors.TURNO_CON_CLASES[1] : 'Revisa y resuelve las asignaciones existentes antes de guardar este cambio.'
+        throw new AccessError(409, `${explanation}${classes}`)
       }
       const mapped = businessErrors[body?.message]
       if (mapped) throw new AccessError(...mapped)

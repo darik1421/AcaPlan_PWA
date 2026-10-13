@@ -39,6 +39,8 @@ export default function EspaciosPage({ canManage, onChanged }) {
 
     useEffect(() => { const c = new AbortController(); load(c.signal); return () => c.abort() }, [])
 
+    useEffect(() => { if(!canManage) { setFormAula(null); setMessage('') } }, [canManage])
+
     async function saveEntity(endpoint, payload, resetForm, successMsg) {
         if (busy || !canManage || !payload.id) return
         setBusy(true); setError(''); setMessage('')

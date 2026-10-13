@@ -1,6 +1,30 @@
-# Sprint 2: catálogos y disponibilidad
+# Sprint 2: catálogos, grupos, espacios y tiempos
 
 Alcance de la planificación vigente: H06, H07, H09, H10 y H08. H11 corresponde al Sprint 3. H12 es un avance del sprint 3 y no se utiliza para dar por terminado el sprint 2. El diseño sigue siendo provisional.
+
+## Organización de pantallas acordada el 12 de octubre de 2026
+
+Navegación ajustada al flujo acordado: se retiraron las entradas independientes Grupos, Demanda de carga y Bloques y recesos. Asignación académica reúne Asignaturas y docentes con Años de carrera y turnos; explica la recepción por Excel, revisión y futura generación. El usuario aclaró que hay un único grupo de estudiantes por año de carrera, no secciones A/B/C. La configuración de tiempos está dentro de Semestres y se ofrece a quienes tienen permiso para gestionarla. Los descansos se consideran intervalos sin clase, no asignaturas ni filas obligatorias del horario publicado. No se cambia el esquema ni se fusionan registros existentes: la reorganización es de interfaz. La carga definitiva de Excel y la generación continúan pendientes.
+
+Verificación: 66 pruebas de interfaz (suite y prueba de navegación adicional), lint, compilación y arranque.
+
+## Incremento del 12 de octubre de 2026
+
+H09: la consulta de grupos incorpora búsqueda y filtros combinables de carrera, año y turno, incluido «Sin turno asignado». Solo muestra el semestre activo. Los controles distinguen códigos repetidos con carrera e identificador; guardar utiliza id_seccion y la versión, no el código. Una cantidad de estudiantes ausente se señala como pendiente, sin inventar cero o treinta. Las selecciones no guardadas se descartan al cambiar el alcance de permisos. Un fallo de consulta no se presenta como ausencia de grupos y permite reintentar.
+
+H08: al corregir aulas la PWA exige una lista explícita de recursos y un tipo. Omitir recursos no los retira; una lista vacía explícita sí expresa esa intención. Omitir el tipo no convierte un laboratorio en aula común. La corrección abierta se descarta al perder el permiso.
+
+Verificación: 97 pruebas backend y 65 interfaz aprobadas (suite completa más prueba adicional focalizada), lint, compilación y arranque. Quince escenarios SQL en memoria, incluido mismo código en carreras/semestres distintos y rechazo de duplicado dentro de la misma carrera y semestre. Esta suite SQL también conserva comprobaciones del contrato histórico: no acredita que la generación ni todas las reglas nuevas estén integradas.
+
+No se cambió el Supabase compartido ni la app móvil en este incremento. La corrección HTTP de aulas es propia de la PWA; no afirmar que la escritura móvil o SQL directa recibe esta validación nueva. Continúan pendientes modalidad/sede de grupos, importaciones definitivas, excepciones y revalidación; el sprint no está cerrado. Siguiente incremento: completar el modelo compartido de datos de preparación e importación, conservando compatibilidad y sin reactivar altas manuales descartadas.
+
+## Pendientes contrastados con la planificación vigente
+
+El sprint sigue abierto. H06/H07 cuentan con consulta y correcciones; su recepción definitiva por Excel no está completa. H09 requiere completar modalidad/sede y validar en el entorno compartido la identidad por carrera y semestre; su contrato SQL ya se comprobó localmente sin asumir un código global único. H08 requiere importación del inventario con vista previa y sus datos de sede, pabellón, capacidad, tipo y recursos. La plantilla definitiva y el inventario oficial siguen pendientes, pero no bloquean toda la lógica de preparación.
+
+H10 ya protege las configuraciones en uso. En este incremento la protección devuelve los IDs de las clases afectadas; el backend muestra hasta 20 IDs positivos y descarta detalles internos. Aplicado en Supabase sin modificar clases ni permisos. Quedan las excepciones autorizadas de salud y el procedimiento completo de revalidación de cambios sobre clases persistidas; rechazar un cambio no equivale a tener ese procedimiento terminado.
+
+Pruebas: 96 backend, 60 interfaz; lint, compilación y arranque aprobados. El ensayo SQL local comprobó rechazo y detalle exacto de dos clases, conservación de versión y edición permitida de nombre. No se probaron escrituras ficticias en producción ni concurrencia multiconexión. Evidencia remota: `docs/evidencias/sprint2-clases-afectadas.png`. El SQL permanece en `database.local/sprint-2-proteger-turnos.sql`, excluido de Git por decisión del responsable: compartirlo aparte para reproducir otro entorno.
 
 ## Estado actual de la adaptación — 11 de octubre de 2026
 

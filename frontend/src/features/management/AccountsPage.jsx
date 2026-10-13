@@ -9,21 +9,23 @@ export default function AccountsPage({ context, onChanged }) {
   const [form,setForm] = useState(null)
   const [query,setQuery] = useState('')
   const [loading,setLoading] = useState(true)
+  const [loadFailed,setLoadFailed] = useState(false)
   const [busy,setBusy] = useState(false)
   const [error,setError] = useState('')
   const [message,setMessage] = useState('')
   async function load(signal) {
-    setLoading(true); setError('')
+    setLoading(true); setLoadFailed(false); setError('')
     try { const data = await api('/accounts',{ signal }); if (!signal?.aborted) setRows(data) }
-    catch(e) { if (!signal?.aborted) setError(e.message) }
+    catch(e) { if (!signal?.aborted) { setError(e.message); setLoadFailed(true); setRows([]); setForm(null) } }
     finally { if (!signal?.aborted) setLoading(false) }
   }
   useEffect(() => { const c = new AbortController(); load(c.signal); return () => c.abort() }, [])
+  useEffect(() => { if(!context.canCreateAccounts) setForm(current => current?.id ? current : null) }, [context.canCreateAccounts])
   const field = (name,value) => setForm(current => ({...current,[name]:value}))
   function toggle(name,value) { field(name,form[name].includes(value) ? form[name].filter(item => item !== value) : [...form[name],value]) }
   async function save(event) {
     event.preventDefault()
-    if (busy) return
+    if (busy || loading || loadFailed || !form || (!form.id && !context.canCreateAccounts)) return
     if (form.id === profile.id_usuario && (form.estado !== 'activo' || form.rol !== profile.rol)
       && !window.confirm('Cambiarás tu propio acceso. Tu sesión se volverá a comprobar. ¿Continuar?')) return
     setBusy(true); setError(''); setMessage('')
@@ -39,13 +41,13 @@ export default function AccountsPage({ context, onChanged }) {
   const filtered = rows.filter(r => [r.nombre,r.correo,r.cedula].join(' ').toLowerCase().includes(query.toLowerCase()))
   return <section aria-labelledby="accounts-title">
     <div className="section-heading"><div><h2 id="accounts-title">Gestión de cuentas</h2><p className="muted">Personal autorizado y funciones institucionales.</p></div>
-      <button className="secondary" disabled={busy || !context.canCreateAccounts} onClick={() => {setForm(empty());setMessage('')}}>Nueva cuenta</button></div>
+      <button className="secondary" disabled={busy || loading || loadFailed || !context.canCreateAccounts} onClick={() => {setForm(empty());setMessage('')}}>Nueva cuenta</button></div>
     {!context.canCreateAccounts && <p className="notice">La creación de cuentas requiere completar la configuración del servidor.</p>}
     {error && <p role="alert" className="error">{error}</p>}
     {message && <p role="status" className="success">{message}</p>}
     {form && <form className="management-form" onSubmit={save}>
       <h3>{form.id ? 'Editar cuenta' : 'Nueva cuenta'}</h3>
-      <fieldset disabled={busy}><div className="form-grid">
+      <fieldset disabled={busy || loading || loadFailed}><div className="form-grid">
         <label>Nombre completo<input required maxLength={100} value={form.nombre} onChange={e=>field('nombre',e.target.value)} autoComplete="name"/></label>
         <label>Cédula<input required maxLength={20} value={form.cedula} onChange={e=>field('cedula',e.target.value)}/></label>
         <label>Correo<input type="email" required maxLength={100} value={form.correo} readOnly={Boolean(form.id)} onChange={e=>field('correo',e.target.value)} autoComplete="off"/></label>
@@ -67,8 +69,8 @@ export default function AccountsPage({ context, onChanged }) {
       </fieldset>
     </form>}
     <div className="list-toolbar"><label>Buscar cuentas<input type="search" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Nombre, correo o cédula"/></label><button className="secondary" disabled={busy || loading} onClick={()=>load()}>Actualizar lista</button></div>
-    {loading ? <p role="status">Cargando cuentas…</p> : <div className="table-scroll"><table><caption>{filtered.length} cuentas</caption><thead><tr><th>Persona</th><th>Rol y funciones</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>
-      {filtered.map(row=><tr key={row.id_usuario}><td><strong>{row.nombre}</strong><span className="cell-detail">{row.correo}</span></td><td>{row.rol}<span className="cell-detail">{row.funciones.map(value => ({ coordinador: 'Coordinadores de carrera', planificador: 'Planificación', aprobador: 'Aprobación', jefe_departamento: 'Jefes de departamento' })[value] || value).join(', ') || 'Sin funciones adicionales'}</span></td><td><span className={row.estado === 'activo' ? 'badge active':'badge'}>{row.estado}</span></td><td><button className="secondary" disabled={busy} aria-label={`Editar cuenta de ${row.nombre}`} onClick={()=>{setForm({...row,id:row.id_usuario,password:''});setMessage('')}}>Editar</button></td></tr>)}
+    {loading ? <p role="status">Cargando cuentas…</p> : loadFailed ? <p className="notice">No se pudo cargar la lista. Pulsa «Actualizar lista» para volver a intentarlo.</p> : <div className="table-scroll"><table><caption>{filtered.length} cuentas</caption><thead><tr><th>Persona</th><th>Rol y funciones</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>
+      {filtered.map(row=><tr key={row.id_usuario}><td><strong>{row.nombre}</strong><span className="cell-detail">{row.correo}</span></td><td>{row.rol}<span className="cell-detail">{row.funciones.map(value => ({ coordinador: 'Coordinadores de carrera', planificador: 'Planificación', aprobador: 'Aprobación', jefe_departamento: 'Jefes de departamento' })[value] || value).join(', ') || 'Sin funciones adicionales'}</span></td><td><span className={row.estado === 'activo' ? 'badge active':'badge'}>{row.estado}</span></td><td><button className="secondary" disabled={busy || loading || loadFailed} aria-label={`Editar cuenta de ${row.nombre}`} onClick={()=>{setForm({...row,id:row.id_usuario,password:''});setMessage('')}}>Editar</button></td></tr>)}
       {!filtered.length && <tr><td colSpan={4}>No hay cuentas que coincidan.</td></tr>}
     </tbody></table></div>}
   </section>
