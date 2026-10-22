@@ -1,8 +1,9 @@
+import PreparacionExcel from './PreparacionExcel'
 import { useEffect, useState } from 'react'
 import { api } from '../../services/management'
 
 
-export default function EspaciosPage({ canManage, onChanged }) {
+export default function EspaciosPage({ canManage, onChanged, periodId }) {
     const [tab, setTab] = useState('aulas')
     const [pabellones, setPabellones] = useState([])
     const [recursos, setRecursos] = useState([])
@@ -23,7 +24,7 @@ export default function EspaciosPage({ canManage, onChanged }) {
         setLoading(true); setError('')
         try {
             const [dataAulas, dataPabellones, dataRecursos] = await Promise.all([
-                api('/aulas', { signal }),
+                api('/inventario', { signal }),
                 api('/pabellones', { signal }),
                 api('/recursos', { signal })
             ])
@@ -67,12 +68,14 @@ export default function EspaciosPage({ canManage, onChanged }) {
             <div><h2 id="espacios-title">Gestión de espacios</h2><p className="muted">Administración de pabellones, aulas y recursos físicos.</p></div>
         </div>
 
-        <p className="notice">El inventario se cargará desde Excel cuando se defina su plantilla. Por ahora puedes consultar los datos existentes y corregir aulas registradas.</p>
+        <p className="notice">Importa el inventario desde Excel y confirma los datos revisados. La plantilla sigue siendo provisional. Las correcciones de aulas existentes se realizan desde su fila.</p>
         <nav className="workspace-nav" aria-label="Espacios">
             <button className={tab === 'aulas' ? 'selected' : ''} onClick={() => setTab('aulas')}>Aulas y Laboratorios</button>
             <button className={tab === 'pabellones' ? 'selected' : ''} onClick={() => setTab('pabellones')}>Pabellones</button>
             <button className={tab === 'recursos' ? 'selected' : ''} onClick={() => setTab('recursos')}>Catálogo de Recursos</button>
         </nav>
+
+        {canManage && <PreparacionExcel tipo="espacios" periodId={periodId} onConfirmed={()=>{setFormAula(null);load();onChanged?.()}}/>}
 
         {error && <p role="alert" className="error">{error}</p>}
         {message && <p role="status" className="success">{message}</p>}
@@ -113,14 +116,14 @@ export default function EspaciosPage({ canManage, onChanged }) {
                 <label>Filtrar por tipo<select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}><option value="">Todos los tipos</option>{[...new Set(aulas.map(a => a.tipo))].sort().map(tipo => <option key={tipo} value={tipo}>{tipo}</option>)}</select></label>
                 <label>Filtrar por recurso<select value={resourceFilter} onChange={e => setResourceFilter(e.target.value)}><option value="">Todos los recursos</option>{recursos.map(r => <option key={r.id_recurso} value={r.id_recurso}>{r.nombre}</option>)}</select></label>
             </div>
-            {loading ? <p role="status">Cargando aulas…</p> : <div className="table-scroll"><table><caption>{filteredAulas.length} aulas encontradas</caption><thead><tr><th>Pabellón</th><th>Código</th><th>Tipo</th><th>Capacidad</th><th>Recursos</th><th>Estado</th>{canManage && <th>Acciones</th>}</tr></thead><tbody>
+            {loading ? <p role="status">Cargando aulas…</p> : <div className="table-scroll"><table><caption>{filteredAulas.length} aulas encontradas</caption><thead><tr><th>Sede</th><th>Pabellón</th><th>Código</th><th>Espacio principal</th><th>Tipo</th><th>Capacidad</th><th>Recursos</th><th>Estado</th>{canManage && <th>Acciones</th>}</tr></thead><tbody>
                 {filteredAulas.map(row => <tr key={row.id_aula}>
-                    <td>{row.pabellon_nombre}</td><td>{row.codigo}</td><td>{row.tipo}</td><td>{row.capacidad}</td>
+                    <td>{row.sede||'Pendiente'}</td><td>{row.pabellon_nombre}</td><td>{row.codigo}</td><td>{row.espacio_padre||'—'}</td><td>{row.tipo}</td><td>{row.capacidad}</td>
                     <td>{row.recursos.map(rid => recursos.find(r => r.id_recurso === rid)?.nombre).join(', ') || '-'}</td>
                     <td><span className={row.estado === 'activo' ? 'badge active' : 'badge'}>{row.estado}</span></td>
                     {canManage && <td><button className="secondary" disabled={busy} onClick={() => { setFormAula({ ...row, id: row.id_aula }); setMessage('') }}>Editar</button></td>}
                 </tr>)}
-                {!filteredAulas.length && <tr><td colSpan={canManage ? 7 : 6}>No hay aulas que coincidan con los filtros.</td></tr>}
+                {!filteredAulas.length && <tr><td colSpan={canManage ? 9 : 8}>No hay aulas que coincidan con los filtros.</td></tr>}
             </tbody></table></div>}
         </div>}
 

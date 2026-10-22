@@ -1,3 +1,5 @@
+import HorariosPublicados from '../features/management/HorariosPublicados'
+import BorradoresPage from '../features/management/BorradoresPage'
 import { useEffect, useState } from 'react'
 import { useAuth } from '../features/auth/AuthContext'
 import { api } from '../services/management'
@@ -20,7 +22,10 @@ export default function DashboardPage() {
   const { profile, logout } = useAuth()
   const [closing, setClosing] = useState(false)
   const [workspace, setWorkspace] = useState(null)
-  const context = workspace?.profile === profile ? workspace.data : null
+  // El refresco de sesión devuelve otro objeto aunque el perfil no cambie.
+  // Solo un cambio en sus datos debe invalidar el espacio y sus formularios.
+  const profileKey = JSON.stringify(profile)
+  const context = workspace?.profileKey === profileKey ? workspace.data : null
   const [error, setError] = useState('')
   const [revision, setRevision] = useState(0)
   const [page, setPage] = useState('periods')
@@ -32,10 +37,10 @@ export default function DashboardPage() {
     const controller = new AbortController()
     setError('')
     api('/workspace', { signal: controller.signal }).then(data => {
-      if (!controller.signal.aborted) setWorkspace({profile, data})
+      if (!controller.signal.aborted) setWorkspace({profileKey, data})
     }).catch(e => { if (!controller.signal.aborted) { setError(e.message); setWorkspace(null) } })
     return () => controller.abort()
-  }, [revision, profile])
+  }, [revision, profileKey])
 
   async function close() { setClosing(true); await logout() }
 
@@ -48,14 +53,14 @@ export default function DashboardPage() {
           <span>{admin ? 'Administrador' : 'Docente'}</span>
         </div>
       </div>
-      <nav className="sidebar-nav">
+      <nav className="sidebar-nav"><button className={page === "publicados" ? "selected" : ""} onClick={()=>setPage("publicados")}><Calendar size={18}/> Horarios publicados</button>
         <button className={page === 'periods' ? 'selected' : ''} onClick={() => setPage('periods')}><Calendar size={18} /> Semestres</button>
         <button className={page === 'carreras' ? 'selected' : ''} onClick={() => setPage('carreras')}><Layers size={18} /> Carreras</button>
         <button className={page === 'asignaturas' ? 'selected' : ''} onClick={() => setPage('asignaturas')}><BookOpen size={18} /> Asignaturas</button>
         <button className={page === 'espacios' ? 'selected' : ''} onClick={() => setPage('espacios')}><Building2 size={18} /> Aulas y Recursos</button>
         <button className={page === 'programacion' ? 'selected' : ''} onClick={() => setPage('programacion')}><ClipboardList size={18} /> Asignación académica</button>
         <button className={page === 'disponibilidad' ? 'selected' : ''} onClick={() => setPage('disponibilidad')}><Clock size={18} /> Restricciones</button>
-        {context?.canManageAccounts && <button className={page === 'accounts' ? 'selected' : ''} onClick={() => setPage('accounts')}><User size={18} /> Gestión de Cuentas</button>}
+        {context?.canManageBloques && <button className={page === "borradores" ? "selected" : ""} onClick={()=>setPage("borradores")}><Calendar size={18}/> Borradores</button>}{context?.canManageAccounts && <button className={page === 'accounts' ? 'selected' : ''} onClick={() => setPage('accounts')}><User size={18} /> Gestión de Cuentas</button>}
       </nav>
       <div style={{ padding: '24px' }}>
         <button style={{ display: 'flex', gap: '12px', alignItems: 'center', background: 'transparent', border: 'none', color: 'var(--text-muted)', fontWeight: 500, fontSize: '14px', width: '100%' }} onClick={close} disabled={closing}>
@@ -78,10 +83,12 @@ export default function DashboardPage() {
         {error && <div className="error" role="alert" style={{ marginBottom: '20px' }}><p style={{ margin: 0, marginBottom: '10px' }}>{error}</p><button className="secondary" onClick={refresh}>Reintentar carga</button></div>}
         {!context && !error && <p role="status">Cargando tu espacio de trabajo…</p>}
         {context && (
+          page === 'publicados' ? <HorariosPublicados/> :
+          page === 'borradores' && context.canManageBloques ? <BorradoresPage key={context.activePeriod?.id_periodo} periodId={context.activePeriod?.id_periodo}/> :
           page === 'accounts' && context.canManageAccounts ? <AccountsPage context={context} onChanged={refresh} /> :
             page === 'carreras' ? <CarrerasPage canManage={context.canManageCarreras} onChanged={refresh} /> :
               page === 'asignaturas' ? <AsignaturasPage context={context} canManage={context.canManageAsignaturas} onChanged={refresh} /> :
-                page === 'espacios' ? <EspaciosPage canManage={context.canManageEspacios} onChanged={refresh} /> :
+                page === 'espacios' ? <EspaciosPage periodId={context.activePeriod?.id_periodo} canManage={context.canManageEspacios} onChanged={refresh} /> :
                     page === 'programacion' ? <AsignacionAcademicaPage context={context} onChanged={refresh} /> :
                         page === 'disponibilidad' ? <DisponibilidadPage context={context} /> :
                           <><PeriodsPage canManage={context.canManagePeriods} onChanged={refresh} />

@@ -1,0 +1,43 @@
+import {cleanup,fireEvent,render,screen,waitFor} from '@testing-library/react'
+import {afterEach,test,expect,vi} from 'vitest'
+import CorreccionAsignacion from '../src/features/management/CorreccionAsignacion'
+const mocks=vi.hoisted(()=>({api:vi.fn()}))
+vi.mock('../src/services/management',()=>({api:mocks.api}))
+afterEach(()=>{cleanup();mocks.api.mockReset()})
+const context={asignacion:{id:1,id_periodo:2,revision:5,horas_semestre:56,docentes:[4,5],asignatura:'Web',ano_estudio:3,turno:'matutino'},disponibles:[{id:4,nombre:'Ana',activo:true},{id:5,nombre:'Luis',activo:true}]}
+test('Corrección exige revisión explícita y conserva semestre y revisión consultados',async()=>{
+ mocks.api.mockResolvedValueOnce(context).mockResolvedValueOnce({guardado:true})
+ const saved=vi.fn();render(<CorreccionAsignacion id={1} periodId={2} onSaved={saved} onClose={vi.fn()}/>)
+ fireEvent.change(await screen.findByLabelText('Horas totales del semestre a corregir'),{target:{value:'42'}})
+ fireEvent.click(screen.getByLabelText('Luis'))
+ expect(screen.getByRole('button',{name:'Guardar corrección'}).disabled).toBe(true)
+ fireEvent.click(screen.getByLabelText('Revisé los cambios y confirmo esta corrección.'))
+ fireEvent.click(screen.getByRole('button',{name:'Guardar corrección'}))
+ await waitFor(()=>expect(saved).toHaveBeenCalledTimes(1))
+ expect(mocks.api).toHaveBeenLastCalledWith('/asignacion-academica/correccion',{method:'PATCH',data:{id:1,id_periodo:2,revision:5,horas_semestre:42,docentes:[4]}})
+})
+test('Conflicto o fallo incierto bloquea reintento y requiere recargar la revisión',async()=>{
+ mocks.api.mockResolvedValueOnce(context).mockRejectedValueOnce(new Error('Otro usuario modificó el registro')).mockResolvedValueOnce({...context,asignacion:{...context.asignacion,revision:6}})
+ render(<CorreccionAsignacion id={1} periodId={2} onSaved={vi.fn()} onClose={vi.fn()}/>)
+ fireEvent.change(await screen.findByLabelText('Horas totales del semestre a corregir'),{target:{value:'42'}})
+ fireEvent.click(screen.getByLabelText('Revisé los cambios y confirmo esta corrección.'))
+ fireEvent.click(screen.getByRole('button',{name:'Guardar corrección'}))
+ await screen.findByRole('alert')
+ expect(screen.getByLabelText('Horas totales del semestre a corregir').closest('fieldset').disabled).toBe(true)
+ fireEvent.click(screen.getByRole('button',{name:'Recargar asignación'}))
+ await waitFor(()=>expect(screen.getByLabelText('Horas totales del semestre a corregir').value).toBe('56'))
+ expect(screen.queryByRole('alert')).toBeNull()
+})
+test('No permite guardar sin docentes y descarta respuestas de un contexto anterior',async()=>{
+ let resolve;mocks.api.mockResolvedValueOnce(context).mockImplementationOnce(()=>new Promise(r=>{resolve=r})).mockResolvedValueOnce({...context,asignacion:{...context.asignacion,id_periodo:3}})
+ const saved=vi.fn();const view=render(<CorreccionAsignacion id={1} periodId={2} onSaved={saved} onClose={vi.fn()}/>)
+ fireEvent.click(await screen.findByLabelText('Ana'));fireEvent.click(screen.getByLabelText('Luis'))
+ fireEvent.click(screen.getByLabelText('Revisé los cambios y confirmo esta corrección.'))
+ expect(screen.getByRole('button',{name:'Guardar corrección'}).disabled).toBe(true)
+ fireEvent.click(screen.getByLabelText('Ana'))
+ fireEvent.click(screen.getByLabelText('Revisé los cambios y confirmo esta corrección.'))
+ fireEvent.click(screen.getByRole('button',{name:'Guardar corrección'}))
+ view.rerender(<CorreccionAsignacion id={1} periodId={3} onSaved={saved} onClose={vi.fn()}/>)
+ resolve({guardado:true});await screen.findByLabelText('Ana')
+ expect(saved).not.toHaveBeenCalled()
+})

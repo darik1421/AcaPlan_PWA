@@ -17,6 +17,51 @@ export function snapshot() {
   }
 }
 const codes = data => validateSchedule(data).conflictos.map(c => c.codigo)
+
+test('La comprobación integral exige sedes explícitas para el sábado y reserva un bloque de traslado',()=>{
+ const data=snapshot()
+ data.bloques[0].dia='Sabado';data.cuadriculas[0].bloques[0].dia='Sabado'
+ assert.ok(codes(data).includes('SEDES_TRASLADO_PENDIENTES'))
+ data.sedesTraslado={sede_cur:'CUR',sede_instituto:'Instituto'};data.aulas[0].sede='CUR'
+ assert.equal(validateSchedule(data).completo,true)
+ data.aulas.push({...data.aulas[0],id_aula:2,sede:'Instituto'})
+ data.bloques.push({...data.bloques[0],id_bloque:2,hora_inicio:'09:10',hora_fin:'10:10'})
+ data.cuadriculas[0].bloques.push({...data.bloques[1]})
+ data.clases.push({...data.clases[0],id_horario:2,id_aula:2,id_bloque:2})
+ assert.ok(codes(data).includes('TRASLADO_SABATINO'))
+ assert.equal(validateSchedule(data).aprobado,false)
+})
+
+test('La validación integral exige consultar reglas académicas y conserva pendientes de parejas',()=>{
+ const data=snapshot();data.programacion[0].id_asignacion=101
+ assert.ok(codes(data).includes('CONSECUTIVAS_SIN_CARGAR'))
+ data.reglasConsecutivas=[];assert.equal(validateSchedule(data).completo,true)
+ data.reglasConsecutivas=[{id:5,activa:true,asignacion_a:101,asignacion_b:101}]
+ const result=validateSchedule(data);assert.equal(result.completo,false);assert.equal(result.aprobado,false);assert.ok(result.pendientes.some(p=>p.id_regla_consecutiva===5))
+})
+
+test('El aula completa y sus divisiones no admiten ocupaciones simultáneas',()=>{
+ const data=snapshot();data.aulas.push({...data.aulas[0],id_aula:2,id_espacio_padre:1},{...data.aulas[0],id_aula:3,id_espacio_padre:2})
+ data.clases.push({...data.clases[0],id_horario:2,id_aula:3})
+ const conflicts=()=>validateSchedule(data).conflictos.filter(c=>c.codigo==='TRASLAPE'&&c.recurso.tipo==='aula')
+ assert.deepEqual(conflicts().map(c=>c.clases),[[1,2]]);assert.equal(conflicts()[0].recurso.id,1)
+ data.clases.reverse();assert.equal(conflicts().length,1)
+ data.aulas[2].id_espacio_padre=1;data.clases[1].id_aula=2;assert.equal(conflicts().length,0)
+})
+
+test('Relaciones circulares o padres ausentes invalidan el inventario sin bloquear la ejecución',()=>{
+ const data=snapshot();data.aulas[0].id_espacio_padre=99
+ assert.ok(codes(data).includes('JERARQUIA_ESPACIO_INVALIDA'))
+ data.aulas[0].id_espacio_padre=2;data.aulas.push({...data.aulas[0],id_aula:2,id_espacio_padre:1})
+ assert.ok(codes(data).includes('JERARQUIA_ESPACIO_INVALIDA'))
+})
+
+test('Padre y división permiten clases adyacentes sin reservar artificialmente el receso',()=>{
+ const data=snapshot();data.aulas.push({...data.aulas[0],id_aula:2,id_espacio_padre:1})
+ data.bloques.push({...data.bloques[0],id_bloque:2,hora_inicio:'09:10',hora_fin:'10:10'})
+ data.clases.push({...data.clases[0],id_horario:2,id_aula:2,id_bloque:2})
+ assert.ok(!validateSchedule(data).conflictos.some(c=>c.codigo==='TRASLAPE'&&c.recurso.tipo==='aula'))
+})
 test('Una propuesta válida y completa nunca se aprueba automáticamente', () => {
   const data = snapshot(), before = structuredClone(data)
   assert.deepEqual(validateSchedule(data), { valido: true, completo: true, aprobado: false, conflictos: [], pendientes: [] })

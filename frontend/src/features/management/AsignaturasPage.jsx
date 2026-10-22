@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { api } from '../../services/management'
+import AsignaturasImportadas from './AsignaturasImportadas'
 
 
 export default function AsignaturasPage({ context, canManage, onChanged }) {
     const [rows, setRows] = useState([])
+    const [linked, setLinked] = useState([])
     const [carreras, setCarreras] = useState([])
     const [form, setForm] = useState(null)
     const [query, setQuery] = useState('')
@@ -51,7 +53,7 @@ export default function AsignaturasPage({ context, canManage, onChanged }) {
         finally { setBusy(false) }
     }
 
-    const filtered = rows.filter(r =>
+    const filtered = rows.filter(r => !linked.includes(r.id_asignatura) &&
         (!careerFilter || r.id_carrera === Number(careerFilter)) &&
         (!yearFilter || r.ano_estudio === Number(yearFilter)) &&
         (r.nombre.toLowerCase().includes(query.toLowerCase()) ||
@@ -66,7 +68,9 @@ export default function AsignaturasPage({ context, canManage, onChanged }) {
         <div className="section-heading">
             <div><h2 id="asignaturas-title">Gestión de asignaturas</h2><p className="muted">Consulta de asignaturas y corrección de los datos recibidos.</p></div>
         </div>
-        <p className="muted">Los coordinadores de carrera proporcionarán las asignaturas y sus docentes mediante Excel. La importación definitiva está pendiente; aquí puedes consultar y corregir los registros existentes.</p>
+        <AsignaturasImportadas context={context} canManage={canManage} onLinked={setLinked}/>
+        <details><summary>Catálogo anterior</summary>
+        <p className="muted">Registros del modelo anterior. La entrega nueva se consulta arriba; no es necesario registrar las asignaturas de nuevo aquí.</p>
         <p className="muted">Las horas teóricas y prácticas son datos del catálogo; no determinan automáticamente la duración de las clases. La regla general de matutino y vespertino es de dos sesiones de 90 minutos por semana.</p>
         {error && <p role="alert" className="error">{error}</p>}
         {message && <p role="status" className="success">{message}</p>}
@@ -105,5 +109,6 @@ export default function AsignaturasPage({ context, canManage, onChanged }) {
             </tr>)}
             {!filtered.length && <tr><td colSpan={canManage ? 8 : 7}>No hay asignaturas que coincidan.</td></tr>}
         </tbody></table></div>}
+        </details>
     </section>
 }

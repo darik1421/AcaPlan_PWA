@@ -2,6 +2,18 @@
 
 Alcance de la planificación vigente: H06, H07, H09, H10 y H08. H11 corresponde al Sprint 3. H12 es un avance del sprint 3 y no se utiliza para dar por terminado el sprint 2. El diseño sigue siendo provisional.
 
+## Revisión provisional de Excel del 12 de octubre de 2026
+
+Se conectaron tres plantillas provisionales nuevas y su vista previa: años de carrera, asignaturas/docentes e inventario. El archivo anterior queda dentro de consulta histórica. Los años incluyen carrera, año, turno, modalidad, sede y estudiantes; el semestre viene del contexto activo. Asignaciones admite varios docentes por asignatura y necesidades de espacio. Inventario incluye sede, pabellón, código, tipo, capacidad, equipamiento y espacio principal opcional.
+
+El backend comprueba permisos antes de leer: administración/coordinadores para datos académicos y administración/planificador para inventario. Rechaza carreras fuera de alcance, IDs inválidos/inactivos, asignaturas de otra carrera/año, duplicados, fórmulas, archivos dañados y tamaños excesivos. No deduce matrícula ni frecuencia nocturna/encuentros. Regular exige dos sesiones semanales. Rechaza padres ausentes y ciclos de espacios en el archivo. El formato provisional aún usa IDs de catálogos existentes; no crea docentes o asignaturas nuevos.
+
+Endpoints nuevos: POST /api/preparacion/plantilla y /api/preparacion/revisar. Solo leen catálogos; no habilitan confirmación ni escriben archivos del usuario al disco. La PWA muestra campos legibles, errores por fila y advertencia explícita de que no se guardó. Rechaza respuestas de otro semestre y descarta resultados al cambiar de pantalla/semestre.
+
+Alcance pendiente: guardar los datos nuevos con migración y validación transaccional compartidas, confirmar/importar y tratar actualizaciones de registros existentes, adaptar INS en cuentas de ambas apps, excepciones autorizadas y revalidación. No afirmar que solo restan plantillas y motor. Decisión provisional del usuario: Medicina y Bioanálisis no cambian duración ni frecuencia; aplicar las reglas generales de su turno hasta recibir información oficial. No crear excepciones especiales por ahora. No se necesitan los Excel reales para continuar el desarrollo de la confirmación, pero sí para validar el formato final.
+
+Verificación: 105 pruebas backend y 69 interfaz aprobadas; lint, build y smoke correctos. No hubo escrituras en Supabase ni cambios móviles. Sprint 2 sigue abierto.
+
 ## Organización de pantallas acordada el 12 de octubre de 2026
 
 Navegación ajustada al flujo acordado: se retiraron las entradas independientes Grupos, Demanda de carga y Bloques y recesos. Asignación académica reúne Asignaturas y docentes con Años de carrera y turnos; explica la recepción por Excel, revisión y futura generación. El usuario aclaró que hay un único grupo de estudiantes por año de carrera, no secciones A/B/C. La configuración de tiempos está dentro de Semestres y se ofrece a quienes tienen permiso para gestionarla. Los descansos se consideran intervalos sin clase, no asignaturas ni filas obligatorias del horario publicado. No se cambia el esquema ni se fusionan registros existentes: la reorganización es de interfaz. La carga definitiva de Excel y la generación continúan pendientes.
@@ -166,3 +178,19 @@ La configuración por turno y modalidad sigue pendiente: todavía no se sustituy
 Verificación de la conexión de turnos al resumen: 78 pruebas backend y 51 frontend aprobadas; lint sin errores ni advertencias y compilación correcta. Los nuevos casos cubren sesiones de 90 minutos, recesos, cambios de día, alternativas solapadas y conservación de la programación histórica sin conversiones automáticas.
 
 Cierre de esta depuración: 78 pruebas backend y 47 frontend aprobadas; lint sin errores, compilación y arranque correctos. Se actualizaron el README y el Word de traspaso. No se declara terminado el Sprint 2 ni implementado el motor generador.
+
+
+## Estado vigente — 12 de octubre de 2026
+
+La decisión final es cédula, no INS. Se aplicó `database.local/sprint-2-importacion-academica.sql` en Supabase y se verificaron sus tablas y permisos. La PWA permite plantilla, revisión y confirmación de asignaciones con docentes académicos sin cuenta, códigos de asignatura y horas semestrales. Inventario y años solo tienen revisión. No genera horarios ni integra todavía identidades nuevas en restricciones históricas. La consulta remota confirma validadores históricos de 80 minutos y disponibilidad positiva pendientes de sustitución coordinada. El detalle está en `AcaPlan_Estado_Base_de_Datos.docx`; este estado prevalece sobre notas históricas anteriores. No se declara cerrado ningún sprint por este incremento.
+
+
+## Restricciones académicas — 12 de octubre de 2026
+
+Restricciones de docentes importados: migración sprint-3-restricciones-academicas.sql aplicada y verificada en Supabase. Administradores y jefes de departamento pueden registrar, corregir y retirar intervalos de docentes sin cuenta. Los perfiles activos consultan nombres y restricciones sin cédulas. La identidad se distingue por origen (historico o academico) e ID; no se equiparan números entre tablas. El contrato móvil anterior se conserva. No se crearon cuentas ni se modificaron horarios.
+
+Este incremento conecta el registro de restricciones, no su aplicación al guardar o publicar horarios. Persisten validadores históricos de 80 minutos y disponibilidad positiva que deben sustituirse de forma coordinada. No se declara terminado ningún sprint ni el motor.
+
+Verificación: 110 pruebas backend y 73 frontend aprobadas, lint, compilación y smoke correctos. PostgreSQL local comprobó permisos, identidades coincidentes, versiones, retirada y compatibilidad. En Supabase se verificaron RLS, bloqueo anónimo, RPC autenticada, bloqueo de escritura directa y conservación del contrato anterior. No se hicieron altas ficticias ni pruebas funcionales con personas reales en producción.
+
+Siguiente incremento: correcciones de asignaciones importadas. Referencia vigente: AcaPlan_Traspaso_Completo_Proyecto.docx.

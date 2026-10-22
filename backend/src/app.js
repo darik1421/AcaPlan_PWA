@@ -11,6 +11,21 @@ export function createApp({ authenticateRequest = authenticate, management = cre
     const path = new URL(request.url, 'http://localhost').pathname
     const routes = {
       'GET /api/workspace': 'context',
+      'POST /api/borradores/estado': 'lifecycle.context',
+      'POST /api/borradores/transicion': 'lifecycle.transition',
+      'GET /api/horarios/publicados': 'publications.list',
+      'POST /api/borradores/consultar': 'drafts.context',
+      'POST /api/borradores': 'drafts.create',
+      'POST /api/borradores/detalle': 'draftWork.context',
+      'POST /api/borradores/clase': 'draftWork.save',
+      'POST /api/borradores/fijar': 'draftWork.fix',
+      'POST /api/borradores/retirar': 'draftWork.retire',
+      'POST /api/borradores/revisar': 'draftWork.review',
+      'POST /api/asignacion-academica/componentes': 'components.context',
+      'PATCH /api/asignacion-academica/componentes': 'components.save',
+      'POST /api/preparacion/diagnostico': 'preparation.review',
+      'POST /api/sedes-traslado/contexto': 'travel.context',
+      'POST /api/sedes-traslado': 'travel.save',
       'GET /api/accounts': 'accounts.list',
       'POST /api/accounts': 'accounts.create',
       'PATCH /api/accounts': 'accounts.update',
@@ -21,6 +36,13 @@ export function createApp({ authenticateRequest = authenticate, management = cre
       'POST /api/carreras': 'carreras.create',
       'PATCH /api/carreras': 'carreras.update',
       'GET /api/asignaturas': 'asignaturas.list',
+      'GET /api/asignaturas/importadas': 'academicSubjects.list',
+      'PATCH /api/asignaturas/importadas': 'academicSubjects.save',
+      'GET /api/asignacion-academica/anos': 'academicYears.list',
+      'PATCH /api/asignacion-academica/anos': 'academicYears.save',
+      'POST /api/asignacion-academica/turno': 'academicTurn.context',
+      'PATCH /api/asignacion-academica/turno': 'academicTurn.save',
+      'GET /api/inventario': 'inventory.list',
 
       'PATCH /api/asignaturas': 'asignaturas.update',
       'GET /api/pabellones': 'pabellones.list',
@@ -36,11 +58,23 @@ export function createApp({ authenticateRequest = authenticate, management = cre
       'POST /api/grupos-turnos': 'groupGrids.save',
       'GET /api/docentes': 'docentes.list',
       'GET /api/restricciones': 'restrictions.list',
+      'GET /api/restricciones/unificadas': 'restrictions.context',
+      'POST /api/restricciones/unificadas': 'restrictions.unifiedSave',
+      'POST /api/restricciones/consecutivas/contexto': 'consecutive.context',
+      'POST /api/restricciones/consecutivas': 'consecutive.save',
       'POST /api/restricciones': 'restrictions.save',
       'GET /api/disponibilidad': 'disponibilidad.list',
       'GET /api/programacion': 'programacion.list',
       'GET /api/programacion/resumen': 'programacion.report',
       'GET /api/programacion/detalle': 'programacion.detalle.list',
+      'POST /api/preparacion/plantilla': 'preparation.template',
+      'POST /api/preparacion/confirmar': 'preparation.confirm',
+      'POST /api/asignacion-academica/correccion': 'academicAssignments.context',
+      'POST /api/asignacion-academica/necesidades': 'academicNeeds.context',
+      'PATCH /api/asignacion-academica/necesidades': 'academicNeeds.save',
+      'PATCH /api/asignacion-academica/correccion': 'academicAssignments.save',
+      'GET /api/asignacion-academica': 'academicAssignments.list',
+      'POST /api/preparacion/revisar': 'preparation.preview',
       'GET /api/importacion/plantilla': 'import.template',
       'GET /api/importacion/historial': 'import.history',
     }
@@ -48,7 +82,7 @@ export function createApp({ authenticateRequest = authenticate, management = cre
     if (route) {
       try {
         const profile = await authenticateRequest(request)
-        const data = request.method === 'GET' ? {} : await readBody(request, 16384)
+        const data = request.method === 'GET' ? {} : await readBody(request, ['preparation.preview','preparation.confirm'].includes(route) ? 2900000 : 16384)
         const result = await management.execute(request, profile, route, data)
         response.writeHead(200)
         response.end(JSON.stringify(result))

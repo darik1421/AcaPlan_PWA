@@ -4,18 +4,23 @@ import { assignedTeacherIds } from './assigned-teachers.js'
 import { academicRule } from './academic-rules.js'
 import { studentGaps } from './student-gaps.js'
 import { groupTurn } from './turn-sessions.js'
+import { spaceHierarchy } from './space-hierarchy.js'
+import { validateConsecutive } from './consecutive-validation.js'
+import { validateSaturdayTravel } from './saturday-travel.js'
 const seconds = value => {
   if (typeof value !== 'string' || !/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/.test(value)) return null
   const [h, m, s = '0'] = value.split(':'); return Number(h) * 3600 + Number(m) * 60 + Number(s)
 }
 const index = (rows, key) => new Map(rows.map(row => [row[key], row]))
 const overlap = (a, b) => a.start < b.end && b.start < a.end
-export function validateSchedule({ clases, secciones, asignaturas, docentes, aulas, bloques, restricciones, programacion, recursos, cuadriculas = [], gruposTurnos = [] }) {
+export function validateSchedule({ clases, secciones, asignaturas, docentes, aulas, bloques, restricciones, programacion, recursos, cuadriculas = [], gruposTurnos = [], reglasConsecutivas, sedesTraslado }) {
   const sections = index(secciones, 'id_seccion'), subjects = index(asignaturas, 'id_asignatura')
   const teachers = index(docentes, 'id_docente'), rooms = index(aulas, 'id_aula'), slots = index(bloques, 'id_bloque')
   const resourceIds = new Set(recursos.map(r => r.id_recurso))
   const conflicts = [], intervals = [], seen = new Set(), counts = new Map()
   const issue = (codigo, motivo, ids, recurso = null) => conflicts.push({ codigo, motivo, clases: ids, recurso })
+  const spaces=spaceHierarchy(aulas)
+  for(const id of spaces.invalid)issue('JERARQUIA_ESPACIO_INVALIDA','El inventario tiene un espacio padre inexistente o una relación circular. Corrígelo antes de validar.',[],{tipo:'aula',id})
   const turns = new Map(secciones.map(section => [section.id_seccion, groupTurn(section, cuadriculas, gruposTurnos)]))
   for (const section of secciones) {
     const turn = turns.get(section.id_seccion)
@@ -116,17 +121,22 @@ export function validateSchedule({ clases, secciones, asignaturas, docentes, aul
     for (const teacherId of a.teacherIds.filter(id => b.teacherIds.includes(id))) {
       issue('TRASLAPE', 'Las clases se superponen para el mismo recurso: docente.', [a.id, b.id], { tipo: 'docente', id: teacherId })
     }
-    for (const [field, type] of [['id_aula', 'aula'], ['id_seccion', 'sección']]) {
+    const sharedRoom=spaces.sharedSpace(a.row.id_aula,b.row.id_aula)
+    if(sharedRoom!==null)issue('TRASLAPE',a.row.id_aula===b.row.id_aula?'Las clases se superponen para el mismo recurso: aula.':'El aula completa y una de sus divisiones se ocupan al mismo tiempo.',[a.id,b.id],{tipo:'aula',id:sharedRoom})
+    for (const [field, type] of [['id_seccion', 'sección']]) {
       if (a.row[field] === b.row[field]) issue('TRASLAPE', `Las clases se superponen para el mismo recurso: ${type}.`, [a.id, b.id], { tipo: type, id: a.row[field] })
     }
   }
   const pending = []
+  conflicts.push(...validateSaturdayTravel({intervals,rooms,turns,grids:cuadriculas,sites:sedesTraslado}))
   for (const need of programacion) {
     const scheduled = counts.get(need.id_programacion) || 0
     if (scheduled > need.sesiones_semanales) issue('SESIONES_EXCEDIDAS', 'Hay más sesiones que las requeridas.', clases.filter(c => c.id_seccion === need.id_seccion && c.id_asignatura === need.id_asignatura && sections.get(c.id_seccion)?.id_periodo === need.id_periodo).map(c => c.id_horario))
     if (scheduled < need.sesiones_semanales) pending.push({ id_programacion: need.id_programacion, sesiones_pendientes: need.sesiones_semanales - scheduled })
   }
   const gaps = studentGaps({ clases, secciones, bloques, cuadriculas, gruposTurnos })
+  const consecutive=validateConsecutive({reglas:reglasConsecutivas,programacion,intervals,turns,cuadriculas})
+  conflicts.push(...consecutive.conflictos);pending.push(...consecutive.pendientes)
   for (const gap of gaps) issue('HUECO_ESTUDIANTIL', 'Hay un hueco entre sesiones del grupo, descontando únicamente los recesos de su turno.', gap.clases, { tipo: 'sección', id: gap.id_seccion })
   return { valido: conflicts.length === 0, completo: conflicts.length === 0 && pending.length === 0 && programacion.length > 0,
     aprobado: false, conflictos: conflicts, pendientes: pending }

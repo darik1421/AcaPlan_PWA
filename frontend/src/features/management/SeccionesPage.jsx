@@ -77,8 +77,9 @@ export default function SeccionesPage({ context, onChanged }) {
             <div><h2 id="secciones-title">Años de carrera</h2><p className="muted">Estudiantes y turno por año de carrera para el semestre {context?.activePeriod?.nombre || 'vigente'}.</p></div>
         </div>
 
-        <p className="notice">Estos datos forman parte de la entrega del coordinador. Cada año de carrera reúne a sus estudiantes en un único grupo. Aquí se revisan los años ya registrados, su cantidad de estudiantes y el turno que les corresponde. No es un alta de secciones adicionales.</p>
+        <p className="notice">Estos datos pertenecen al modelo anterior. La entrega actual obtiene carrera, año y turno del único Excel de asignación académica. Cada año de carrera reúne a sus estudiantes en un único grupo. Aquí se revisan los años ya registrados, su cantidad de estudiantes y el turno que les corresponde. No es un alta de secciones adicionales.</p>
         {!context?.activePeriod && <div className="banner info">No hay un semestre académico activo definido.</div>}
+
 
         {error && <p role="alert" className="error">{error} <button className="secondary" disabled={busy||loading} onClick={()=>load()}>Recargar grupos</button></p>}
         {message && <p role="status" className="success">{message}</p>}

@@ -6,7 +6,7 @@ const MAX_BYTES = 2 * 1024 * 1024
 const MAX_EXPANDED = 8 * 1024 * 1024
 
 // Lee cada entrada sin extraer archivos al disco y verifica su tamaño real.
-async function inspectZip(buffer) {
+export async function inspectZip(buffer) {
   await new Promise((resolve, reject) => {
     yauzl.fromBuffer(buffer, { lazyEntries: true, validateEntrySizes: true }, (error, zip) => {
       if (error) return reject(new Error('El archivo no es un XLSX válido.'))

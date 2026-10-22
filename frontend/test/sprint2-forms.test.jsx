@@ -64,18 +64,13 @@ test('Grupos permite asignar el turno del semestre y no muestra configuraciones 
  await screen.findByText('Bloques asignados a GRUPO-A.')
  expect(mocks.api).toHaveBeenCalledWith('/grupos-turnos',{method:'POST',data:{id_seccion:1,id_cuadricula:1,version:0}})
 })
-test('Programación consulta solo grupos del semestre sin ofrecer alta manual',async()=>{
- mockData();render(<ProgramacionPage context={{...base,isAdmin:true,carreras:[]}}/> )
- await waitFor(()=>expect(screen.getByLabelText('Año de carrera a consultar:').options).toHaveLength(2))
- expect(screen.queryByRole('option',{name:/OTRO-PERIODO/})).toBeNull()
- expect(screen.queryByRole('button',{name:'Registrar Impartición'})).toBeNull()
- expect(mocks.api.mock.calls.every(([,options])=>!options?.method)).toBe(true)
+test('Docente sin función no recibe controles de entrega académica',async()=>{
+ mockData();render(<ProgramacionPage context={{...base,funciones:[],carreras:[],canManageSecciones:false}}/> )
+ expect(screen.queryByLabelText('Seleccionar Excel de asignación académica')).toBeNull()
+ expect(screen.getByText(/La entrega académica está disponible/)).toBeTruthy()
+ expect(mocks.api).not.toHaveBeenCalled()
 })
-test('Docente sin función no recibe controles de escritura en programación',async()=>{
- mockData();render(<ProgramacionPage context={{...base,funciones:[],carreras:[],canManageSecciones:false}} onChanged={vi.fn()}/> )
- await screen.findByRole('option',{name:/GRUPO-A/})
- expect(screen.queryByRole('button',{name:'Registrar Impartición'})).toBeNull()
-})
+
 test('Bloques devueltos por PostgreSQL se muestran con el filtro Lunes',async()=>{
  mocks.api.mockResolvedValue([{id_bloque:1,id_periodo:1,dia:'Lunes',hora_inicio:'08:00:00',hora_fin:'09:00:00',es_receso:false}])
  render(<BloquesPage context={{...base,canManageBloques:true}} onChanged={vi.fn()}/> )
@@ -105,14 +100,16 @@ test('La consulta histórica respeta el semestre seleccionado',async()=>{
 test('Asignaturas restringe opciones a carreras coordinadas',async()=>{
  mockData();render(<AsignaturasPage context={base} canManage onChanged={vi.fn()}/> )
  await screen.findByText('Matemática')
+ fireEvent.click(screen.getByText('Catálogo anterior'))
  fireEvent.click(screen.getByRole('button',{name:'Editar Matemática'}))
  expect(screen.getByLabelText('Carrera').options).toHaveLength(1)
 })
 
 test('Filtra asignaturas combinando carrera, año y búsqueda',async()=>{
- mocks.api.mockImplementation(async path=>path==='/carreras'?careers:[...subjects,{...subjects[0],id_asignatura:2,id_carrera:2,ano_estudio:2,nombre:'Biología',codigo:'BIO',carrera_nombre:'Medicina'}])
+ mocks.api.mockImplementation(async path=>path==='/asignaturas/importadas'?[]:path==='/carreras'?careers:[...subjects,{...subjects[0],id_asignatura:2,id_carrera:2,ano_estudio:2,nombre:'Biología',codigo:'BIO',carrera_nombre:'Medicina'}])
  render(<AsignaturasPage context={{...base,isAdmin:true}} canManage onChanged={vi.fn()}/> )
  await screen.findByText('Biología')
+ fireEvent.click(screen.getByText('Catálogo anterior'))
  fireEvent.change(screen.getByLabelText('Filtrar por carrera'),{target:{value:'2'}})
  fireEvent.change(screen.getByLabelText('Filtrar por año'),{target:{value:'2'}})
  expect(screen.queryByText('Matemática')).toBeNull()
@@ -122,7 +119,7 @@ test('Filtra asignaturas combinando carrera, año y búsqueda',async()=>{
 })
 
 test('Consulta espacios por capacidad, tipo y recurso',async()=>{
- mocks.api.mockImplementation(async path=>({'/pabellones':[{id_pabellon:1,nombre:'Norte'}],'/recursos':[{id_recurso:1,nombre:'Proyector'}],'/aulas':[
+ mocks.api.mockImplementation(async path=>({'/pabellones':[{id_pabellon:1,nombre:'Norte'}],'/recursos':[{id_recurso:1,nombre:'Proyector'}],'/inventario':[
   {id_aula:1,codigo:'LAB-40',tipo:'laboratorio',capacidad:40,recursos:[1],estado:'activo',pabellon_nombre:'Norte'},
   {id_aula:2,codigo:'AULA-20',tipo:'aula',capacidad:20,recursos:[],estado:'activo',pabellon_nombre:'Norte'}
  ]}[path]||[]))
@@ -139,6 +136,7 @@ test('Consulta espacios por capacidad, tipo y recurso',async()=>{
 
 test('Asignaturas corrige sin alta manual y descarta el formulario al perder su carrera',async()=>{
  mockData();const view=render(<AsignaturasPage context={base} canManage onChanged={vi.fn()}/> )
+ fireEvent.click(screen.getByText('Catálogo anterior'))
  fireEvent.click(await screen.findByRole('button',{name:'Editar Matemática'}))
  expect(screen.queryByRole('button',{name:'Nueva asignatura'})).toBeNull()
  fireEvent.change(screen.getByLabelText('Nombre de la asignatura'),{target:{value:'Matemática I'}})
@@ -152,7 +150,7 @@ test('Asignaturas corrige sin alta manual y descarta el formulario al perder su 
 })
 
 test('La corrección de aula se descarta al perder el permiso y no reaparece al recuperarlo',async()=>{
- mocks.api.mockImplementation(async path=>({'/pabellones':[{id_pabellon:1,nombre:'B'}],'/recursos':[], '/aulas':[{id_aula:1,id_pabellon:1,codigo:'B4',pabellon_nombre:'B',tipo:'laboratorio',capacidad:30,recursos:[],estado:'activo'}]}[path]||[]))
+ mocks.api.mockImplementation(async path=>({'/pabellones':[{id_pabellon:1,nombre:'B'}],'/recursos':[], '/inventario':[{id_aula:1,id_pabellon:1,codigo:'B4',pabellon_nombre:'B',tipo:'laboratorio',capacidad:30,recursos:[],estado:'activo'}]}[path]||[]))
  const view=render(<EspaciosPage canManage onChanged={vi.fn()}/>)
  fireEvent.click(await screen.findByRole('button',{name:'Editar'}))
  view.rerender(<EspaciosPage canManage={false} onChanged={vi.fn()}/>)

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import RestriccionesPanel from './RestriccionesPanel'
+import ConsecutivasPanel from './ConsecutivasPanel'
 import { api } from '../../services/management'
 
 
@@ -45,7 +46,8 @@ export default function DisponibilidadPage({ context }) {
 
         {error && <p role="alert" className="error">{error}</p>}
 
-        <RestriccionesPanel context={context} docentes={docentes}/>
+        <RestriccionesPanel context={context}/>
+        <ConsecutivasPanel context={context}/>
         <details><summary>Consultar disponibilidad del modelo anterior</summary>
         <p>Estos intervalos son disponibilidad histórica; no se convierten en restricciones.</p>
         {context?.activePeriod && <div className="list-toolbar">

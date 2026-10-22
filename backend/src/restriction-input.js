@@ -8,3 +8,8 @@ export function restrictionInput(data) {
  return {id_docente:positiveId(data.id_docente),id_periodo:positiveId(data.id_periodo),dia:data.dia,hora_inicio:data.hora_inicio,hora_fin:data.hora_fin,activa:data.activa,
  ...(data.id===undefined?{}:{id:positiveId(data.id),version:positiveId(data.version)})}
 }
+
+export function unifiedRestrictionInput(data) {
+ if(!['historico','academico'].includes(data.origen))throw new AccessError(400,'Selecciona el docente desde la lista; no se puede inferir su identidad.')
+ return {...restrictionInput(data),origen:data.origen}
+}

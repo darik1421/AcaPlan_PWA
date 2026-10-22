@@ -185,3 +185,5 @@
         grid-template-columns: 1fr;
     }
 }
+.weekly-class { display: flex; flex-direction: column; gap: .35rem; min-width: 140px; padding: .65rem; margin-bottom: .5rem; border: 1px solid var(--border-color, #d1d5db); border-radius: .5rem; }
+.weekly-class span { font-size: .85rem; }
