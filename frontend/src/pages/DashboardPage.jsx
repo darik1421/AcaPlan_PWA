@@ -60,7 +60,7 @@ export default function DashboardPage() {
         <button className={page === 'espacios' ? 'selected' : ''} onClick={() => setPage('espacios')}><Building2 size={18} /> Aulas y Recursos</button>
         <button className={page === 'programacion' ? 'selected' : ''} onClick={() => setPage('programacion')}><ClipboardList size={18} /> Asignación académica</button>
         <button className={page === 'disponibilidad' ? 'selected' : ''} onClick={() => setPage('disponibilidad')}><Clock size={18} /> Restricciones</button>
-        {context?.canManageBloques && <button className={page === "borradores" ? "selected" : ""} onClick={()=>setPage("borradores")}><Calendar size={18}/> Borradores</button>}{context?.canManageAccounts && <button className={page === 'accounts' ? 'selected' : ''} onClick={() => setPage('accounts')}><User size={18} /> Gestión de Cuentas</button>}
+        {context?.canReadDrafts && <button className={page === "borradores" ? "selected" : ""} onClick={()=>setPage("borradores")}><Calendar size={18}/> Borradores</button>}{context?.canManageAccounts && <button className={page === 'accounts' ? 'selected' : ''} onClick={() => setPage('accounts')}><User size={18} /> Gestión de Cuentas</button>}
       </nav>
       <div style={{ padding: '24px' }}>
         <button style={{ display: 'flex', gap: '12px', alignItems: 'center', background: 'transparent', border: 'none', color: 'var(--text-muted)', fontWeight: 500, fontSize: '14px', width: '100%' }} onClick={close} disabled={closing}>
@@ -84,7 +84,7 @@ export default function DashboardPage() {
         {!context && !error && <p role="status">Cargando tu espacio de trabajo…</p>}
         {context && (
           page === 'publicados' ? <HorariosPublicados/> :
-          page === 'borradores' && context.canManageBloques ? <BorradoresPage key={context.activePeriod?.id_periodo} periodId={context.activePeriod?.id_periodo}/> :
+          page === 'borradores' && context.canReadDrafts ? <BorradoresPage key={context.activePeriod?.id_periodo} periodId={context.activePeriod?.id_periodo} canPlan={context.canManageBloques}/> :
           page === 'accounts' && context.canManageAccounts ? <AccountsPage context={context} onChanged={refresh} /> :
             page === 'carreras' ? <CarrerasPage canManage={context.canManageCarreras} onChanged={refresh} /> :
               page === 'asignaturas' ? <AsignaturasPage context={context} canManage={context.canManageAsignaturas} onChanged={refresh} /> :

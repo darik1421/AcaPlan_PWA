@@ -59,7 +59,7 @@ export default function AccountsPage({ context, onChanged }) {
       <fieldset className="choice-group"><legend>Funciones adicionales</legend>
         {functions.filter(([id]) => id !== 'jefe_departamento' || context.permissionVersion >= 2 || form.funciones.includes(id)).map(([id,label])=><label className="check-label" key={id}><input type="checkbox" checked={form.funciones.includes(id)} onChange={()=>toggle('funciones',id)}/>{label}</label>)}
       </fieldset>
-      <p className="muted">Los coordinadores de carrera gestionan la asignación académica de sus carreras. Planificación permite gestionar semestres; aprobación identifica a quienes revisan el horario.</p>
+      <p className="muted">Los coordinadores de carrera gestionan la asignación académica de sus carreras. Planificación permite preparar y corregir borradores y enviarlos a revisión. Aprobación permite revisarlos, aprobarlos y publicarlos, sin editar sus clases.</p>
       {context.permissionVersion >= 2 && <p className="muted">Los jefes de departamento registran las restricciones docentes. Los coordinadores de carrera pueden consultarlas. Los administradores conservan su acceso de gestión.</p>}
       {form.funciones.includes('coordinador') && <fieldset className="choice-group"><legend>Carreras asignadas (selecciona al menos una)</legend>
         {!context.catalogoCarreras.length && <p className="notice">No hay carreras registradas. Primero deben incorporarse al catálogo.</p>}

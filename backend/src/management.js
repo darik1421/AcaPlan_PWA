@@ -309,9 +309,10 @@ export function createManagement({
         const canManageAsignaturas = isAdmin || Boolean(context.funciones?.includes('coordinador'))
         const canManageEspacios = canManageCarreras
         const canManageBloques = canManageEspacios
+        const canReadDrafts = canManageBloques || Boolean(context.funciones?.includes('aprobador'))
         const canManageSecciones = canManageAsignaturas
         const canManageDisponibilidad = isAdmin || Boolean(context.funciones?.includes('jefe_departamento'))
-        return { ...context, isAdmin, canCreateAccounts: isAdmin && Boolean(serviceKey), canManageCarreras, canManageAsignaturas, canManageEspacios, canManageSecciones, canManageBloques, canManageDisponibilidad }
+        return { ...context, isAdmin, canCreateAccounts: isAdmin && Boolean(serviceKey), canManageCarreras, canManageAsignaturas, canManageEspacios, canManageSecciones, canManageBloques, canReadDrafts, canManageDisponibilidad }
       }
       if (route === 'accounts.create') return createAccount(request, data)
       if (route === 'accounts.update') return rpc(request, route, accountInput(data))

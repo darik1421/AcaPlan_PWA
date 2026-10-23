@@ -13,6 +13,7 @@ export async function transitionDraft({input,actor,call,confirm}){
  if(!Number.isInteger(input?.id)||input.id<1||!Number.isInteger(input.revision)||input.revision<1||!Number.isInteger(input.version)||input.version<0||!['en_revision','aprobado','publicado'].includes(input.estado))throw new AccessError(400,'Selecciona un borrador y su versión actual.')
  const identity={id:input.id,version_reglas:PREPARATION_RULE_VERSION}
  const before=await call('pwa_ciclo_contexto','context',identity)
+ if(!(input.estado==='en_revision'?before.canPlan:before.canApprove))throw new AccessError(403,input.estado==='en_revision'?'Necesitas la función Planificación para enviar a revisión.':'Necesitas la función Aprobación para aprobar o publicar.')
  if(before.version!==input.version)throw new AccessError(409,'El estado cambió. Consulta nuevamente.')
  const expected={en_revision:'borrador',aprobado:'en_revision',publicado:'aprobado'}
  if(before.estado!==expected[input.estado])throw new AccessError(409,'El estado actual no permite esta acción. Consulta nuevamente.')

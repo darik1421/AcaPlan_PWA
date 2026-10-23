@@ -37,3 +37,13 @@ Implementado y habilitado en Supabase: migración `database.local/sprint-4-publi
 
 Validación: 163 pruebas backend y 108 frontend aprobadas; prueba PostgreSQL local de permisos, transiciones, aprobación inválida, publicación, versiones obsoletas, invalidación por clase/catálogo y propuestas independientes; lint, compilación y arranque correctos. No se publicaron horarios ni se cargaron datos reales. Sin cambios en Word ni móvil.
 
+
+## Separación de Planificación y Aprobación — 22 de octubre de 2026
+
+Implementado localmente y aplicado en Supabase el 22 de octubre de 2026 mediante `database.local/sprint-4-permisos-aprobacion.sql`, con autorización específica del usuario. Las cuatro funciones coinciden con el SQL local (hash del cuerpo normalizando saltos de línea). Sin acceso anónimo; la confirmación sigue siendo exclusiva de service_role. Evidencia: `docs/evidencias/permisos-aprobacion-verificados.png`.
+
+- Planificación prepara/edita/fija/retira clases y envía borradores a revisión. No aprueba ni publica por sí sola.
+- Aprobación consulta propuestas, ejecuta la revisión y aprueba/publica, sin crear borradores ni editar clases. Si una propuesta pierde vigencia, Planificación debe reenviarla.
+- Administrador conserva ambas capacidades; una cuenta con las dos funciones también. No se asignan funciones automáticamente ni se alteran horarios existentes.
+- SQL separa lectura/escritura y comprueba el permiso específico de cada transición; Node exige el permiso devuelto por SQL antes de usar la confirmación privada. La interfaz usa esos mismos permisos para las acciones. Se mantienen estados, versiones y validación completa antes de aprobar/publicar.
+- Validación: 113 pruebas frontend y 164 backend aprobadas; lint y compilación correctos. PostgreSQL en memoria verifica lectura del aprobador, denegación de creación/edición/fijación/retiro, bloqueo del planificador al aprobar/publicar y del aprobador al enviar, transiciones, concurrencia e invalidación. Sin importaciones reales ni cambios en Word/móvil.
