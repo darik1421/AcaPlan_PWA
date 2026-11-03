@@ -177,3 +177,30 @@ Todos los cambios fueron validados rigurosamente contra la suite de pruebas del 
 4. **Integridad de Accesibilidad:**
    - Se preservaron todos los atributos `aria-labelledby`, `aria-label`, `role="tab"`, y etiquetas `<label>` requeridas por las pruebas automáticas y por la accesibilidad web (WCAG).
 
+---
+
+## 4. Requisitos de Persistencia en Supabase para el Guardado de Horarios
+
+Para que las propuestas generadas por el motor de IA se guarden de forma permanente en la base de datos de producción de Supabase (y no queden únicamente en la memoria de la interfaz), se debe tener en cuenta lo siguiente:
+
+### 4.1 Desactivación de la obligatoriedad de aula (`id_aula` opcional)
+En el esquema inicial de `Supabase.sql`, la columna `id_aula` en la tabla `horarios` tenía una restricción `NOT NULL`. Para permitir que el generador cree propuestas preliminares donde el usuario decida no asignar aulas físicas inmediatamente, la columna debe permitir valores nulos (`NULL`).
+- **Migración requerida en Supabase (proveniente de la app móvil):**
+  ```sql
+  ALTER TABLE public.horarios ALTER COLUMN id_aula DROP NOT NULL;
+  ```
+  *Sin este cambio, cualquier intento de guardar una clase con aula pendiente generará un error de violación de restricción NOT NULL.*
+
+### 4.2 Tabla de versiones de borradores (`versiones_horario`)
+Para no sobrescribir el horario vigente y permitir el ciclo institucional de revisión por jefaturas y docentes:
+- **Tabla `versiones_horario`:** Registra cada propuesta con su `id_version_horario`, `numero_version`, `id_periodo`, `estado` (`borrador`, `compartido`, `aprobado`, `publicado`) y `alcance_turno`.
+- **Campos en `horarios`:** La tabla `horarios` debe incluir:
+  - `id_version_horario INTEGER REFERENCES public.versiones_horario(id_version_horario)`
+  - `es_fijada BOOLEAN DEFAULT FALSE` (para respetar clases bloqueadas en futuras ejecuciones del generador).
+  - `numero_sesion INTEGER` (para identificar si es la sesión 1 o 2 de la materia en la semana).
+
+### 4.3 Inserción en Lote (Batch Insert) en el Backend
+- Actualmente el backend cuenta con endpoints individuales para crear un borrador (`POST /api/borradores`) y modificar clases una a una (`POST /api/borradores/clase`).
+- Para guardar el horario generado completo de una sola vez, se recomienda implementar un endpoint de inserción masiva (`POST /api/borradores/lote-clases` o procedimiento almacenado RPC) que reciba el array completo de clases generadas e inserte todas las filas en una única transacción atómica en Supabase.
+
+
