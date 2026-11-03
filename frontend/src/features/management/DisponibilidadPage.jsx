@@ -3,70 +3,147 @@ import RestriccionesPanel from './RestriccionesPanel'
 import ConsecutivasPanel from './ConsecutivasPanel'
 import { api } from '../../services/management'
 
-
 export default function DisponibilidadPage({ context }) {
-    const [rows, setRows] = useState([])
-    const [docentes, setDocentes] = useState([])
+  const [rows, setRows] = useState([])
+  const [docentes, setDocentes] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [filtroDocente, setFiltroDocente] = useState('')
 
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState('')
+  const load = useCallback(async signal => {
+    setLoading(true)
+    setError('')
+    try {
+      const [dataDisp, dataDoc] = await Promise.all([
+        api('/disponibilidad', { signal }),
+        api('/docentes', { signal }),
+      ])
+      if (!signal?.aborted) {
+        setRows(dataDisp)
+        setDocentes(dataDoc)
+        setFiltroDocente(current =>
+          dataDoc.some(d => d.id_docente === Number(current))
+            ? current
+            : dataDoc[0]?.id_docente || ''
+        )
+      }
+    } catch (e) {
+      if (!signal?.aborted) setError(e.message)
+    } finally {
+      if (!signal?.aborted) setLoading(false)
+    }
+  }, [])
 
-    const [filtroDocente, setFiltroDocente] = useState('')
+  useEffect(() => {
+    const c = new AbortController()
+    load(c.signal)
+    return () => c.abort()
+  }, [load])
 
-    const load = useCallback(async (signal) => {
-        setLoading(true); setError('')
-        try {
-            const [dataDisp, dataDoc] = await Promise.all([
-                api('/disponibilidad', { signal }),
-                api('/docentes', { signal })
-            ])
-            if (!signal?.aborted) {
-                setRows(dataDisp)
-                setDocentes(dataDoc)
-                setFiltroDocente(current => dataDoc.some(d => d.id_docente === Number(current)) ? current : (dataDoc[0]?.id_docente || ''))
-            }
-        } catch (e) {
-            if (!signal?.aborted) setError(e.message)
-        } finally {
-            if (!signal?.aborted) setLoading(false)
-        }
-    }, [])
+  const fmt = t => t.substring(0, 5)
+  const visibles = rows.filter(
+    r =>
+      r.id_periodo === context?.activePeriod?.id_periodo &&
+      r.id_docente === Number(filtroDocente)
+  )
 
-    useEffect(() => { const c = new AbortController(); load(c.signal); return () => c.abort() }, [load])
-
-    const fmt = t => t.substring(0, 5)
-    const visibles = rows.filter(r => r.id_periodo === context?.activePeriod?.id_periodo && r.id_docente === Number(filtroDocente))
-
-    return <section aria-labelledby="disp-title">
-        <div className="section-heading">
-            <div><h2 id="disp-title">Restricciones</h2><p className="muted">Restricciones comunicadas para {context?.activePeriod?.nombre || 'ningún semestre'}.</p></div>
+  return (
+    <section className="management-page" aria-labelledby="disp-title">
+      <div className="section-heading">
+        <div>
+          <span className="screen-kicker">Jefaturas de departamento</span>
+          <h2 id="disp-title">Restricciones</h2>
+          <p className="muted">
+            Intervalos autorizados en los que un docente no puede impartir clases.
+          </p>
         </div>
+      </div>
 
-        {!context?.activePeriod && <div className="banner info">No hay un semestre académico activo.</div>}
+      <div className="banner-notice">
+        Si no se comunica una restricción, el docente no queda bloqueado por disponibilidad.
+      </div>
 
-        {error && <p role="alert" className="error">{error}</p>}
+      {!context?.activePeriod && (
+        <div className="notice">No hay un semestre académico activo.</div>
+      )}
 
-        <RestriccionesPanel context={context}/>
-        <ConsecutivasPanel context={context}/>
-        <details><summary>Consultar disponibilidad del modelo anterior</summary>
-        <p>Estos intervalos son disponibilidad histórica; no se convierten en restricciones.</p>
-        {context?.activePeriod && <div className="list-toolbar">
-            <label>Docente seleccionado para ver su disponibilidad:
-                <select value={filtroDocente} onChange={e => { setFiltroDocente(e.target.value) }}>
-                    {docentes.map(d => <option key={d.id_docente} value={d.id_docente}>{d.nombres} {d.apellidos}</option>)}
-                    {!docentes.length && <option value="">Sin docentes registrados</option>}
-                </select>
+      {error && (
+        <p role="alert" className="error">
+          {error}
+        </p>
+      )}
+
+      <RestriccionesPanel context={context} />
+      <ConsecutivasPanel context={context} />
+
+      <details
+        style={{
+          marginTop: '24px',
+          background: '#FFFFFF',
+          border: '1px solid #E2E8F0',
+          borderRadius: '12px',
+          padding: '16px 20px',
+        }}
+      >
+        <summary style={{ fontWeight: 600, color: '#1B2C48', cursor: 'pointer' }}>
+          Consultar disponibilidad del modelo anterior
+        </summary>
+        <p className="muted" style={{ marginTop: '8px', fontSize: '13px' }}>
+          Estos intervalos son disponibilidad histórica; no se convierten en restricciones.
+        </p>
+        {context?.activePeriod && (
+          <div className="list-toolbar" style={{ marginTop: '16px' }}>
+            <label className="filter-card">
+              <span>Docente seleccionado para ver su disponibilidad:</span>
+              <select
+                value={filtroDocente}
+                onChange={e => {
+                  setFiltroDocente(e.target.value)
+                }}
+              >
+                {docentes.map(d => (
+                  <option key={d.id_docente} value={d.id_docente}>
+                    {d.nombres} {d.apellidos}
+                  </option>
+                ))}
+                {!docentes.length && <option value="">Sin docentes registrados</option>}
+              </select>
             </label>
-        </div>}
+          </div>
+        )}
 
-        {loading ? <p role="status" style={{ marginTop: '1rem' }}>Cargando agenda de disponibilidad…</p> : context?.activePeriod && <div className="table-scroll" style={{ marginTop: '1rem' }}><table><caption>Disponibilidad para el docente elegido</caption><thead><tr><th>Día de la semana</th><th>Hora de Inicio</th><th>Hora de Fin</th></tr></thead><tbody>
-            {visibles.map(row => <tr key={row.id_disponibilidad}>
-                <td>{row.dia}</td>
-                <td><strong style={{ fontSize: '1em' }}>{fmt(row.hora_inicio)}</strong></td>
-                <td><strong style={{ fontSize: '1em' }}>{fmt(row.hora_fin)}</strong></td>
-            </tr>)}
-            {!visibles.length && <tr><td colSpan={3}>No hay intervalos anteriores registrados para este docente.</td></tr>}
-        </tbody></table></div>}
-        </details>
+        {loading ? (
+          <p role="status">Cargando disponibilidad histórica…</p>
+        ) : (
+          <div className="table-scroll" style={{ marginTop: '16px' }}>
+            <table>
+              <thead>
+                <tr>
+                  <th>Día</th>
+                  <th>Desde</th>
+                  <th>Hasta</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visibles.map(r => (
+                  <tr key={r.id_disponibilidad}>
+                    <td><strong>{r.dia_semana}</strong></td>
+                    <td>{fmt(r.hora_inicio)}</td>
+                    <td>{fmt(r.hora_fin)}</td>
+                  </tr>
+                ))}
+                {!visibles.length && (
+                  <tr>
+                    <td colSpan={3}>
+                      No hay intervalos anteriores registrados para este docente.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </details>
     </section>
+  )
 }

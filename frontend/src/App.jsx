@@ -11,7 +11,7 @@ function Screens() {
   const { session, profile, loading, recovery, error, retry, logout } = useAuth()
   if (loading) return <AppLayout><section className="recovery-wrap"><p role="status">Verificando tu acceso…</p></section></AppLayout>
   if (recovery || window.location.pathname === '/recuperar') return <AppLayout><RecoveryPage /></AppLayout>
-  if (!session) return <AppLayout><LoginPage /></AppLayout>
+  if (!session) return <LoginPage />
   if (!profile) return <AppLayout><section className="recovery-wrap"><div className="auth-card">
     <h2>No se pudo habilitar el acceso</h2>
     <p className="error" role="alert">{error || 'Es necesario comprobar tu cuenta antes de continuar.'}</p>

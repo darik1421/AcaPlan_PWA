@@ -30,7 +30,7 @@ export default function ProgramacionResumen({ activePeriodId, revision }) {
       <div className="list-toolbar">
         <label>Semestre del resumen<select value={period} onChange={e => { setPeriod(e.target.value); setCareer('') }}>
           <option value="">Todos los semestres</option>
-          {activePeriodId && !periods.some(([id]) => id === activePeriodId) && <option value={activePeriodId}>Semestre activo (sin programación)</option>}
+          {activePeriodId && !periods.some(([id]) => id === activePeriodId) && <option key="active-period" value={activePeriodId}>Semestre activo (sin programación)</option>}
           {periods.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
         </select></label>
         <label>Carrera del resumen<select value={career} onChange={e => setCareer(e.target.value)}><option value="">Todas las carreras</option>{careers.map(([id, name]) => <option key={id} value={id ?? ''}>{name}</option>)}</select></label>
