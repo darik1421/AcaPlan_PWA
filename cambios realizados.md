@@ -145,18 +145,35 @@ Se crearon y consolidaron más de 800 líneas de reglas CSS modulares y reutiliz
 
 ---
 
+### 2.13 Generador de Horarios con IA (`GeneradorPage.jsx` & `schedule-ai-solver.js`)
+- **Ubicación en el Navegador Lateral:** Ubicado como primera opción en la barra lateral institucional, directamente arriba de *Horarios publicados*, identificado con el ícono `Sparkles` y título *Generador de horarios*.
+- **Motor Heurístico de Optimización:**
+  - Implementación en `schedule-ai-solver.js` con búsqueda con retroceso acotada (*Constrained Backtracking*).
+  - Poda por dominios mínimos (*Minimum Remaining Values - MRV*).
+  - Priorización pedagógica de pares de días alternos universitarios (Lunes ↔ Miércoles, Martes ↔ Jueves).
+  - Optimización y minimización de huecos estudiantiles (`calculateGaps`).
+  - Exploración de combinaciones alternativas sin perder asignaciones fijadas.
+- **Interfaz Interactiva:**
+  - Parámetros: interruptores para `Modo profundo` (hasta 15,000 pasos de búsqueda) y `Asignar aulas físicas` (opcional en borrador).
+  - Protección de días: selector para bloquear días de la semana (ej. Sábado o Viernes) evitando que el generador coloque clases en ellos.
+  - Tablero de métricas en tiempo real: sesiones colocadas, clases fijadas preservadas, huecos evitados, tiempo de cálculo en ms y estado de optimalidad.
+  - Matriz interactiva de clases generadas por día y grupo, con botón para fijar/desfijar clases (`Pin` / `PinOff`).
+  - Guardado directo como **Borrador Oficial** conectado al flujo institucional de revisión y aprobación.
+
+---
+
 ## 3. Verificación y Calidad del Software
 
 Todos los cambios fueron validados rigurosamente contra la suite de pruebas del proyecto y estándares de calidad:
 
 1. **Pruebas Automatizadas:**
    - **Backend:** 164 pruebas aprobadas (`node --test`).
-   - **Frontend:** 113 pruebas aprobadas (`vitest run`).
-   - **Total:** **277 pruebas unitarias y de integración pasando al 100% (0 fallos).**
+   - **Frontend:** 119 pruebas aprobadas (`vitest run`), incluyendo suite de 6 pruebas unitarias para el algoritmo generador (`schedule-ai-solver.test.js`).
+   - **Total:** **283 pruebas unitarias y de integración pasando al 100% (0 fallos).**
 2. **Linter:**
    - Ejecutado `oxlint` sin errores ni advertencias (0 errors, 0 warnings).
 3. **Build de Producción:**
-   - Ejecutado `vite build` generando el paquete estático en `dist/` en 598 ms sin errores de transpilación.
+   - Ejecutado `vite build` generando el paquete estático en `dist/` en 1.29 s sin errores de transpilación.
 4. **Integridad de Accesibilidad:**
    - Se preservaron todos los atributos `aria-labelledby`, `aria-label`, `role="tab"`, y etiquetas `<label>` requeridas por las pruebas automáticas y por la accesibilidad web (WCAG).
 

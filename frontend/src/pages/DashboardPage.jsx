@@ -8,11 +8,13 @@ import {
   User,
   LogOut,
   ClipboardList,
+  Sparkles,
 } from 'lucide-react'
 import { useAuth } from '../features/auth/AuthContext'
 import { api } from '../services/management'
 import acaplanLogo from '../assets/acaplan-logo.png'
 
+import GeneradorPage from '../features/management/GeneradorPage'
 import HorariosPublicados from '../features/management/HorariosPublicados'
 import BorradoresPage from '../features/management/BorradoresPage'
 import AccountsPage from '../features/management/AccountsPage'
@@ -26,6 +28,7 @@ import DisponibilidadPage from '../features/management/DisponibilidadPage'
 import '../features/management/management.css'
 
 const PAGE_TITLES = {
+  generador: 'Generador de Horarios con IA',
   publicados: 'Horario semanal',
   periods: 'Semestres académicos',
   carreras: 'Carreras coordinadas',
@@ -97,6 +100,14 @@ export default function DashboardPage() {
           </div>
 
           <nav className="sidebar-nav">
+            <button
+              className={page === 'generador' ? 'selected' : ''}
+              onClick={() => setPage('generador')}
+            >
+              <Sparkles size={18} />
+              <span>Generador de horarios</span>
+            </button>
+
             <button
               className={page === 'publicados' ? 'selected' : ''}
               onClick={() => setPage('publicados')}
@@ -224,6 +235,13 @@ export default function DashboardPage() {
             {!context && !error && <p role="status">Cargando tu espacio de trabajo…</p>}
 
             {context && (
+              page === 'generador' ? (
+                <GeneradorPage
+                  context={context}
+                  periodId={context.activePeriod?.id_periodo}
+                  onNavigateToDrafts={() => setPage('borradores')}
+                />
+              ) :
               page === 'publicados' ? <HorariosPublicados /> :
               page === 'borradores' && context.canReadDrafts ? (
                 <BorradoresPage
