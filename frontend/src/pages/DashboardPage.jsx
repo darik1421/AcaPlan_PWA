@@ -13,6 +13,7 @@ import {
 import { useAuth } from '../features/auth/AuthContext'
 import { api } from '../services/management'
 import acaplanLogo from '../assets/acaplan-logo.png'
+import { roleLabel } from '../lib/role-labels'
 
 import GeneradorPage from '../features/management/GeneradorPage'
 import HorariosPublicados from '../features/management/HorariosPublicados'
@@ -28,12 +29,13 @@ import DisponibilidadPage from '../features/management/DisponibilidadPage'
 import '../features/management/management.css'
 
 const PAGE_TITLES = {
+  personal: 'Mi horario',
   generador: 'Generador de Horarios con IA',
   publicados: 'Horario semanal',
   periods: 'Semestres académicos',
   carreras: 'Carreras coordinadas',
   asignaturas: 'Catálogo de asignaturas',
-  espacios: 'Aulas y recursos',
+  espacios: 'Pabellones y aulas',
   programacion: 'Asignación académica',
   disponibilidad: 'Restricciones',
   borradores: 'Borradores de horarios',
@@ -50,7 +52,6 @@ export default function DashboardPage() {
   const [revision, setRevision] = useState(0)
   const [page, setPage] = useState('periods')
 
-  const admin = profile?.rol === 'administrador'
   const refresh = () => setRevision(value => value + 1)
 
   useEffect(() => {
@@ -100,13 +101,14 @@ export default function DashboardPage() {
           </div>
 
           <nav className="sidebar-nav">
-            <button
+            {context?.personalScheduleVersion >= 1 && <button className={page === 'personal' ? 'selected' : ''} onClick={() => setPage('personal')}><Calendar size={18} /><span>Mi horario</span></button>}
+            {context?.canManageBloques && <button
               className={page === 'generador' ? 'selected' : ''}
               onClick={() => setPage('generador')}
             >
               <Sparkles size={18} />
               <span>Generador de horarios</span>
-            </button>
+            </button>}
 
             <button
               className={page === 'publicados' ? 'selected' : ''}
@@ -145,7 +147,7 @@ export default function DashboardPage() {
               onClick={() => setPage('espacios')}
             >
               <Building2 size={18} />
-              <span>Aulas y Recursos</span>
+              <span>Pabellones y aulas</span>
             </button>
 
             <button
@@ -216,7 +218,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="user-info">
                   <span className="user-name">{profile?.nombre || profile?.email || 'Usuario'}</span>
-                  <span className="user-role">{admin ? 'Administración' : 'Docente'}</span>
+                  <span className="user-role">{roleLabel(profile, context?.funciones || [])}</span>
                 </div>
               </div>
             </div>
@@ -235,14 +237,15 @@ export default function DashboardPage() {
             {!context && !error && <p role="status">Cargando tu espacio de trabajo…</p>}
 
             {context && (
-              page === 'generador' ? (
+              page === 'generador' && context.canManageBloques ? (
                 <GeneradorPage
                   context={context}
                   periodId={context.activePeriod?.id_periodo}
                   onNavigateToDrafts={() => setPage('borradores')}
                 />
               ) :
-              page === 'publicados' ? <HorariosPublicados /> :
+              page === 'personal' && context.personalScheduleVersion >= 1 ? <HorariosPublicados key="personal" personal /> :
+              page === 'publicados' ? <HorariosPublicados key="publicados" /> :
               page === 'borradores' && context.canReadDrafts ? (
                 <BorradoresPage
                   key={context.activePeriod?.id_periodo}
@@ -254,7 +257,7 @@ export default function DashboardPage() {
                 <AccountsPage context={context} onChanged={refresh} />
               ) :
               page === 'carreras' ? (
-                <CarrerasPage canManage={context.canManageCarreras} onChanged={refresh} />
+                <CarrerasPage canManage={context.canManageCarreras} onChanged={refresh} manageDepartments={context.isAdmin} departmentScopeVersion={context.departmentScopeVersion} />
               ) :
               page === 'asignaturas' ? (
                 <AsignaturasPage

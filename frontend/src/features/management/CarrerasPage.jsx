@@ -1,11 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { api } from '../../services/management'
 import { Plus, Pencil, RotateCw } from 'lucide-react'
 
+
 const empty = () => ({ nombre: '' })
 
-export default function CarrerasPage({ canManage, onChanged }) {
+export default function CarrerasPage({ canManage, onChanged, manageDepartments = false }) {
   const [rows, setRows] = useState([])
+  const [departments, setDepartments] = useState(null)
   const [form, setForm] = useState(null)
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(true)
@@ -13,24 +15,24 @@ export default function CarrerasPage({ canManage, onChanged }) {
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
 
-  async function load(signal) {
+  const load = useCallback(async (signal) => {
     setLoading(true)
     setError('')
     try {
-      const data = await api('/carreras', { signal })
-      if (!signal?.aborted) setRows(data)
+      const [data, organization] = await Promise.all([api('/carreras', { signal }), manageDepartments ? api('/departamentos', { signal }) : Promise.resolve(null)])
+      if (!signal?.aborted) { setRows(data); setDepartments(organization) }
     } catch (e) {
       if (!signal?.aborted) setError(e.message)
     } finally {
       if (!signal?.aborted) setLoading(false)
     }
-  }
+  }, [manageDepartments])
 
   useEffect(() => {
     const c = new AbortController()
     load(c.signal)
     return () => c.abort()
-  }, [])
+  }, [load])
 
   const field = (name, value) =>
     setForm(current => ({ ...current, [name]: value }))
@@ -42,7 +44,19 @@ export default function CarrerasPage({ canManage, onChanged }) {
     setError('')
     setMessage('')
     try {
-      await api('/carreras', { method: form.id ? 'PATCH' : 'POST', data: form })
+      const result = await api('/carreras', { method: form.id ? 'PATCH' : 'POST', data: { nombre: form.nombre, ...(form.id ? { id: form.id, estado: form.estado } : {}) } })
+      const savedId = form.id || result.id
+      if (manageDepartments) {
+        setForm(current => ({...current, id: savedId, estado: current.estado || 'activo'}))
+        try {
+          const latest = await api('/departamentos')
+          const relation = latest.carreras.find(c => c.id_carrera === savedId)
+          if (relation?.id_departamento !== Number(form.departamento)) {
+            if ((relation?.revision || 0) !== (form.revisionDepartamento || 0)) throw new Error('La relación de departamento cambió. Cierra el formulario y consulta nuevamente antes de editar.')
+            await api('/departamentos/carrera', {method:'PATCH',data:{id_carrera:savedId,id_departamento:Number(form.departamento),revision:relation?.revision || 0}})
+          }
+        } catch (error) { throw new Error('La carrera se guardó, pero su departamento no: ' + error.message) }
+      }
       setMessage(form.id ? 'Carrera actualizada.' : 'Carrera registrada.')
       setForm(null)
       await load()
@@ -107,6 +121,7 @@ export default function CarrerasPage({ canManage, onChanged }) {
                   placeholder="Ej. Ingeniería en Sistemas de Información"
                 />
               </label>
+              {manageDepartments && <label>Departamento de la carrera<select required value={form.departamento || ''} onChange={e => field('departamento',e.target.value)}><option value="">Selecciona un departamento</option>{departments?.departamentos.map(d => <option key={d.id} value={d.id}>{d.nombre}</option>)}</select></label>}
               {form.id && (
                 <label>
                   Estado
@@ -177,6 +192,7 @@ export default function CarrerasPage({ canManage, onChanged }) {
               <tr>
                 <th>Nombre</th>
                 <th>Estado</th>
+                {manageDepartments && <th>Departamento</th>}
                 {canManage && <th>Acciones</th>}
               </tr>
             </thead>
@@ -198,6 +214,7 @@ export default function CarrerasPage({ canManage, onChanged }) {
                       <span>{row.estado}</span>
                     </span>
                   </td>
+                  {manageDepartments && <td>{departments?.departamentos.find(d => d.id === departments.carreras.find(c => c.id_carrera === row.id_carrera)?.id_departamento)?.nombre || 'Pendiente de asignar'}</td>}
                   {canManage && (
                     <td>
                       <button
@@ -205,7 +222,8 @@ export default function CarrerasPage({ canManage, onChanged }) {
                         disabled={busy}
                         aria-label={`Editar ${row.nombre}`}
                         onClick={() => {
-                          setForm({ ...row, id: row.id_carrera })
+                          const relation = departments?.carreras.find(c => c.id_carrera === row.id_carrera)
+                          setForm({ ...row, id: row.id_carrera, departamento: relation?.id_departamento || '', revisionDepartamento: relation?.revision || 0 })
                           setMessage('')
                         }}
                       >
@@ -218,7 +236,7 @@ export default function CarrerasPage({ canManage, onChanged }) {
               ))}
               {!filtered.length && (
                 <tr>
-                  <td colSpan={canManage ? 3 : 2}>
+                  <td colSpan={(canManage ? 3 : 2) + (manageDepartments ? 1 : 0)}>
                     No hay carreras que coincidan.
                   </td>
                 </tr>

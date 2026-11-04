@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { api } from '../../services/management'
 import { useAuth } from '../auth/AuthContext'
+import { FUNCTION_LABELS, roleLabel } from '../../lib/role-labels'
 import { Plus, RefreshCw, Pencil } from 'lucide-react'
 
 const empty = () => ({
@@ -15,15 +16,18 @@ const empty = () => ({
 })
 
 const functions = [
-  ['coordinador', 'Coordinadores de carrera'],
+  ['coordinador', 'Coordinador de carrera'],
   ['planificador', 'Planificación'],
   ['aprobador', 'Aprobación'],
-  ['jefe_departamento', 'Jefes de departamento'],
+  ['jefe_departamento', 'Directores de departamento'],
 ]
 
 export default function AccountsPage({ context, onChanged }) {
+  const institutional = context.departmentScopeVersion >= 1
+  const institutionalRole = account => account.rol !== 'docente' ? account.rol : account.funciones.includes('jefe_departamento') ? 'jefe_departamento' : account.funciones.includes('coordinador') ? 'coordinador' : 'docente'
   const { profile, retry } = useAuth()
   const [rows, setRows] = useState([])
+  const [organization, setOrganization] = useState(null)
   const [form, setForm] = useState(null)
   const [query, setQuery] = useState('')
   const [roleFilter, setRoleFilter] = useState('')
@@ -34,13 +38,13 @@ export default function AccountsPage({ context, onChanged }) {
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
 
-  async function load(signal) {
+  const load = useCallback(async (signal) => {
     setLoading(true)
     setLoadFailed(false)
     setError('')
     try {
-      const data = await api('/accounts', { signal })
-      if (!signal?.aborted) setRows(data)
+      const [data, departments, directors] = await Promise.all([api('/accounts', { signal }), institutional ? api('/departamentos', {signal}) : Promise.resolve(null), institutional ? api('/departamentos/directores', {signal}) : Promise.resolve([])])
+      if (!signal?.aborted) { setRows(data); setOrganization(departments ? {...departments, directors} : null) }
     } catch (e) {
       if (!signal?.aborted) {
         setError(e.message)
@@ -51,13 +55,13 @@ export default function AccountsPage({ context, onChanged }) {
     } finally {
       if (!signal?.aborted) setLoading(false)
     }
-  }
+  }, [institutional])
 
   useEffect(() => {
     const c = new AbortController()
     load(c.signal)
     return () => c.abort()
-  }, [])
+  }, [load])
 
   useEffect(() => {
     if (!context.canCreateAccounts) setForm(current => (current?.id ? current : null))
@@ -89,7 +93,21 @@ export default function AccountsPage({ context, onChanged }) {
     setError('')
     setMessage('')
     try {
-      await api('/accounts', { method: form.id ? 'PATCH' : 'POST', data: form })
+      const { departamento, revisionDepartamento, ...account } = form
+      const result = await api('/accounts', { method: form.id ? 'PATCH' : 'POST', data: account })
+      const savedId = form.id || result.id
+      if (institutional && institutionalRole(form) === 'jefe_departamento' && form.estado === 'activo') {
+        setForm(current => ({...current, id:savedId, password:''}))
+        try {
+          const latest = await api('/departamentos/directores')
+          const relation = latest.find(d => d.id_usuario === savedId)
+          const selected = departamento ? Number(departamento) : null
+          if ((relation?.id_departamento || null) !== selected) {
+            if ((relation?.revision || 0) !== (revisionDepartamento || 0)) throw new Error('El departamento cambió. Cierra el formulario y consulta nuevamente.')
+            await api('/departamentos/director', {method:'PATCH',data:{id_usuario:savedId,id_departamento:selected,revision:relation?.revision || 0}})
+          }
+        } catch (error) { throw new Error('La cuenta se guardó, pero su departamento no: ' + error.message) }
+      }
       const self = form.id === profile.id_usuario
       setMessage(
         form.id
@@ -112,7 +130,7 @@ export default function AccountsPage({ context, onChanged }) {
       .join(' ')
       .toLowerCase()
       .includes(query.toLowerCase())
-    const matchesRole = !roleFilter || r.rol === roleFilter
+    const matchesRole = !roleFilter || (institutional ? institutionalRole(r) : r.rol) === roleFilter
     const matchesStatus = !statusFilter || r.estado === statusFilter
     return matchesQuery && matchesRole && matchesStatus
   })
@@ -208,11 +226,18 @@ export default function AccountsPage({ context, onChanged }) {
               )}
               <label>
                 Rol
-                <select value={form.rol} onChange={e => field('rol', e.target.value)}>
+                {institutional ? <select value={institutionalRole(form)} onChange={e=>{
+                  const value=e.target.value
+                  setForm(current=>({...current,rol:['coordinador','jefe_departamento'].includes(value)?'docente':value,funciones:['coordinador','jefe_departamento'].includes(value)?[value]:[],carreras:value==='coordinador'?current.carreras:[]}))
+                }}>
+                  <option value="administrador">Administrador</option><option value="director">Director</option><option value="jefe_departamento">Director de departamento</option><option value="coordinador">Coordinador de carrera</option><option value="docente">Docente</option>
+                </select> : <select value={form.rol} onChange={e => field('rol', e.target.value)}>
                   <option value="docente">Docente</option>
                   <option value="administrador">Administrador</option>
-                </select>
+                  {(context.institutionalRolesVersion >= 1 || form.rol === 'director') && <option value="director">Director</option>}
+                </select>}
               </label>
+              {institutional && institutionalRole(form) === 'jefe_departamento' && <label>Departamento del director<select required value={form.departamento || ''} onChange={e => field('departamento',e.target.value)}><option value="">Selecciona un departamento</option>{organization?.departamentos.map(d => <option key={d.id} value={d.id}>{d.nombre}</option>)}</select></label>}
               {form.id && (
                 <label>
                   Estado
@@ -230,7 +255,7 @@ export default function AccountsPage({ context, onChanged }) {
               </p>
             )}
 
-            <fieldset className="choice-group">
+            {!institutional && <fieldset className="choice-group">
               <legend>Funciones adicionales</legend>
               {functions
                 .filter(
@@ -249,17 +274,17 @@ export default function AccountsPage({ context, onChanged }) {
                     {label}
                   </label>
                 ))}
-            </fieldset>
+            </fieldset>}
 
             <p className="muted" style={{ marginTop: '12px', fontSize: '13px' }}>
-              Los coordinadores de carrera gestionan la asignación académica de sus carreras.
+              {institutional ? 'El Director y el Administrador tienen acceso completo. Cada director de departamento registra restricciones y aprueba los borradores de su departamento; los coordinadores gestionan la entrega académica de sus carreras y los docentes consultan sus horarios.' : <>Los coordinadores de carrera gestionan la asignación académica de sus carreras.
               Planificación permite preparar y corregir borradores y enviarlos a revisión. Aprobación
-              permite revisarlos, aprobarlos y publicarlos, sin editar sus clases.
+              permite revisarlos, aprobarlos y publicarlos, sin editar sus clases.</>}
             </p>
 
-            {context.permissionVersion >= 2 && (
+            {!institutional && context.permissionVersion >= 2 && (
               <p className="muted" style={{ marginTop: '8px', fontSize: '13px' }}>
-                Los jefes de departamento registran las restricciones docentes. Los coordinadores de
+                Los directores de departamento registran las restricciones docentes. Los coordinadores de
                 carrera pueden consultarlas. Los administradores conservan su acceso de gestión.
               </p>
             )}
@@ -313,7 +338,9 @@ export default function AccountsPage({ context, onChanged }) {
           <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)}>
             <option value="">Todos los roles</option>
             <option value="administrador">Administrador</option>
+            {context.institutionalRolesVersion >= 1 && <option value="director">Director</option>}
             <option value="docente">Docente</option>
+            {institutional && <><option value="jefe_departamento">Director de departamento</option><option value="coordinador">Coordinador de carrera</option></>}
           </select>
         </label>
         <label className="filter-card">
@@ -350,7 +377,7 @@ export default function AccountsPage({ context, onChanged }) {
             <thead>
               <tr>
                 <th>Persona</th>
-                <th>Rol y funciones</th>
+                <th>{institutional ? 'Rol' : 'Rol y funciones'}</th>
                 <th>Carreras</th>
                 <th>Estado</th>
                 <th>Acciones</th>
@@ -364,23 +391,18 @@ export default function AccountsPage({ context, onChanged }) {
                     <span className="cell-detail">{row.correo}</span>
                   </td>
                   <td>
-                    <strong>{row.rol === 'administrador' ? 'Administradora' : 'Docente'}</strong>
-                    <span className="cell-detail">
+                    <strong>{roleLabel(row)}</strong>
+                    {!institutional && <span className="cell-detail">
                       {row.funciones
                         .map(
                           value =>
-                            ({
-                              coordinador: 'Coordinación',
-                              planificador: 'Planificación',
-                              aprobador: 'Aprobación',
-                              jefe_departamento: 'Jefes de departamento',
-                            }[value] || value)
+                            (FUNCTION_LABELS[value] || value)
                         )
                         .join(' · ') || 'Sin funciones adicionales'}
-                    </span>
+                    </span>}
                   </td>
                   <td>
-                    {row.rol === 'administrador'
+                    {['administrador', 'director'].includes(row.rol)
                       ? 'Todas'
                       : row.carreras
                           ?.map(id => context.catalogoCarreras?.find(c => c.id_carrera === id)?.nombre)
@@ -399,7 +421,9 @@ export default function AccountsPage({ context, onChanged }) {
                       disabled={busy || loading || loadFailed}
                       aria-label={`Editar cuenta de ${row.nombre}`}
                       onClick={() => {
-                        setForm({ ...row, id: row.id_usuario, password: '' })
+                        const role = institutionalRole(row)
+                        const relation = organization?.directors.find(d => d.id_usuario === row.id_usuario)
+                        setForm({ ...row, id: row.id_usuario, password: '', departamento: relation?.id_departamento || '', revisionDepartamento: relation?.revision || 0, ...(institutional ? {funciones:['coordinador','jefe_departamento'].includes(role)?[role]:[],carreras:role==='coordinador'?row.carreras:[]} : {}) })
                         setMessage('')
                       }}
                     >

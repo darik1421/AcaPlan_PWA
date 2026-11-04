@@ -6,7 +6,7 @@ import {createManagement} from '../src/management.js'
 const catalog={carreras:[{id_carrera:1,nombre:'Sistemas',estado:'activo'},{id_carrera:2,nombre:'Salud'}],asignaturas:[{id_asignatura:3,id_carrera:1,ano_estudio:3,estado:'activo'}],docentes:[{id_docente:4,estado:'activo'},{id_docente:5,estado:'activo'}],recursos:[{id_recurso:1,nombre:'Computadora'}]}
 const context={catalog,period:{id_periodo:2},allowedCareers:[1]}
 async function xlsx(kind,rows){const book=new ExcelJS.Workbook(),sheet=book.addWorksheet(PREPARATION[kind].sheet);sheet.addRow(PREPARATION[kind].fields);rows.forEach(row=>sheet.addRow(row));return Buffer.from(await book.xlsx.writeBuffer())}
-const room=['CUR-Chontales','B','B4','laboratorio',35,'Computadoras;Televisor','']
+const room=['CUR-Chontales','B','B4','laboratorio',35]
 test('Las plantillas provisionales de inventario contienen campos y referencias, sin filas inventadas',async()=>{
  for(const kind of Object.keys(PREPARATION)){
   const book=new ExcelJS.Workbook();await book.xlsx.load(await preparationTemplate(kind,catalog))
@@ -28,9 +28,9 @@ test('El segundo archivo de años queda retirado de plantilla y revisión',async
 })
 
 test('Rechaza fórmulas y datos de inventario inconsistentes',async()=>{
- const row=[...room];row[4]={formula:'30+5',result:35};row[5]='TV;tv';row[6]='B4'
+ const row=[...room];row[4]={formula:'30+5',result:35}
  const result=await previewPreparation('espacios',await xlsx('espacios',[row]),context)
- for(const key of ['capacidad','recursos','espacio_padre'])assert.ok(result.errores.some(e=>e.campo===key),key)
+ for(const key of ['capacidad'])assert.ok(result.errores.some(e=>e.campo===key),key)
 })
 test('Archivo vacío, dañado, tipo desconocido y semestre ausente no pasan',async()=>{
  await assert.rejects(previewPreparation('espacios',Buffer.from('invalid'),context),{status:400})
@@ -52,15 +52,11 @@ test('Permisos de revisión se comprueban en backend antes de leer el Excel',asy
  }
 })
 
-test('Inventario exige un padre presente y rechaza ciclos de subdivisiones',async()=>{
- const first=[...room];first[6]='B5'
- const second=[...room];second[2]='B5';second[6]='B4'
- const cycle=await previewPreparation('espacios',await xlsx('espacios',[first,second]),context)
- assert.ok(cycle.errores.some(e=>e.motivo.includes('ciclo')))
- const missing=await previewPreparation('espacios',await xlsx('espacios',[first]),context)
- assert.ok(missing.errores.some(e=>e.motivo.includes('Incluye el espacio principal')))
- second[6]=''
- assert.equal((await previewPreparation('espacios',await xlsx('espacios',[first,second]),context)).valido,true)
+test('La plantilla usa aulas completas y rechaza las columnas anteriores de equipamiento y subdivisiones',async()=>{
+ const book=new ExcelJS.Workbook();await book.xlsx.load(await preparationTemplate('espacios',catalog));
+ assert.deepEqual(book.getWorksheet('Espacios').getRow(1).values.slice(1),['sede','pabellon','codigo','tipo','capacidad']);
+ assert.equal(book.getWorksheet('Recursos'),undefined);
+ await assert.rejects(previewPreparation('espacios',await xlsx('espacios',[[...room,'Televisor','B1']]),context),{status:400});
 })
 
 test('Inventario revisa contra Supabase y confirma únicamente con huella y semestre actual',async()=>{

@@ -24,7 +24,7 @@ export async function collectPreparation(call,id_periodo){
    if(typeof components?.vigente!=='boolean'||components.asignacion?.revision!==identity.revision)throw new AccessError(409,'La distribución de sesiones cambió. Vuelve a consultar.')
    if(!Array.isArray(availability?.restricciones))throw new AccessError(503,'No se recibieron las restricciones de la asignatura. Vuelve a consultar.')
    if(identity.revision!==availability.revision)throw new AccessError(409,'La asignación cambió al consultar sus restricciones. Vuelve a consultar.')
-   if(!Array.isArray(teachers?.asignacion?.docentes)||!Array.isArray(teachers?.disponibles)||typeof needs?.definidas!=='boolean'||!Array.isArray(needs.recursos))throw new AccessError(503,'Faltan datos de docentes o necesidades. Vuelve a consultar.')
+   if(!Array.isArray(teachers?.asignacion?.docentes)||!Array.isArray(teachers?.disponibles)||typeof needs?.definidas!=='boolean')throw new AccessError(503,'Faltan datos de docentes o necesidades. Vuelve a consultar.')
    return {...row,id_carrera:identity.id_carrera,estado_carrera:identity.estado_carrera,needs,teachers,components,restricciones:availability.restricciones}
   })))
  }
@@ -87,15 +87,15 @@ export function preparationReview({semester,details,years,rooms,grids,restrictio
    if(sessions&&row.teachers.asignacion.docentes.length){
     for(const part of row.components?.componentes||[{tipo:'general',docentes:row.teachers.asignacion.docentes,sesiones:2}]){
     const capacity=restrictionCapacity(sessions.candidatos,part.docentes,row.restricciones?.filter(r=>part.docentes.includes(r.id_docente)))
-    if(capacity<part.sesiones)add('RESTRICCIONES_SIN_TIEMPO',`Con las restricciones comunicadas quedan ${capacity} sesiones de 90 minutos sin solaparse para esta asignatura; se necesitan ${part.sesiones} (${part.tipo}). Revisa los tiempos y solicita a los jefes de departamento revisar las restricciones. No se retiran automáticamente.`,'Semestres → Tiempos y Restricciones docentes',row)
+    if(capacity<part.sesiones)add('RESTRICCIONES_SIN_TIEMPO',`Con las restricciones comunicadas quedan ${capacity} sesiones de 90 minutos sin solaparse para esta asignatura; se necesitan ${part.sesiones} (${part.tipo}). Revisa los tiempos y solicita a los directores de departamento revisar las restricciones. No se retiran automáticamente.`,'Semestres → Tiempos y Restricciones docentes',row)
     }
    }
   }
   if(!Number.isInteger(row.horas_semestre)||row.horas_semestre<=0)add('HORAS_PENDIENTES','Revisa las horas totales del semestre; no se convierten automáticamente en sesiones.','Asignación académica → Corregir',row)
-  if(!row.needs.definidas)add('NECESIDADES_PENDIENTES','Falta revisar el tipo de espacio y el equipamiento requerido.','Asignación académica → Necesidades',row)
+  if(!row.needs.definidas)add('NECESIDADES_PENDIENTES','Falta revisar el tipo de aula requerido.','Asignación académica → Necesidades',row)
   else if(year?.sede&&Number.isInteger(year.cantidad_estudiantes)&&year.cantidad_estudiantes>0){
-   const compatible=r=>r.estado==='activo'&&r.capacidad>=year.cantidad_estudiantes&&(!row.needs.tipo_espacio||r.tipo===row.needs.tipo_espacio)&&row.needs.recursos.every(id=>r.recursos?.includes(id))
-   if(!rooms.some(r=>compatible(r)&&r.sede&&normalize(r.sede)===normalize(year.sede)))add('ESPACIO_PENDIENTE',rooms.some(r=>compatible(r)&&!r.sede)?'Hay espacios compatibles sin sede registrada; completa el inventario para comprobarlos.':'No se encontró un espacio activo en la sede con capacidad, tipo y equipamiento compatibles.','Espacios → Inventario y Asignación académica → Necesidades',row)
+   const compatible=r=>r.estado==='activo'&&r.capacidad>=year.cantidad_estudiantes&&(!row.needs.tipo_espacio||r.tipo===row.needs.tipo_espacio)
+   if(!rooms.some(r=>compatible(r)&&r.sede&&normalize(r.sede)===normalize(year.sede)))add('ESPACIO_PENDIENTE',rooms.some(r=>compatible(r)&&!r.sede)?'Hay espacios compatibles sin sede registrada; completa el inventario para comprobarlos.':'No se encontró un espacio activo en la sede con capacidad y tipo compatibles.','Espacios → Inventario y Asignación académica → Necesidades',row)
   }
  }
  return {...version,id_periodo:semester.id_periodo,semestre:semester.nombre,consultado_en:new Date().toISOString(),alcance:'Carreras autorizadas para tu usuario',asignaturas:details.length,anos:checkedYears.size,reglas_consecutivas:rules.filter(r=>r.activa).length,restricciones_comunicadas:restrictions.filter(r=>r.activa!==false).length,pendientes:findings,preparacion_sin_pendientes:findings.length===0,habilita_generacion:false,aviso:'Revisión orientativa de datos consultados. No comprueba la viabilidad global, no reserva espacios y no genera ni aprueba horarios. Actualiza después de corregir.'}

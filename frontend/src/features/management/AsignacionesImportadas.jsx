@@ -116,7 +116,7 @@ export default function AsignacionesImportadas({ periodId, revision }) {
           onClose={() => setNeeds(null)}
           onSaved={() => {
             setNeeds(null)
-            setMessage('Necesidades de aula y equipamiento guardadas.')
+            setMessage('Necesidades de aula guardadas.')
             setAttempt(n => n + 1)
           }}
         />

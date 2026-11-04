@@ -1,6 +1,5 @@
 import {academicRule} from './academic-rules.js'
 import {turnSessions} from './turn-sessions.js'
-import {spaceHierarchy} from './space-hierarchy.js'
 import {validateSaturdayTravel} from './saturday-travel.js'
 import {preparationVersion} from './preparation-version.js'
 const time=s=>{if(typeof s!=='string'||!/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/.test(s))return null;const [h,m,x=0]=s.split(':').map(Number);return h*3600+m*60+x}
@@ -11,6 +10,11 @@ export function reviewDraft(data){
  const conflicts=[],pending=[],intervals=[],groups=new Map(),counts=new Map(),courses=new Map(data.asignaciones.map(a=>[a.id,a]))
  const rooms=new Map(data.espacios.map(r=>[r.id_aula,r])),turns=new Map()
  const issue=(codigo,motivo,clases=[])=>conflicts.push({codigo,motivo,clases})
+ const external=data.ocupaciones_externas||[]
+ for(const reserved of external){
+  if(reserved.identidad_pendiente)issue('PUBLICACION_ANTERIOR_PENDIENTE','Hay un horario anterior de otro departamento sin identificadores suficientes. Debe conciliarse antes de aprobar.')
+  else if(time(reserved.hora_inicio)===null||time(reserved.hora_fin)===null||!Array.isArray(reserved.docentes_ids))issue('RESERVA_EXTERNA_INVALIDA','No se pudieron comprobar las ocupaciones de otros departamentos.')
+ }
  const restCovered=(start,end,grid,day)=>{
   if(end===start)return true
   let cursor=start
@@ -49,18 +53,20 @@ export function reviewDraft(data){
   if(group.year?.cantidad_estudiantes>room.capacidad)issue('CAPACIDAD','La capacidad del aula es insuficiente.',[c.id])
   if(!room.sede||normalize(room.sede)!==normalize(group.year?.sede))issue('SEDE_INCOMPATIBLE','El aula no corresponde a la sede del año de carrera.',[c.id])
   if(a.necesidades.tipo_espacio&&a.necesidades.tipo_espacio!==room.tipo)issue('TIPO_ESPACIO','El tipo de espacio no cumple lo requerido.',[c.id])
-  if(a.necesidades.recursos.some(id=>!room.recursos?.includes(id)))issue('EQUIPAMIENTO','Falta equipamiento requerido en el aula.',[c.id])
   if(data.restricciones.some(r=>part.docentes.includes(r.id_docente)&&r.dia===c.dia&&time(r.hora_inicio)<end&&start<time(r.hora_fin)))issue('RESTRICCION_DOCENTE','La clase coincide con una restricción comunicada.',[c.id])
+  for(const reserved of external){
+   if(reserved.dia!==c.dia||!(time(reserved.hora_inicio)<end&&start<time(reserved.hora_fin)))continue
+   if(reserved.id_aula===c.id_aula)issue('CRUCE_AULA_OTRO_DEPARTAMENTO','El aula está reservada por un horario aprobado o publicado de otro departamento.',[c.id])
+   if(reserved.docentes_ids?.some(id=>part.docentes.includes(id)))issue('CRUCE_DOCENTE_OTRO_DEPARTAMENTO','Un docente ya tiene clase en un horario aprobado o publicado de otro departamento.',[c.id])
+  }
   const key=`${a.id}:${part.tipo}`;counts.set(key,(counts.get(key)||0)+1)
   intervals.push({id:c.id,row:{id_aula:c.id_aula,id_seccion:group.id},teacherIds:part.docentes,period:data.borrador.id_periodo,day:c.dia,start,end,assignment:a.id,group})
  }
- const spaces=spaceHierarchy(data.espacios)
- if(spaces.invalid.length)issue('JERARQUIA_ESPACIOS','Corrige las relaciones de espacios padre e hijos.')
  for(let i=0;i<intervals.length;i++)for(let j=i+1;j<intervals.length;j++){
   const a=intervals[i],b=intervals[j];if(a.day!==b.day||!overlap(a,b))continue
   if(a.row.id_seccion===b.row.id_seccion)issue('CRUCE_GRUPO','Dos clases del mismo año se superponen.',[a.id,b.id])
   if(a.teacherIds.some(id=>b.teacherIds.includes(id)))issue('CRUCE_DOCENTE','Un docente está ocupado en ambas clases.',[a.id,b.id])
-  if(spaces.sharedSpace(a.row.id_aula,b.row.id_aula)!==null)issue('CRUCE_ESPACIO','El aula o una de sus divisiones está ocupada.',[a.id,b.id])
+  if(a.row.id_aula===b.row.id_aula)issue('CRUCE_ESPACIO','El aula está ocupada.',[a.id,b.id])
  }
  for(const group of groups.values())for(const day of new Set(intervals.map(c=>c.day))){
   const rows=intervals.filter(c=>c.group===group&&c.day===day).sort((a,b)=>a.start-b.start)

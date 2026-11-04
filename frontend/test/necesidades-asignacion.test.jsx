@@ -8,11 +8,11 @@ const data={asignacion:{id:1,id_periodo:2,revision:5,codigo:'WEB',nombre:'Web',a
 test('Necesidades pendientes se guardan únicamente después de revisión expresa',async()=>{
  mocks.api.mockResolvedValueOnce(data).mockResolvedValueOnce({guardado:true});const saved=vi.fn()
  render(<NecesidadesAsignacion id={1} periodId={2} onSaved={saved} onClose={vi.fn()}/>)
- fireEvent.change(await screen.findByLabelText('Tipo de espacio necesario'),{target:{value:'laboratorio'}});fireEvent.click(screen.getByLabelText('Computadora'))
+ fireEvent.change(await screen.findByLabelText('Tipo de espacio necesario'),{target:{value:'laboratorio'}});expect(screen.queryByLabelText('Computadora')).toBeNull()
  expect(screen.getByRole('button',{name:'Guardar necesidades'}).disabled).toBe(true)
  fireEvent.click(screen.getByLabelText('Revisé las necesidades de esta asignatura y confirmo estos datos.'));fireEvent.click(screen.getByRole('button',{name:'Guardar necesidades'}))
  await waitFor(()=>expect(saved).toHaveBeenCalledTimes(1))
- expect(mocks.api).toHaveBeenLastCalledWith('/asignacion-academica/necesidades',{method:'PATCH',data:{id:1,id_periodo:2,revision:5,tipo_espacio:'laboratorio',recursos:[4]}})
+ expect(mocks.api).toHaveBeenLastCalledWith('/asignacion-academica/necesidades',{method:'PATCH',data:{id:1,id_periodo:2,revision:5,tipo_espacio:'laboratorio'}})
 })
 test('No confunde pendiente con revisado sin requisitos especiales',async()=>{
  mocks.api.mockResolvedValueOnce({...data,definidas:true})

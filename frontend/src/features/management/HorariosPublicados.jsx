@@ -3,38 +3,53 @@ import { api } from '../../services/management'
 import { publicationCsv } from './publication-csv'
 import { RefreshCw, Download } from 'lucide-react'
 
-export default function HorariosPublicados() {
+export default function HorariosPublicados({ personal = false }) {
   const [data, setData] = useState(null),
     [error, setError] = useState(''),
     [attempt, setAttempt] = useState(0),
     [career, setCareer] = useState(''),
     [year, setYear] = useState(''),
     [busy, setBusy] = useState(false)
+  const [identity, setIdentity] = useState(null)
+  const endpoint = personal ? '/horarios/personal' : '/horarios/publicados'
 
   useEffect(() => {
     const c = new AbortController()
     setData(null)
     setError('')
-    api('/horarios/publicados', { signal: c.signal })
+    setIdentity(null)
+    api(endpoint, { signal: c.signal })
       .then(d => {
-        if (!c.signal.aborted) setData(d)
+        if (!c.signal.aborted) { setData(personal ? d.publicaciones : d); if (personal) setIdentity(d) }
       })
       .catch(e => {
         if (!c.signal.aborted) setError(e.message)
       })
     return () => c.abort()
-  }, [attempt])
+  }, [attempt, endpoint, personal])
 
   const visible = rows =>
     rows.filter(r => (!career || r.carrera === career) && (!year || String(r.ano) === year))
+
+  const weeklyRows = publications => publications.flatMap(p => p.filas).sort((a, b) => {
+    const days = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo']
+    const day = value => days.indexOf(String(value).toLocaleLowerCase('es'))
+    return day(a.dia) - day(b.dia) || a.inicio.localeCompare(b.inicio) || a.carrera.localeCompare(b.carrera)
+  })
+  const displayed = personal && data?.length ? [{
+    id: 'personal', nombre: 'Mi horario semanal', semestre: [...new Set(data.map(p => p.semestre))].join(', '),
+    fecha: data.reduce((latest, p) => p.fecha > latest ? p.fecha : latest, data[0].fecha), filas: weeklyRows(data),
+  }] : data
 
   async function download(id) {
     setBusy(true)
     setError('')
     try {
-      const current = await api('/horarios/publicados'),
-        publication = current.find(p => p.id === id)
+      const response = await api(endpoint),
+        current = personal ? response.publicaciones : response,
+        publication = personal ? (current.length ? { filas: weeklyRows(current) } : null) : current.find(p => p.id === id)
       setData(current)
+      if (personal) setIdentity(response)
       if (!publication)
         throw new Error('La publicación cambió o perdió vigencia. Consulta el horario actualizado.')
       const blob = new Blob([publicationCsv(visible(publication.filas))], {
@@ -43,7 +58,7 @@ export default function HorariosPublicados() {
         url = URL.createObjectURL(blob),
         a = document.createElement('a')
       a.href = url
-      a.download = `horario-publicado-${id}.csv`
+      a.download = `${personal ? 'mi-horario' : 'horario-publicado'}-${id}.csv`
       a.click()
       setTimeout(() => URL.revokeObjectURL(url), 1000)
     } catch (e) {
@@ -58,9 +73,9 @@ export default function HorariosPublicados() {
       <div className="section-heading">
         <div>
           <span className="screen-kicker">Distribución semanal</span>
-          <h2 id="publicados-title">Horarios publicados</h2>
+          <h2 id="publicados-title">{personal ? 'Mi horario' : 'Horarios publicados'}</h2>
           <p className="muted">
-            Consulta las publicaciones vigentes. Los borradores y las aprobaciones desactualizadas no aparecen aquí.
+            {personal ? 'Tus clases publicadas, con sus días, horas y lugares, reunidas de todos los departamentos.' : 'Consulta las publicaciones vigentes. Los borradores y las aprobaciones desactualizadas no aparecen aquí.'}
           </p>
         </div>
         <button
@@ -75,6 +90,8 @@ export default function HorariosPublicados() {
 
       {error && <p role="alert" className="error">{error}</p>}
       {!data && !error && <p role="status">Consultando publicaciones…</p>}
+      {personal && identity?.vinculado === false && <p className="notice">Tu cuenta aún no está vinculada a un registro docente. Solicita a administración que revise esa relación.</p>}
+      {personal && identity?.requiere_republicacion && <p className="notice">Existen publicaciones anteriores sin identificadores de docentes. El encargado debe revisarlas y volver a publicarlas para incorporarlas al horario personal.</p>}
 
       {data && (
         <>
@@ -103,11 +120,11 @@ export default function HorariosPublicados() {
 
           {!data.length && (
             <p className="notice">
-              No hay publicaciones vigentes. El encargado debe completar la revisión y publicación.
+              {personal ? 'Aún no tienes clases publicadas vigentes vinculadas a tu cuenta.' : 'No hay publicaciones vigentes. El encargado debe completar la revisión y publicación.'}
             </p>
           )}
 
-          {data.map(p => (
+          {displayed.map(p => (
             <div key={p.id} className="surface-card" style={{ marginBottom: '24px' }}>
               <div
                 style={{
@@ -124,7 +141,7 @@ export default function HorariosPublicados() {
                     {p.semestre} · {p.nombre}
                   </h3>
                   <p className="card-subtitle" style={{ margin: 0 }}>
-                    Publicado: {new Date(p.fecha).toLocaleString()}
+                    {personal ? 'Última publicación incluida: ' : 'Publicado: '}{new Date(p.fecha).toLocaleString()}
                   </p>
                 </div>
                 <button

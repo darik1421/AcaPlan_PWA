@@ -5,6 +5,12 @@ import {createManagement} from '../src/management.js'
 const input={id:1,revision:4,version:0,estado:'en_revision'}
 const empty={borrador:{id:1,id_periodo:1,revision:4},asignaciones:[],anos:[],tiempos:[],espacios:[],restricciones:[],consecutivas:[],sedes:null,clases:[]}
 
+test('Aprobar un departamento no concede publicación aunque el cliente la solicite',async()=>{
+ let called=0,confirmed=false
+ await assert.rejects(transitionDraft({input:{...input,estado:'publicado'},actor:5,call:async()=>{called++;return {canApprove:true,canPublish:false}},confirm:async()=>{confirmed=true}}),{status:403})
+ assert.equal(called,1);assert.equal(confirmed,false)
+})
+
 test('Cada transición exige su función antes de revisar o usar la clave privada',async()=>{
  for(const [estado,canPlan,canApprove] of [['aprobado',true,false],['publicado',true,false],['en_revision',false,true],['en_revision',false,false]]){
   let calls=0,confirmed=false

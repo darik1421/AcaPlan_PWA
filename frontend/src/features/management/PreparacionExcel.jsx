@@ -20,14 +20,11 @@ const labels = {
   asignatura_id: 'Asignatura (ID)',
   docentes_ids: 'Docentes (IDs)',
   tipo_espacio: 'Espacio requerido',
-  recursos_ids: 'Recursos (IDs)',
   sesiones_semanales: 'Sesiones por semana',
   pabellon: 'Pabellón',
   codigo: 'Código',
   tipo: 'Tipo de espacio',
   capacidad: 'Capacidad',
-  recursos: 'Equipamiento',
-  espacio_padre: 'Espacio principal',
   accion: 'Acción',
 }
 const names = { asignaciones: 'asignación académica', espacios: 'inventario de espacios' }
@@ -142,7 +139,7 @@ export default function PreparacionExcel({ tipo, periodId, onConfirmed }) {
       setMessage(
         tipo === 'asignaciones'
           ? 'Asignación académica guardada. No se crearon cuentas de acceso.'
-          : 'Inventario guardado. Se conservaron los espacios y recursos anteriores.'
+          : 'Inventario guardado. Se conservaron las aulas existentes.'
       )
       onConfirmed?.()
     } catch (e) {
@@ -173,7 +170,7 @@ export default function PreparacionExcel({ tipo, periodId, onConfirmed }) {
       <p className="muted" style={{ fontSize: '13.5px', margin: '4px 0 14px 0' }}>
         {tipo === 'asignaciones'
           ? 'Plantilla provisional única: completa cédulas, nombres, códigos de asignatura, carrera, año, turno y horas totales del semestre. Revisa qué se reconoce y qué se creará antes de confirmar. No se generan horarios ni cuentas de acceso.'
-          : 'Sube el inventario, revisa las coincidencias y confirma su guardado. Se añaden espacios y equipamiento; los datos existentes que no coincidan requieren revisión.'}
+          : 'Sube el inventario, revisa las coincidencias y confirma su guardado. Se incorporan pabellones y aulas completas; los datos existentes que no coincidan requieren revisión.'}
       </p>
 
       <div className="excel-importer-actions">
@@ -322,7 +319,7 @@ export default function PreparacionExcel({ tipo, periodId, onConfirmed }) {
                 <span>
                   {tipo === 'asignaciones'
                     ? 'Revisé las coincidencias y autorizo crear los registros nuevos y añadir estas asignaciones, sin retirar docentes anteriores.'
-                    : 'Revisé los espacios y autorizo crear los nuevos y añadir su equipamiento, sin retirar recursos existentes.'}
+                    : 'Revisé las aulas completas y autorizo incorporar las nuevas sin sobrescribir las existentes.'}
                 </span>
               </label>
               <button

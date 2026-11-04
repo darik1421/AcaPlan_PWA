@@ -35,11 +35,13 @@ export default function BorradoresPage({ periodId, canPlan = false }) {
     [report, setReport] = useState(null),
     [attempt, setAttempt] = useState(0)
   const generation = useRef(0)
+  const [department,setDepartment] = useState('')
 
   useEffect(() => {
     setSelected(null)
     setName('')
     setCareers([])
+    setDepartment('')
   }, [periodId])
 
   useEffect(() => {
@@ -173,7 +175,7 @@ export default function BorradoresPage({ periodId, canPlan = false }) {
       </div>
 
       <div className="banner-notice">
-        Propuesta visual con datos de ejemplo. Las clases fijadas y los conflictos tendrían una marca y explicación visibles.
+        Cada borrador corresponde a un departamento. Las clases fijadas conservan su ubicación; la revisión comprueba también las ocupaciones aprobadas o publicadas de otros departamentos.
       </div>
 
       {error && (
@@ -198,7 +200,7 @@ export default function BorradoresPage({ periodId, canPlan = false }) {
                 <option value="">Seleccionar borrador</option>
                 {list.borradores.map(d => (
                   <option key={d.id} value={d.id}>
-                    {d.nombre}
+                    {d.nombre}{d.departamento ? ` · ${d.departamento}` : ''}
                   </option>
                 ))}
               </select>
@@ -234,7 +236,7 @@ export default function BorradoresPage({ periodId, canPlan = false }) {
                   e.preventDefault()
                   run(
                     '/borradores',
-                    { id_periodo: periodId, nombre: name, carreras: careers },
+                    { id_periodo: periodId, nombre: name, carreras: careers, ...(list.departmentDraftVersion >= 1 ? {id_departamento:Number(department)} : {}) },
                     d => {
                       setSelected(d.id)
                       refresh()
@@ -244,6 +246,7 @@ export default function BorradoresPage({ periodId, canPlan = false }) {
               >
                 <fieldset disabled={busy || !list.semestre_activo}>
                   <div className="form-grid">
+                    {list.departmentDraftVersion >= 1 && <label>Departamento del borrador<select required value={department} onChange={e=>{setDepartment(e.target.value);setCareers([])}}><option value="">Seleccionar departamento</option>{list.departamentos.map(item=><option key={item.id} value={item.id}>{item.nombre}</option>)}</select></label>}
                     <label>
                       Nombre del borrador
                       <input
@@ -257,7 +260,7 @@ export default function BorradoresPage({ periodId, canPlan = false }) {
                   </div>
                   <fieldset className="choice-group">
                     <legend>Carreras incluidas</legend>
-                    {list.carreras.map(c => (
+                    {list.carreras.filter(c=>list.departmentDraftVersion < 1 || !list.departmentDraftVersion || c.id_departamento===Number(department)).map(c => (
                       <label className="check-label" key={c.id_carrera}>
                         <input
                           type="checkbox"
@@ -275,7 +278,7 @@ export default function BorradoresPage({ periodId, canPlan = false }) {
                     ))}
                   </fieldset>
                   <div className="form-actions">
-                    <button className="primary" disabled={!careers.length}>
+                    <button className="primary" disabled={!careers.length || (list.departmentDraftVersion >= 1 && !department)}>
                       Crear borrador
                     </button>
                   </div>

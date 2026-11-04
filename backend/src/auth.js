@@ -30,7 +30,7 @@ export async function authenticate(request, {
   if (!profilesResponse.ok) throw new AccessError(503, 'No se pudo consultar el perfil autorizado.')
   const profiles = await profilesResponse.json()
   if (!Array.isArray(profiles) || profiles.length !== 1 || profiles[0].estado !== 'activo'
-      || !['administrador', 'docente'].includes(profiles[0].rol)) {
+      || !['administrador', 'director', 'docente'].includes(profiles[0].rol)) {
     throw new AccessError(403, 'La cuenta no está autorizada o se encuentra inactiva.')
   }
   const { id_usuario, nombre, correo, rol, estado } = profiles[0]

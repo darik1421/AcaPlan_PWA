@@ -26,7 +26,7 @@ test('Inventario elimina altas manuales pero permite corregir aulas existentes',
  expect(screen.queryByRole('button',{name:'Nueva aula'})).toBeNull()
  fireEvent.click(screen.getByRole('button',{name:'Pabellones',exact:true}))
  expect(screen.queryByRole('button',{name:'Nuevo pabellón'})).toBeNull()
- fireEvent.click(screen.getByRole('button',{name:'Catálogo de Recursos'}))
+ expect(screen.queryByRole('button',{name:'Catálogo de Recursos'})).toBeNull()
  expect(screen.queryByRole('button',{name:'Nuevo recurso'})).toBeNull()
  expect(mocks.api.mock.calls.some(([,options])=>options?.method==='POST')).toBe(false)
 })

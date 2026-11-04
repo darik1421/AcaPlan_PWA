@@ -6,11 +6,9 @@ import { Pencil, Building2 } from 'lucide-react'
 export default function EspaciosPage({ canManage, onChanged, periodId }) {
   const [tab, setTab] = useState('aulas')
   const [pabellones, setPabellones] = useState([])
-  const [recursos, setRecursos] = useState([])
   const [aulas, setAulas] = useState([])
   const [capacityFilter, setCapacityFilter] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
-  const [resourceFilter, setResourceFilter] = useState('')
   const [selectedAulaId, setSelectedAulaId] = useState(null)
 
   const [loading, setLoading] = useState(true)
@@ -25,15 +23,13 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
     setLoading(true)
     setError('')
     try {
-      const [dataAulas, dataPabellones, dataRecursos] = await Promise.all([
+      const [dataAulas, dataPabellones] = await Promise.all([
         api('/inventario', { signal }),
         api('/pabellones', { signal }),
-        api('/recursos', { signal }),
       ])
       if (!signal?.aborted) {
         setAulas(dataAulas)
         setPabellones(dataPabellones)
-        setRecursos(dataRecursos)
       }
     } catch (e) {
       if (!signal?.aborted) setError(e.message)
@@ -73,23 +69,10 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
     }
   }
 
-  const toggleRecurso = id_recurso => {
-    setFormAula(current => {
-      const selected = current.recursos.includes(id_recurso)
-      return {
-        ...current,
-        recursos: selected
-          ? current.recursos.filter(id => id !== id_recurso)
-          : [...current.recursos, id_recurso],
-      }
-    })
-  }
-
   const filteredAulas = aulas.filter(
     a =>
       (!capacityFilter || a.capacidad >= Number(capacityFilter)) &&
-      (!typeFilter || a.tipo === typeFilter) &&
-      (!resourceFilter || a.recursos.includes(Number(resourceFilter)))
+      (!typeFilter || a.tipo === typeFilter)
   )
 
   const selectedAula =
@@ -102,8 +85,8 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
       <div className="section-heading">
         <div>
           <span className="screen-kicker">Inventario institucional</span>
-          <h2 id="espacios-title">Aulas y recursos</h2>
-          <p className="muted">Capacidad, tipo de espacio y equipamiento disponible para cada grupo.</p>
+          <h2 id="espacios-title">Pabellones y aulas</h2>
+          <p className="muted">Aulas completas, su pabellón, sede, tipo y capacidad.</p>
         </div>
       </div>
 
@@ -123,12 +106,6 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
           onClick={() => setTab('pabellones')}
         >
           Pabellones
-        </button>
-        <button
-          className={tab === 'recursos' ? 'selected' : ''}
-          onClick={() => setTab('recursos')}
-        >
-          Catálogo de Recursos
         </button>
       </nav>
 
@@ -183,20 +160,7 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
                 ))}
               </select>
             </label>
-            <label className="filter-card">
-              <span>Filtrar por recurso</span>
-              <select
-                value={resourceFilter}
-                onChange={e => setResourceFilter(e.target.value)}
-              >
-                <option value="">Todos los recursos</option>
-                {recursos.map(r => (
-                  <option key={r.id_recurso} value={r.id_recurso}>
-                    {r.nombre}
-                  </option>
-                ))}
-              </select>
-            </label>
+
           </div>
 
           <div className="two-column-layout">
@@ -212,10 +176,8 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
                         <th>Sede</th>
                         <th>Pabellón</th>
                         <th>Código</th>
-                        <th>Espacio principal</th>
                         <th>Tipo</th>
                         <th>Capacidad</th>
-                        <th>Recursos</th>
                         <th>Estado</th>
                         {canManage && <th>Acciones</th>}
                       </tr>
@@ -233,15 +195,9 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
                             <td>{row.sede || 'Pendiente'}</td>
                             <td>{row.pabellon_nombre}</td>
                             <td><strong>{row.codigo}</strong></td>
-                            <td>{row.espacio_padre || '—'}</td>
                             <td>{row.tipo}</td>
                             <td>{row.capacidad} personas</td>
-                            <td>
-                              {row.recursos
-                                .map(rid => recursos.find(r => r.id_recurso === rid)?.nombre)
-                                .filter(Boolean)
-                                .join(' · ') || '—'}
-                            </td>
+
                             <td>
                               <span
                                 className={
@@ -276,7 +232,7 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
                       })}
                       {!filteredAulas.length && (
                         <tr>
-                          <td colSpan={canManage ? 9 : 8}>
+                          <td colSpan={canManage ? 7 : 6}>
                             No hay aulas que coincidan con los filtros.
                           </td>
                         </tr>
@@ -298,7 +254,7 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
                   }}
                 >
                   <h3 className="card-title">Corregir aula</h3>
-                  <p className="card-subtitle">Actualizar capacidad o recursos asignados</p>
+                  <p className="card-subtitle">Actualizar los datos del aula completa</p>
                   <fieldset disabled={busy} style={{ border: 'none', padding: 0, margin: 0 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                       <label>
@@ -366,37 +322,6 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
                           </select>
                         </label>
                       )}
-                      <div>
-                        <strong style={{ display: 'block', marginBottom: '8px', fontSize: '13px' }}>
-                          Recursos asignados al aula
-                        </strong>
-                        <div
-                          style={{
-                            display: 'flex',
-                            gap: '0.75rem',
-                            flexWrap: 'wrap',
-                            marginTop: '0.25rem',
-                          }}
-                        >
-                          {recursos.map(r => (
-                            <label
-                              key={r.id_recurso}
-                              className="check-label"
-                              style={{ fontWeight: 'normal', fontSize: '13px' }}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={formAula.recursos.includes(r.id_recurso)}
-                                onChange={() => toggleRecurso(r.id_recurso)}
-                              />
-                              <span>{r.nombre}</span>
-                            </label>
-                          ))}
-                          {!recursos.length && (
-                            <em className="muted">No hay recursos en el catálogo.</em>
-                          )}
-                        </div>
-                      </div>
                     </div>
                     <div className="form-actions" style={{ marginTop: '20px' }}>
                       <button className="primary" type="submit">
@@ -415,7 +340,7 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
               ) : selectedAula ? (
                 <div className="side-panel-card">
                   <h3 className="card-title">Espacio seleccionado</h3>
-                  <p className="card-subtitle">Detalle institucional y recursos disponibles</p>
+                  <p className="card-subtitle">Detalle del aula completa</p>
                   <div className="side-panel-detail-grid">
                     <div className="side-panel-item">
                       <span className="detail-label">Código del espacio</span>
@@ -435,15 +360,7 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
                       <span className="detail-label">Capacidad</span>
                       <span className="detail-value">{selectedAula.capacidad} personas</span>
                     </div>
-                    <div className="side-panel-item">
-                      <span className="detail-label">Recursos disponibles</span>
-                      <span className="detail-value" style={{ fontSize: '13px', fontWeight: 500 }}>
-                        {selectedAula.recursos
-                          .map(rid => recursos.find(r => r.id_recurso === rid)?.nombre)
-                          .filter(Boolean)
-                          .join(', ') || 'Sin equipamiento especial'}
-                      </span>
-                    </div>
+
                     <div className="side-panel-item">
                       <span className="detail-label">Estado</span>
                       <div>
@@ -480,7 +397,7 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
                   <Building2 size={36} color="#94a3b8" style={{ margin: '0 auto 12px auto' }} />
                   <h3 className="card-title" style={{ fontSize: '15px' }}>Ningún espacio seleccionado</h3>
                   <p className="muted" style={{ fontSize: '13px', margin: 0 }}>
-                    Selecciona un aula de la tabla para ver su información y equipamiento.
+                    Selecciona un aula de la tabla para ver su información.
                   </p>
                 </div>
               )}
@@ -508,24 +425,6 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
         </div>
       )}
 
-      {tab === 'recursos' && (
-        <div className="surface-card">
-          <h3 className="card-title">Catálogo de recursos</h3>
-          <p className="card-subtitle">Equipamiento tecnológico y didáctico para la docencia</p>
-          {loading ? (
-            <p role="status">Cargando recursos…</p>
-          ) : (
-            <ul style={{ paddingLeft: '20px', lineHeight: '2' }}>
-              {recursos.map(p => (
-                <li key={p.id_recurso}>
-                  <strong>{p.nombre}</strong>
-                </li>
-              ))}
-              {!recursos.length && <li>Vacío.</li>}
-            </ul>
-          )}
-        </div>
-      )}
     </section>
   )
 }

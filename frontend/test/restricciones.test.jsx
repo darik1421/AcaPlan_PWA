@@ -8,6 +8,16 @@ const context={canManageDisponibilidad:true,activePeriod:{id_periodo:1}}
 const docentes=[{id_docente:4,nombre:'Ana',origen:'historico',estado:'activo'}]
 const row={origen:'historico',id_restriccion:1,id_docente:4,id_periodo:1,dia:'Lunes',hora_inicio:'08:00:00',hora_fin:'09:00:00',activa:true,version:1}
 
+test('Una restricción compartida de otro departamento se consulta con la edición deshabilitada',async()=>{
+ mocks.api.mockResolvedValue({version:2,docentes,restricciones:[{...row,editable:false}]})
+ render(<RestriccionesPanel context={context}/> )
+ await screen.findByText('Lunes')
+ const edit=screen.getByRole('button',{name:/Corregir restricción/})
+ expect(edit.disabled).toBe(true)
+ fireEvent.click(edit)
+ expect(screen.queryByRole('button',{name:'Guardar restricción'})).toBeNull()
+})
+
 test('Un docente importado sin cuenta conserva su origen aunque coincida el número del registro anterior',async()=>{
  mocks.api.mockResolvedValue({version:2,docentes:[...docentes,{id_docente:4,origen:'academico',nombre:'Beatriz',estado:'activo'}],restricciones:[]})
  render(<RestriccionesPanel context={context}/> )

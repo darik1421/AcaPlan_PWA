@@ -6,14 +6,15 @@ export function publicationRows(data){
  return data.clases.map(c=>{
   const a=data.asignaciones.find(a=>a.id===c.id_asignacion),room=data.espacios.find(r=>r.id_aula===c.id_aula)
   const ids=a.componentes?.find(p=>p.tipo===c.componente)?.docentes||a.docentes.map(d=>d.id)
-  return {carrera:a.carrera,ano:a.ano_estudio,turno:a.turno,asignatura:a.nombre,componente:c.componente,docentes:a.docentes.filter(d=>ids.includes(d.id)).map(d=>d.nombre),aula:room.codigo,sede:room.sede,dia:c.dia,inicio:c.hora_inicio.slice(0,5),fin:c.hora_fin.slice(0,5)}
+  return {id_asignacion:a.id,id_aula:c.id_aula,docentes_ids:a.docentes.filter(d=>ids.includes(d.id)).map(d=>d.id),carrera:a.carrera,ano:a.ano_estudio,turno:a.turno,asignatura:a.nombre,componente:c.componente,docentes:a.docentes.filter(d=>ids.includes(d.id)).map(d=>d.nombre),aula:room.codigo,sede:room.sede,dia:c.dia,inicio:c.hora_inicio.slice(0,5),fin:c.hora_fin.slice(0,5)}
  })
 }
 export async function transitionDraft({input,actor,call,confirm}){
  if(!Number.isInteger(input?.id)||input.id<1||!Number.isInteger(input.revision)||input.revision<1||!Number.isInteger(input.version)||input.version<0||!['en_revision','aprobado','publicado'].includes(input.estado))throw new AccessError(400,'Selecciona un borrador y su versión actual.')
  const identity={id:input.id,version_reglas:PREPARATION_RULE_VERSION}
  const before=await call('pwa_ciclo_contexto','context',identity)
- if(!(input.estado==='en_revision'?before.canPlan:before.canApprove))throw new AccessError(403,input.estado==='en_revision'?'Necesitas la función Planificación para enviar a revisión.':'Necesitas la función Aprobación para aprobar o publicar.')
+ const allowed=input.estado==='en_revision'?before.canPlan:input.estado==='publicado'?(before.canPublish??before.canApprove):before.canApprove
+ if(!allowed)throw new AccessError(403,input.estado==='en_revision'?'Necesitas permiso para preparar horarios y enviarlos a revisión.':input.estado==='publicado'?'Solo el Director o un Administrador pueden publicar.':'Necesitas permiso para aprobar el horario de este departamento.')
  if(before.version!==input.version)throw new AccessError(409,'El estado cambió. Consulta nuevamente.')
  const expected={en_revision:'borrador',aprobado:'en_revision',publicado:'aprobado'}
  if(before.estado!==expected[input.estado])throw new AccessError(409,'El estado actual no permite esta acción. Consulta nuevamente.')
@@ -22,5 +23,5 @@ export async function transitionDraft({input,actor,call,confirm}){
  const result=reviewDraft(snapshot)
  if(input.estado!=='en_revision'&&!result.completo)throw new AccessError(409,`No se puede aprobar o publicar: ${result.conflictos.length} conflictos y ${result.pendientes.length} pendientes. Revisa el borrador.`)
  // SQL vuelve a comprobar la revisión global bajo bloqueo antes del commit.
- return confirm(input.estado,{id:input.id,revision:input.revision,version:input.version,revision_datos:before.revision_datos,actor,version_reglas:PREPARATION_RULE_VERSION,huella:result.huella_datos,completo:result.completo,filas:input.estado==='publicado'?publicationRows(snapshot):[]})
+ return confirm(input.estado,{id:input.id,revision:input.revision,version:input.version,revision_datos:before.revision_datos,revision_publicaciones:before.revision_publicaciones,revision_reservas:before.revision_reservas,actor,version_reglas:PREPARATION_RULE_VERSION,huella:result.huella_datos,completo:result.completo,filas:input.estado==='publicado'?publicationRows(snapshot):[]})
 }

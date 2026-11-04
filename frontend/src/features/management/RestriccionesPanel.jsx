@@ -89,7 +89,7 @@ export default function RestriccionesPanel({ context }) {
   return (
     <div style={{ marginTop: '16px' }}>
       <p className="muted" style={{ fontSize: '13.5px', marginBottom: '16px' }}>
-        Los jefes de departamento registran los intervalos autorizados en los que un docente no
+        Los directores de departamento registran los intervalos autorizados en los que un docente no
         puede impartir clases. Los coordinadores pueden consultarlos. Sin restricciones comunicadas
         no hay bloqueo por disponibilidad.
       </p>
@@ -304,7 +304,8 @@ export default function RestriccionesPanel({ context }) {
                       <td>
                         <button
                           className="secondary"
-                          disabled={busy || reloadRequired}
+                          disabled={busy || reloadRequired || r.editable === false}
+                          title={r.editable === false ? 'Esta restricción es de consulta; su modificación corresponde al departamento que la registró o a administración.' : undefined}
                           onClick={() => {
                             setMessage('')
                             setForm({

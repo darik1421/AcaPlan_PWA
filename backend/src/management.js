@@ -1,4 +1,5 @@
 import {transitionDraft,PREPARATION_RULE_VERSION} from './draft-lifecycle.js'
+import {hasGlobalAccess} from './roles.js'
 import {assignmentCorrection} from './assignment-correction.js'
 import {assignmentNeeds} from './assignment-needs.js'
 import {yearTurn} from './year-turn.js'
@@ -19,6 +20,13 @@ import { importTemplate } from './import-workbook.js'
 import { accountInput, carreraInput, asignaturaInput, aulaInput, seccionInput, periodInput, positiveId } from './validation.js'
 
 const businessErrors = {
+ DEPARTAMENTOS_MEZCLADOS:[409,'Un borrador solo puede incluir carreras de un mismo departamento.'],
+ CARRERA_SIN_DEPARTAMENTO:[409,'Relaciona las carreras con su departamento antes de crear el borrador.'],
+ DEPARTAMENTO_EN_USO:[409,'La carrera pertenece a un borrador de un semestre activo. Revisa ese borrador antes de cambiar su departamento.'],
+ DEPARTAMENTO_SIN_ASIGNAR:[403,'Tu cuenta todavía no tiene un departamento asignado. Contacta a administración.'],
+ DEPARTAMENTO_BORRADOR_PENDIENTE:[409,'Este borrador anterior no tiene departamento. Prepara un borrador separado por departamento antes de aprobar o publicar.'],
+ CRUCE_DEPARTAMENTO:[409,'Hay una ocupación incompatible con otro departamento o un horario anterior pendiente de conciliar. Revisa el borrador.'],
+ IDENTIDAD_DOCENTE_VINCULADA:[409,'La cuenta ya está vinculada a un registro docente con esa cédula. La corrección de identidad debe revisarse junto con el registro académico.'],
  TRANSICION_INVALIDA:[409,'El estado cambió. Consulta nuevamente el borrador.'],
  BORRADOR_INCOMPLETO:[409,'El borrador tiene conflictos o datos pendientes.'],
  HORARIOS_HISTORICOS_PENDIENTES:[409,'Este semestre conserva horarios del modelo anterior. Deben conciliarse antes de publicar.'],
@@ -119,6 +127,7 @@ export function createManagement({
     }
     const body = await response.json().catch(() => null)
     if (!response.ok) {
+      if(functionName==='pwa_departamentos_api'&&body?.code==='PGRST202')throw new AccessError(503,'La organización por departamentos está pendiente de aplicar departamentos-base.sql en Supabase.')
       if(functionName==='pwa_necesidades_academicas'&&body?.code==='PGRST202')throw new AccessError(503,'Las necesidades de aula y equipamiento requieren aplicar su migración en Supabase.')
       if (['pwa_inventario','pwa_preparacion_academica'].includes(functionName) && body?.code==='PGRST202') throw new AccessError(503,'Esta función necesita aplicar la migración de cierre funcional del Sprint 2 en Supabase.');
       if (functionName==='pwa_corregir_asignacion' && body?.code==='PGRST202') throw new AccessError(503,'Las correcciones todavía no están habilitadas en esta base de datos. Falta aplicar su migración.');
@@ -162,7 +171,7 @@ export function createManagement({
   async function createAccount(request, data) {
     const input = accountInput(data, true)
     // Comprueba permisos, esquema y duplicados antes de crear en Auth.
-    await rpc(request, 'accounts.check', { correo: input.correo, cedula: input.cedula })
+    await rpc(request, 'accounts.check', { correo: input.correo, cedula: input.cedula, rol: input.rol, funciones: input.funciones })
     if (!serviceKey) throw new AccessError(503, 'Añade SUPABASE_SERVICE_ROLE_KEY en backend/.env y reinicia el backend para crear cuentas.')
     const adminHeaders = { apikey: serviceKey, Authorization: `Bearer ${serviceKey}`, 'Content-Type': 'application/json' }
     let response
@@ -200,9 +209,22 @@ export function createManagement({
 
   return {
     async execute(request, profile, route, data) {
+      if (route.startsWith('departments.')) {
+        if (!hasGlobalAccess(profile)) throw new AccessError(403, 'Solo administración puede organizar los departamentos en esta etapa.')
+        if (route === 'departments.directors') return rpc2(request,'context',{},'pwa_vincular_director')
+        if (route === 'departments.directorSave') {
+          if (!(data.id_departamento===null || (Number.isInteger(data.id_departamento)&&data.id_departamento>=1&&data.id_departamento<=3))||!Number.isSafeInteger(data.revision)||data.revision<0||data.revision>999999999) throw new AccessError(400,'Selecciona el departamento y consulta la versión actual del director.')
+          return rpc2(request,'save',{id_usuario:positiveId(data.id_usuario),id_departamento:data.id_departamento,revision:data.revision},'pwa_vincular_director')
+        }
+        if (route === 'departments.context') return rpc2(request,'context',{},'pwa_departamentos_api')
+        if (route !== 'departments.assign' || !Number.isInteger(data.id_departamento) || data.id_departamento < 1 || data.id_departamento > 3 || !Number.isSafeInteger(data.revision) || data.revision < 0 || data.revision > 999999999) throw new AccessError(400,'Selecciona una carrera y un departamento, y consulta su versión actual.')
+        return rpc2(request,'assign',{id_carrera:positiveId(data.id_carrera),id_departamento:data.id_departamento,revision:data.revision},'pwa_departamentos_api')
+      }
+      if(route==='departmentAcademic.list') return rpc2(request,'list',{},'pwa_resumen_departamento')
       if(route==='lifecycle.context')return rpc2(request,'context',{id:positiveId(data.id),version_reglas:PREPARATION_RULE_VERSION},'pwa_ciclo_contexto')
       if(route==='lifecycle.transition')return transitionDraft({input:data,actor:profile.id_usuario,call:(fn,action,payload)=>rpc2(request,action,payload,fn),confirm:confirmCycle})
       if(route==='publications.list')return rpc2(request,'list',{version_reglas:PREPARATION_RULE_VERSION},'pwa_publicaciones')
+      if(route==='publications.personal')return rpc2(request,'list',{version_reglas:PREPARATION_RULE_VERSION},'pwa_horario_personal')
       if(route.startsWith('components.'))return rpc2(request,route==='components.save'?'save':'context',componentsInput(data,route==='components.save'),'pwa_componentes_api')
       if(route.startsWith('draftWork.')){
         const action=route.split('.')[1],input=draftWorkInput(data,action)
@@ -233,12 +255,12 @@ export function createManagement({
       if (['preparation.template','preparation.preview','preparation.confirm'].includes(route)) {
         if (!['asignaciones','espacios'].includes(data.tipo)) throw new AccessError(400,'Tipo de archivo no válido.')
         const context=await rpc(request,'context')
-        const admin=profile.rol==='administrador'
+        const admin=hasGlobalAccess(profile)
         const allowed=admin || context.funciones?.includes(data.tipo==='espacios'?'planificador':'coordinador')
         if(!allowed) throw new AccessError(403,'No tienes permiso para revisar este tipo de archivo.')
-        const [periodos,carreras,asignaturas,docentes,recursos]=await Promise.all([rpc(request,'periods.list'),...['carreras','asignaturas','docentes','recursos'].map(name=>rpc2(request,`${name}.list`))])
+        const [periodos,carreras,asignaturas,docentes]=await Promise.all([rpc(request,'periods.list'),...['carreras','asignaturas','docentes'].map(name=>rpc2(request,`${name}.list`))])
         const inScope=id=>admin||context.carreras?.includes(id)
-        const catalog={carreras:carreras.filter(c=>inScope(c.id_carrera)),asignaturas:asignaturas.filter(a=>inScope(a.id_carrera)),docentes,recursos}
+        const catalog={carreras:carreras.filter(c=>inScope(c.id_carrera)),asignaturas:asignaturas.filter(a=>inScope(a.id_carrera)),docentes}
         if(route==='preparation.template') {
           const file=data.tipo==='asignaciones'?await assignmentTemplate(catalog.carreras):await preparationTemplate(data.tipo,catalog)
           return {archivo:`PROVISIONAL_${data.tipo}.xlsx`,base64:file.toString('base64')}
@@ -264,7 +286,7 @@ export function createManagement({
         if(!parsed.valido){if(route==='preparation.confirm')throw new AccessError(400,'El archivo tiene errores; vuelve a revisarlo.');return parsed}
         if(route==='preparation.confirm'&&(typeof data.huella!=='string'||!/^[a-f0-9]{32}$/.test(data.huella)))throw new AccessError(400,'Revisa el inventario antes de confirmar.')
         const result=await rpc2(request,route==='preparation.confirm'?'confirm':'preview',{rows:parsed.filas,id_periodo:period.id_periodo,huella:data.huella},'pwa_inventario')
-        return {...parsed,...result,columnas:[...parsed.columnas,'accion'],avisos:['Se crean espacios y se añade equipamiento. No se eliminan recursos ni se sobrescriben capacidad, tipo o estado de aulas existentes.']}
+        return {...parsed,...result,columnas:[...parsed.columnas,'accion'],avisos:['Se incorporan pabellones y aulas completas. No se sobrescriben capacidad, tipo ni estado de aulas existentes.']}
       }
       if (route === 'academicAssignments.context' || route === 'academicAssignments.save') return rpc2(request,route==='academicAssignments.save'?'save':'context',assignmentCorrection(data,route==='academicAssignments.save'),'pwa_corregir_asignacion')
       if (route === 'academicAssignments.list') return rpc2(request,'list',{},'pwa_importar_asignacion')
@@ -292,26 +314,27 @@ export function createManagement({
       }
       if (['import.history', 'import.template'].includes(route)) {
         const context = await rpc(request, 'context')
-        if (profile.rol !== 'administrador' && !context.funciones?.includes('coordinador')) throw new AccessError(403, 'Solo administración o coordinación pueden importar programación.')
+        if (!hasGlobalAccess(profile) && !context.funciones?.includes('coordinador')) throw new AccessError(403, 'Solo administración o coordinación pueden importar programación.')
         if (route === 'import.history') return rpc2(request, 'history', {}, 'pwa_importacion')
         if (route === 'import.template') {
           const [periodos, carreras, secciones, asignaturas, docentes, recursos] = await Promise.all([rpc(request, 'periods.list'), ...['carreras', 'secciones', 'asignaturas', 'docentes', 'recursos'].map(name => rpc2(request, `${name}.list`))])
-          const allowed = id => profile.rol === 'administrador' || context.carreras?.includes(id)
+          const allowed = id => hasGlobalAccess(profile) || context.carreras?.includes(id)
           const buffer = await importTemplate({ periodos, carreras: carreras.filter(c => allowed(c.id_carrera)), secciones: secciones.filter(s => allowed(s.id_carrera)), asignaturas: asignaturas.filter(a => allowed(a.id_carrera)), docentes, recursos })
           return { archivo: 'AcaPlan_programacion.xlsx', base64: buffer.toString('base64') }
         }
       }
-      if (route.startsWith('accounts.') && profile.rol !== 'administrador') throw new AccessError(403, 'Solo un administrador puede gestionar cuentas.')
+      if (route.startsWith('accounts.') && !hasGlobalAccess(profile)) throw new AccessError(403, 'Solo un administrador puede gestionar cuentas.')
       if (route === 'context') {
         const context = await rpc(request, 'context')
-        const isAdmin = profile.rol === 'administrador'
-        const canManageCarreras = isAdmin || Boolean(context.funciones?.includes('planificador'))
-        const canManageAsignaturas = isAdmin || Boolean(context.funciones?.includes('coordinador'))
+        const isAdmin = hasGlobalAccess(profile)
+        const departmental = context.departmentScopeVersion >= 1 && context.esDirectorDepartamento === true
+        const canManageCarreras = isAdmin || (!departmental && Boolean(context.funciones?.includes('planificador')))
+        const canManageAsignaturas = isAdmin || (!departmental && Boolean(context.funciones?.includes('coordinador')))
         const canManageEspacios = canManageCarreras
         const canManageBloques = canManageEspacios
-        const canReadDrafts = canManageBloques || Boolean(context.funciones?.includes('aprobador'))
+        const canReadDrafts = canManageBloques || (departmental ? Boolean(context.id_departamento) : Boolean(context.funciones?.includes('aprobador')))
         const canManageSecciones = canManageAsignaturas
-        const canManageDisponibilidad = isAdmin || Boolean(context.funciones?.includes('jefe_departamento'))
+        const canManageDisponibilidad = isAdmin || (Boolean(context.funciones?.includes('jefe_departamento')) && (!departmental || Boolean(context.id_departamento)))
         return { ...context, isAdmin, canCreateAccounts: isAdmin && Boolean(serviceKey), canManageCarreras, canManageAsignaturas, canManageEspacios, canManageSecciones, canManageBloques, canReadDrafts, canManageDisponibilidad }
       }
       if (route === 'accounts.create') return createAccount(request, data)
@@ -344,7 +367,7 @@ export function createManagement({
       if (route === 'asignaturas.update') return rpc2(request, route, asignaturaInput(data))
       // ── Sprint 2: H08 Aulas y Recursos ──
       if (['pabellones.list', 'recursos.list', 'aulas.list'].includes(route)) return rpc2(request, route)
-      if (route === 'aulas.update') return rpc2(request, route, aulaInput(data))
+      if (route === 'aulas.update') return rpc2(request, 'update', aulaInput(data), 'pwa_inventario')
       // ── Sprint 2: H09 Secciones ──
       if (route === 'secciones.list') return rpc2(request, route)
       if (route === 'secciones.update') return rpc2(request, route, seccionInput(data))

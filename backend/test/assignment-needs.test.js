@@ -3,9 +3,9 @@ import assert from 'node:assert/strict'
 import {assignmentNeeds} from '../src/assignment-needs.js'
 import {createManagement} from '../src/management.js'
 const input={id:1,id_periodo:2,revision:3,tipo_espacio:null,recursos:[]}
-test('Necesidades exigen una revisión y selección explícita; no coercionan IDs ni equipamiento',()=>{
+test('Necesidades exigen una revisión y selección explícita; no coercionan IDs ni admiten equipamiento',()=>{
  assert.deepEqual(assignmentNeeds(input,true),input)
- for(const change of [{recursos:undefined},{recursos:[1,1]},{recursos:['1']},{recursos:[0]},{tipo_espacio:''},{tipo_espacio:42},{revision:0},{id:true}])assert.throws(()=>assignmentNeeds({...input,...change},true),{status:400})
+ for(const change of [{recursos:[1]},{recursos:[1,1]},{recursos:['1']},{recursos:[0]},{tipo_espacio:''},{tipo_espacio:42},{revision:0},{id:true}])assert.throws(()=>assignmentNeeds({...input,...change},true),{status:400})
  assert.deepEqual(assignmentNeeds({...input,isAdmin:true},true),input)
 })
 test('Necesidades envían el JWT del usuario y conservan el conflicto de revisión',async()=>{

@@ -8,6 +8,19 @@ afterEach(()=>{cleanup();mocks.api.mockReset()})
 const detail={borrador:{id:1,nombre:'Propuesta uno',revision:4},semestre_activo:true,clases:[{id:5,id_asignacion:2,componente:'general',id_aula:3,dia:'Lunes',hora_inicio:'08:00:00',hora_fin:'09:30:00',fijada:true}],asignaciones:[{id:2,carrera:'Sistemas',ano_estudio:3,nombre:'Web',codigo:'WEB'}],espacios:[{id_aula:3,codigo:'A1',estado:'activo',sede:'CUR'}],movimientos:[]}
 const list={borradores:[{id:1,nombre:'Propuesta uno'}],carreras:[{id_carrera:1,nombre:'Sistemas'}],semestre_activo:true}
 
+test('Al cambiar el departamento del borrador se retiran las carreras de la selección anterior',async()=>{
+ const grouped={...list,departmentDraftVersion:1,departamentos:[{id:1,nombre:'Económicas'},{id:3,nombre:'Tecnología'}],carreras:[{id_carrera:1,id_departamento:1,nombre:'Economía'},{id_carrera:2,id_departamento:3,nombre:'Sistemas'}]}
+ mocks.api.mockImplementation(async path=>path==='/borradores/consultar'?grouped:detail)
+ render(<BorradoresPage canPlan periodId={1}/> )
+ fireEvent.click(await screen.findByText('Crear un borrador'))
+ const department=await screen.findByLabelText('Departamento del borrador')
+ fireEvent.change(department,{target:{value:'1'}});fireEvent.click(screen.getByLabelText('Economía'))
+ fireEvent.change(department,{target:{value:'3'}})
+ expect(screen.queryByLabelText('Economía')).toBeNull()
+ expect(screen.getByLabelText('Sistemas').checked).toBe(false)
+ expect(screen.getByRole('button',{name:'Crear borrador'}).disabled).toBe(true)
+})
+
 test('Aprobación revisa la propuesta sin controles para crear ni modificar clases',async()=>{
  mocks.api.mockImplementation(async path=>path==='/borradores/estado'?{estado:'en_revision',version:1,historial:[],canApprove:true,canPlan:false}:path==='/borradores/consultar'?list:detail)
  render(<BorradoresPage periodId={1}/>);

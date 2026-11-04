@@ -29,7 +29,7 @@ export function accountInput(data, create = false) {
     funciones: data.funciones || [],
     carreras: data.carreras || [],
   }
-  if (!['administrador', 'docente'].includes(result.rol)) fail('Rol no válido.')
+  if (!['administrador', 'director', 'docente'].includes(result.rol)) fail('Rol no válido.')
   if (!['activo', 'inactivo'].includes(result.estado)) fail('Estado no válido.')
   if (!Array.isArray(result.funciones) || result.funciones.some(f => !['coordinador', 'planificador', 'aprobador', 'jefe_departamento'].includes(f))) fail('Funciones no válidas.')
   if (!Array.isArray(result.carreras) || result.carreras.length > 100) fail('Carreras no válidas.')
@@ -87,12 +87,10 @@ export function asignaturaInput(data, create = false) {
 export function pabellonInput(data) { return { nombre: text(data.nombre, 'Nombre del pabellón', 50) } }
 export function recursoInput(data) { return { nombre: text(data.nombre, 'Nombre del recurso', 50) } }
 export function aulaInput(data, create = false) {
-  if (!Array.isArray(data.recursos)) fail('Envía los recursos del aula; una lista omitida no significa retirarlos.')
   const result = {
     codigo: text(data.codigo, 'Código del aula', 20),
     tipo: text(data.tipo, 'Tipo', 50),
     capacidad: Number(data.capacidad),
-    recursos: [...new Set(data.recursos.map(positiveId))]
   }
   if (!Number.isSafeInteger(result.capacidad) || result.capacidad < 1) fail('La capacidad debe ser mayor a 0.')
   if (create) {

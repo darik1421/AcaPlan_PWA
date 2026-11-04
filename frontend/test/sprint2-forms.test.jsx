@@ -118,7 +118,7 @@ test('Filtra asignaturas combinando carrera, año y búsqueda',async()=>{
  expect(screen.getByText('No hay asignaturas que coincidan.')).toBeTruthy()
 })
 
-test('Consulta espacios por capacidad, tipo y recurso',async()=>{
+test('Consulta aulas completas por capacidad y tipo, sin equipamiento',async()=>{
  mocks.api.mockImplementation(async path=>({'/pabellones':[{id_pabellon:1,nombre:'Norte'}],'/recursos':[{id_recurso:1,nombre:'Proyector'}],'/inventario':[
   {id_aula:1,codigo:'LAB-40',tipo:'laboratorio',capacidad:40,recursos:[1],estado:'activo',pabellon_nombre:'Norte'},
   {id_aula:2,codigo:'AULA-20',tipo:'aula',capacidad:20,recursos:[],estado:'activo',pabellon_nombre:'Norte'}
@@ -127,7 +127,9 @@ test('Consulta espacios por capacidad, tipo y recurso',async()=>{
  await screen.findByText('AULA-20')
  fireEvent.change(screen.getByLabelText('Capacidad mínima'),{target:{value:'30'}})
  fireEvent.change(screen.getByLabelText('Filtrar por tipo'),{target:{value:'laboratorio'}})
- fireEvent.change(screen.getByLabelText('Filtrar por recurso'),{target:{value:'1'}})
+ expect(screen.queryByLabelText('Filtrar por recurso')).toBeNull()
+ expect(screen.queryByRole('button',{name:'Catálogo de Recursos'})).toBeNull()
+ expect(mocks.api.mock.calls.some(([path])=>path==='/recursos')).toBe(false)
  expect(screen.queryByText('AULA-20')).toBeNull()
  expect(screen.getByText('LAB-40')).toBeTruthy()
  fireEvent.change(screen.getByLabelText('Capacidad mínima'),{target:{value:'50'}})

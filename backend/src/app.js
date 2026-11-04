@@ -11,9 +11,15 @@ export function createApp({ authenticateRequest = authenticate, management = cre
     const path = new URL(request.url, 'http://localhost').pathname
     const routes = {
       'GET /api/workspace': 'context',
+      'GET /api/departamentos': 'departments.context',
+      'PATCH /api/departamentos/carrera': 'departments.assign',
+      'GET /api/departamentos/directores': 'departments.directors',
+      'PATCH /api/departamentos/director': 'departments.directorSave',
+      'GET /api/departamento/asignaciones': 'departmentAcademic.list',
       'POST /api/borradores/estado': 'lifecycle.context',
       'POST /api/borradores/transicion': 'lifecycle.transition',
       'GET /api/horarios/publicados': 'publications.list',
+      'GET /api/horarios/personal': 'publications.personal',
       'POST /api/borradores/consultar': 'drafts.context',
       'POST /api/borradores': 'drafts.create',
       'POST /api/borradores/detalle': 'draftWork.context',

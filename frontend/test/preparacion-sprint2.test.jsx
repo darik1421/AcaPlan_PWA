@@ -38,7 +38,7 @@ test('Inventario exige confirmación expresa y recarga el catálogo después de 
  fireEvent.change(screen.getByLabelText('Seleccionar Excel de inventario de espacios'),{target:{files:[file]}})
  const button=await screen.findByRole('button',{name:'Confirmar y guardar inventario'});expect(button.disabled).toBe(true)
  fireEvent.click(screen.getByRole('checkbox'));fireEvent.click(button)
- await screen.findByText('Inventario guardado. Se conservaron los espacios y recursos anteriores.');expect(onConfirmed).toHaveBeenCalledTimes(1)
+ await screen.findByText('Inventario guardado. Se conservaron las aulas existentes.');expect(onConfirmed).toHaveBeenCalledTimes(1)
  expect(mocks.api).toHaveBeenCalledWith('/preparacion/confirmar',{method:'POST',data:{tipo:'espacios',id_periodo:1,base64:'AQID',huella:'b'.repeat(32)}})
 })
 

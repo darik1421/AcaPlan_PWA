@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within, waitFor } from '@testing-library/react'
 import { afterEach, expect, test, vi } from 'vitest'
 import PeriodsPage from '../src/features/management/PeriodsPage'
 import AccountsPage from '../src/features/management/AccountsPage'
@@ -14,11 +14,25 @@ function accounts(overrides = {}) {
   return render(<AuthContext.Provider value={{ profile:account,retry:vi.fn() }}><AccountsPage context={{...context,...overrides}} onChanged={vi.fn()}/></AuthContext.Provider>)
 }
 
-test('Jefes de departamento se habilita al confirmar la migración y se conserva al guardar', async () => {
+test('Los cinco roles institucionales se seleccionan sin funciones de planificación o aprobación independientes',async()=>{
+ mocks.api.mockImplementation(async path => path === '/departamentos' ? {departamentos:[{id:3,nombre:'Ciencias Tecnológicas y Salud'}],carreras:[]} : path === '/departamentos/directores' ? [] : path === '/accounts' ? [{...account,id_usuario:2,nombre:'Otra persona',rol:'docente'}] : {guardado:true})
+ accounts({departmentScopeVersion:1,institutionalRolesVersion:1})
+ fireEvent.click(await screen.findByRole('button',{name:'Editar cuenta de Otra persona'}))
+ const form=screen.getByRole('button',{name:'Guardar cuenta'}).closest('form')
+ const role=within(form).getByLabelText('Rol')
+ expect([...role.options].map(option=>option.text)).toEqual(['Administrador','Director','Director de departamento','Coordinador de carrera','Docente'])
+ expect(within(form).queryByLabelText('Planificación')).toBeNull()
+ fireEvent.change(role,{target:{value:'jefe_departamento'}})
+ fireEvent.change(within(form).getByLabelText('Departamento del director'),{target:{value:'3'}})
+ fireEvent.submit(form)
+ await waitFor(()=>expect(mocks.api).toHaveBeenCalledWith('/accounts',expect.objectContaining({method:'PATCH',data:expect.objectContaining({rol:'docente',funciones:['jefe_departamento'],carreras:[]})})))
+})
+
+test('Directores de departamento se habilita al confirmar la migración y se conserva al guardar', async () => {
   mocks.api.mockResolvedValue([account])
   accounts({permissionVersion:2})
   fireEvent.click(await screen.findByRole('button',{name:'Editar cuenta de Cuenta de prueba'}))
-  fireEvent.click(screen.getByLabelText('Jefes de departamento'))
+  fireEvent.click(screen.getByLabelText('Directores de departamento'))
   fireEvent.submit(screen.getByRole('button',{name:'Guardar cuenta'}).closest('form'))
   await screen.findByText('Cuenta actualizada.')
   expect(mocks.api).toHaveBeenCalledWith('/accounts',expect.objectContaining({method:'PATCH',data:expect.objectContaining({funciones:['jefe_departamento']})}))
@@ -28,7 +42,7 @@ test('No ofrece asignar la función nueva con una base anterior', async () => {
   mocks.api.mockResolvedValue([account])
   accounts({permissionVersion:1})
   fireEvent.click(await screen.findByRole('button',{name:'Editar cuenta de Cuenta de prueba'}))
-  expect(screen.queryByLabelText('Jefes de departamento')).toBeNull()
+  expect(screen.queryByLabelText('Directores de departamento')).toBeNull()
 })
 test('Un docente consulta semestres sin controles de modificación', async () => {
   mocks.api.mockResolvedValue([period])
@@ -64,7 +78,7 @@ test('Editar una cuenta conserva el correo compartido y muestra sus funciones', 
   fireEvent.click(await screen.findByRole('button',{name:'Editar cuenta de Cuenta de prueba'}))
   expect(screen.getByLabelText('Correo').readOnly).toBe(true)
   expect(screen.queryByLabelText('Contraseña inicial')).toBeNull()
-  fireEvent.click(screen.getByLabelText('Coordinadores de carrera'))
+  fireEvent.click(screen.getByLabelText('Coordinador de carrera'))
   expect(screen.getByLabelText('Carrera de prueba')).toBeTruthy()
 })
 test('Error de duplicado conserva el formulario para corregirlo', async () => {

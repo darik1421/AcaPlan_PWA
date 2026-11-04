@@ -63,6 +63,12 @@ test('Reconoce un perfil docente sin convertirlo en administrador', async () => 
   assert.deepEqual(await authenticate(request, { ...base, ...mockResponses(200, [profile]) }), profile)
 })
 
+test('Reconoce Director únicamente desde el perfil activo verificado en Supabase', async () => {
+  const profile = { ...active, rol: 'director' }
+  assert.deepEqual(await authenticate(request, { ...base, ...mockResponses(200, [profile]) }), profile)
+  await assert.rejects(authenticate(request, { ...base, ...mockResponses(200, [{...profile,estado:'inactivo'}]) }), error => error.status === 403)
+})
+
 test('No expone errores internos de conexión o de RLS', async () => {
   await assert.rejects(authenticate(request, { ...base, fetchImpl: () => { throw new Error('secret') } }), error => error.status === 503 && !error.message.includes('secret'))
   await assert.rejects(authenticate(request, { ...base, ...mockResponses(200, [], 403) }), error => error.status === 503)

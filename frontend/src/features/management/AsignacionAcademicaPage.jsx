@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import ProgramacionPage from './ProgramacionPage'
 import SeccionesPage from './SeccionesPage'
+import ResumenDepartamento from './ResumenDepartamento'
 
 export default function AsignacionAcademicaPage({ context, onChanged }) {
   const [historical, setHistorical] = useState(false)
@@ -19,9 +20,9 @@ export default function AsignacionAcademicaPage({ context, onChanged }) {
         El coordinador entrega un único Excel con los docentes, sus asignaturas, la carrera, el año, el turno y las horas totales del semestre. Las correcciones puntuales y necesidades de espacio se gestionan sobre cada registro.
       </div>
 
-      <ProgramacionPage context={context} />
+      {context?.esDirectorDepartamento ? <ResumenDepartamento /> : <ProgramacionPage context={context} />}
 
-      <details
+      {!context?.esDirectorDepartamento && <details
         style={{
           marginTop: '24px',
           background: '#FFFFFF',
@@ -38,7 +39,7 @@ export default function AsignacionAcademicaPage({ context, onChanged }) {
           Estos registros se conservan para consultar y corregir datos existentes. No son un segundo paso de la entrega por Excel ni se completan automáticamente con ella.
         </p>
         {historical && <SeccionesPage context={context} onChanged={onChanged} />}
-      </details>
+      </details>}
     </section>
   )
 }

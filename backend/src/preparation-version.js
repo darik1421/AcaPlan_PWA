@@ -2,7 +2,7 @@ import {createHash} from 'node:crypto'
 import {academicRule} from './academic-rules.js'
 
 // Incrementar al cambiar el significado de una comprobación de preparación.
-export const PREPARATION_RULE_VERSION = '2026-10-15.4'
+export const PREPARATION_RULE_VERSION = '2026-11-03.1'
 
 // Las listas consultadas son conjuntos: su orden de respuesta no es un cambio.
 // Solo se devuelve el hash; nombres, cédulas y otros datos internos no se exponen.

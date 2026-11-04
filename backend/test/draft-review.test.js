@@ -3,6 +3,15 @@ import assert from 'node:assert/strict'
 import {reviewDraft} from '../src/draft-review.js'
 import {componentsInput,draftWorkInput} from '../src/academic-workflow-input.js'
 const fixture=()=>({borrador:{id:1,id_periodo:1,revision:1},asignaciones:[{id:1,id_carrera:1,carrera:'Sistemas',estado_carrera:'activo',ano_estudio:3,codigo:'WEB',turno:'matutino',docentes:[{id:1,activo:true},{id:2,activo:true}],componentes:null,componentes_vigentes:true,necesidades:{definidas:true,tipo_espacio:null,recursos:[]}}],anos:[{id_carrera:1,ano_estudio:3,cantidad_estudiantes:20,sede:'CUR'}],tiempos:[{id_cuadricula:1,id_periodo:1,nombre:'Mañana',turno:'matutino',bloques:['Lunes','Martes'].flatMap(dia=>[{dia,hora_inicio:'08:00',hora_fin:'08:45',es_receso:false},{dia,hora_inicio:'08:45',hora_fin:'09:30',es_receso:false}])}],espacios:[{id_aula:1,estado:'activo',capacidad:30,sede:'CUR',recursos:[]}],restricciones:[],consecutivas:[],sedes:null,clases:['Lunes','Martes'].map((dia,i)=>({id:i+1,id_asignacion:1,componente:'general',id_aula:1,dia,hora_inicio:'08:00',hora_fin:'09:30'}))})
+
+test('La revisión actual no exige equipamiento histórico ni relaciones de subdivisiones',()=>{
+ const data=fixture()
+ data.asignaciones[0].necesidades.recursos=[999]
+ data.espacios[0].id_espacio_padre=999
+ assert.equal(reviewDraft(data).completo,true)
+ data.clases[1].dia='Lunes'
+ assert.ok(reviewDraft(data).conflictos.some(c=>c.codigo==='CRUCE_ESPACIO'))
+})
 test('Dos sesiones de 90 cumplen revisión sin aprobar ni publicar',()=>{const d=fixture(),before=structuredClone(d),r=reviewDraft(d);assert.equal(r.completo,true);assert.equal(r.aprobado,false);assert.deepEqual(d,before);d.clases[0].hora_fin='09:20';assert.ok(reviewDraft(d).conflictos.some(c=>c.codigo==='SESION_FUERA_TURNO'))})
 test('Teoría y práctica reservan sus propios docentes; general reserva todos',()=>{const d=fixture();d.restricciones=[{id_docente:2,dia:'Lunes',hora_inicio:'08:00',hora_fin:'09:30'}];assert.ok(reviewDraft(d).conflictos.some(c=>c.codigo==='RESTRICCION_DOCENTE'));d.asignaciones[0].componentes=[{tipo:'teoria',docentes:[1],sesiones:1},{tipo:'practica',docentes:[2],sesiones:1}];d.clases[0].componente='teoria';d.clases[1].componente='practica';assert.equal(reviewDraft(d).completo,true);d.asignaciones[0].componentes_vigentes=false;assert.equal(reviewDraft(d).completo,false)})
 test('Detecta cruces, faltantes y cambios de datos en la huella',()=>{const d=fixture(),r=reviewDraft(d);d.clases[1].dia='Lunes';const codes=reviewDraft(d).conflictos.map(c=>c.codigo);for(const code of ['CRUCE_GRUPO','CRUCE_DOCENTE','CRUCE_ESPACIO'])assert.ok(codes.includes(code));d.clases.pop();assert.ok(reviewDraft(d).pendientes.some(p=>/faltan 1/.test(p.mensaje)));assert.notEqual(reviewDraft(d).huella_datos,r.huella_datos);d.espacios[0].capacidad=1;assert.ok(reviewDraft(d).conflictos.some(c=>c.codigo==='CAPACIDAD'))})

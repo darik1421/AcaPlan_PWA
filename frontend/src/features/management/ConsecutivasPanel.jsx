@@ -23,7 +23,7 @@ export default function ConsecutivasPanel({context}){
   }catch(e){if(current===generation.current){setError(`${e.message} Recarga antes de volver a guardar.`);setData(null);setForm(null)}}finally{if(current===generation.current)setBusy(false)}
  }
  return <section aria-labelledby="consecutive-title"><h3 id="consecutive-title">Clases consecutivas</h3>
-  <p>Los jefes de departamento registran las solicitudes autorizadas para unir dos sesiones del mismo año de carrera. Pueden ser de la misma asignatura o de dos distintas, en cualquier orden. Se permite el receso oficial entre ellas, pero no otra clase ni tiempo libre adicional.</p>
+  <p>Los directores de departamento registran las solicitudes autorizadas para unir dos sesiones del mismo año de carrera. Pueden ser de la misma asignatura o de dos distintas, en cualquier orden. Se permite el receso oficial entre ellas, pero no otra clase ni tiempo libre adicional.</p>
   <p className="notice">Cada regla solicita una pareja de sesiones durante la semana. No aumenta ni cambia la duración de las clases. Guardarla no mueve clases existentes; su conexión con la generación y validación integral sigue pendiente.</p>
   {error&&<p role="alert">{error}</p>}{message&&<p role="status">{message}</p>}
   {period&&<button className="secondary" disabled={busy} onClick={()=>setAttempt(n=>n+1)}>Recargar clases consecutivas</button>}
