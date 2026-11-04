@@ -1,6 +1,5 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, expect, test, vi } from 'vitest'
-import SeccionesPage from '../src/features/management/SeccionesPage'
 import ProgramacionPage from '../src/features/management/ProgramacionPage'
 import BloquesPage from '../src/features/management/BloquesPage'
 import AsignaturasPage from '../src/features/management/AsignaturasPage'
@@ -16,54 +15,6 @@ const subjects=[{id_asignatura:1,id_carrera:1,codigo:'MAT',nombre:'Matemática',
 const base={isAdmin:false,funciones:['coordinador'],carreras:[1],canManageSecciones:true,canManageAsignaturas:true,activePeriod:{id_periodo:1,nombre:'2026'}}
 const mockData=()=>mocks.api.mockImplementation(async path=>({'/carreras':careers,'/secciones':sections,'/asignaturas':subjects,'/docentes':[{id_docente:4,nombres:'Docente',estado:'activo'}],'/programacion':[]}[path]||[]))
 
-test('Administrador consulta grupos sin alta manual ni grupos de otros semestres',async()=>{
- mockData();render(<SeccionesPage context={{...base,isAdmin:true,carreras:[]}} onChanged={vi.fn()}/> )
- await screen.findByText('GRUPO-A')
- expect(screen.queryByText('OTRO-PERIODO')).toBeNull()
- expect(screen.queryByRole('button',{name:'Nueva sección'})).toBeNull()
- expect(screen.getAllByRole('button',{name:'Editar'})).toHaveLength(2)
-})
-test('Coordinador puede editar y seleccionar solo sus carreras',async()=>{
- mockData();render(<SeccionesPage context={base} onChanged={vi.fn()}/> )
- await screen.findByText('GRUPO-A')
- expect(screen.getAllByRole('button',{name:'Editar'})).toHaveLength(1)
- fireEvent.click(screen.getByRole('button',{name:'Editar'}))
- expect(screen.getByLabelText('Carrera').options).toHaveLength(1)
-})
-
-test('Corregir un grupo envía PATCH y conserva las asignaturas y la matrícula recibidas',async()=>{
- mockData();render(<SeccionesPage context={base} onChanged={vi.fn()}/> )
- fireEvent.click(await screen.findByRole('button',{name:'Editar'}))
- expect(screen.getByLabelText('Cantidad de estudiantes').value).toBe('20')
- fireEvent.change(screen.getByLabelText('Código del grupo'),{target:{value:'GRUPO-A1'}})
- fireEvent.submit(screen.getByRole('button',{name:'Guardar grupo'}).closest('form'))
- await waitFor(()=>expect(mocks.api).toHaveBeenCalledWith('/secciones',expect.objectContaining({method:'PATCH',data:expect.objectContaining({id:1,codigo:'GRUPO-A1',cantidad_estudiantes:20,asignaturas:[1]})})))
- expect(mocks.api.mock.calls.some(([path,options])=>path==='/secciones'&&options?.method==='POST')).toBe(false)
-})
-
-test('Cambiar de semestre o perder permisos descarta la corrección abierta',async()=>{
- mockData();const view=render(<SeccionesPage context={base} onChanged={vi.fn()}/> )
- fireEvent.click(await screen.findByRole('button',{name:'Editar'}))
- view.rerender(<SeccionesPage context={{...base,activePeriod:{id_periodo:2,nombre:'Segundo'}}} onChanged={vi.fn()}/> )
- expect(screen.queryByRole('button',{name:'Guardar grupo'})).toBeNull()
- view.rerender(<SeccionesPage context={base} onChanged={vi.fn()}/> )
- fireEvent.click(await screen.findByRole('button',{name:'Editar'}))
- view.rerender(<SeccionesPage context={{...base,funciones:[],carreras:[],canManageSecciones:false}} onChanged={vi.fn()}/> )
- expect(screen.queryByRole('button',{name:'Guardar grupo'})).toBeNull()
- expect(mocks.api.mock.calls.some(([,options])=>options?.method==='PATCH')).toBe(false)
-})
-
-test('Grupos permite asignar el turno del semestre y no muestra configuraciones de otro',async()=>{
- mockData();const previous=mocks.api.getMockImplementation()
- mocks.api.mockImplementation(async(path,options)=>path==='/cuadriculas'?[{id_cuadricula:1,id_periodo:1,nombre:'Matutino CUR'},{id_cuadricula:2,id_periodo:2,nombre:'Otro semestre'}]:options?.method==='POST'?{id_seccion:1,id_cuadricula:1,version:1}:previous(path,options))
- render(<SeccionesPage context={base} onChanged={vi.fn()}/> )
- const select=await screen.findByLabelText('Bloques de GRUPO-A')
- expect(screen.queryByRole('option',{name:'Otro semestre'})).toBeNull()
- fireEvent.change(select,{target:{value:'1'}})
- fireEvent.click(screen.getByRole('button',{name:'Guardar GRUPO-A'}))
- await screen.findByText('Bloques asignados a GRUPO-A.')
- expect(mocks.api).toHaveBeenCalledWith('/grupos-turnos',{method:'POST',data:{id_seccion:1,id_cuadricula:1,version:0}})
-})
 test('Docente sin función no recibe controles de entrega académica',async()=>{
  mockData();render(<ProgramacionPage context={{...base,funciones:[],carreras:[],canManageSecciones:false}}/> )
  expect(screen.queryByLabelText('Seleccionar Excel de asignación académica')).toBeNull()

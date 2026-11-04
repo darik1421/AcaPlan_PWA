@@ -14,6 +14,7 @@ import { useAuth } from '../features/auth/AuthContext'
 import { api } from '../services/management'
 import acaplanLogo from '../assets/acaplan-logo.png'
 import { roleLabel } from '../lib/role-labels'
+import { workspacePages, workspacePage } from '../lib/workspace-pages'
 
 import GeneradorPage from '../features/management/GeneradorPage'
 import HorariosPublicados from '../features/management/HorariosPublicados'
@@ -45,12 +46,15 @@ const PAGE_TITLES = {
 export default function DashboardPage() {
   const { profile, logout } = useAuth()
   const [closing, setClosing] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   const [workspace, setWorkspace] = useState(null)
   const profileKey = JSON.stringify(profile)
   const context = workspace?.profileKey === profileKey ? workspace.data : null
   const [error, setError] = useState('')
   const [revision, setRevision] = useState(0)
-  const [page, setPage] = useState('periods')
+  const [requestedPage, setPage] = useState('periods')
+  const availablePages = workspacePages(context)
+  const page = workspacePage(requestedPage, context)
 
   const refresh = () => setRevision(value => value + 1)
 
@@ -84,7 +88,7 @@ export default function DashboardPage() {
   const userInitial = (profile?.nombre || profile?.email || 'U').charAt(0).toUpperCase()
 
   return (
-    <div className="app-container">
+    <div className="app-container" onKeyDown={event => { if (event.key === 'Escape') setMenuOpen(false) }}>
       {/* Franja institucional superior de 5px (Azul / Amarillo / Rojo) */}
       <div className="institutional-stripe" aria-hidden="true">
         <span className="stripe-blue" />
@@ -94,13 +98,15 @@ export default function DashboardPage() {
 
       <div className="app-layout">
         {/* Sidebar institucional */}
-        <aside className="sidebar">
+        {menuOpen && <button className="mobile-menu-backdrop" aria-label="Cerrar menú de navegación" onClick={() => setMenuOpen(false)} />}
+        <aside className="sidebar" id="workspace-navigation" data-open={menuOpen}>
+          <button className="mobile-menu-toggle" onClick={() => setMenuOpen(false)}>Cerrar menú</button>
           <div className="sidebar-header">
             <img src={acaplanLogo} alt="AcaPlan" className="sidebar-logo" />
             <span className="sidebar-category">PLANIFICACIÓN ACADÉMICA</span>
           </div>
 
-          <nav className="sidebar-nav">
+          <nav className="sidebar-nav" aria-label="Navegación principal" onClick={event => { if (event.target.closest('button')) setMenuOpen(false) }}>
             {context?.personalScheduleVersion >= 1 && <button className={page === 'personal' ? 'selected' : ''} onClick={() => setPage('personal')}><Calendar size={18} /><span>Mi horario</span></button>}
             {context?.canManageBloques && <button
               className={page === 'generador' ? 'selected' : ''}
@@ -118,6 +124,7 @@ export default function DashboardPage() {
               <span>Horarios publicados</span>
             </button>
 
+            {availablePages.has('periods') && (
             <button
               className={page === 'periods' ? 'selected' : ''}
               onClick={() => setPage('periods')}
@@ -125,7 +132,9 @@ export default function DashboardPage() {
               <Calendar size={18} />
               <span>Semestres</span>
             </button>
+            )}
 
+            {availablePages.has('carreras') && (
             <button
               className={page === 'carreras' ? 'selected' : ''}
               onClick={() => setPage('carreras')}
@@ -133,7 +142,9 @@ export default function DashboardPage() {
               <Layers size={18} />
               <span>Carreras</span>
             </button>
+            )}
 
+            {availablePages.has('asignaturas') && (
             <button
               className={page === 'asignaturas' ? 'selected' : ''}
               onClick={() => setPage('asignaturas')}
@@ -141,7 +152,9 @@ export default function DashboardPage() {
               <BookOpen size={18} />
               <span>Asignaturas</span>
             </button>
+            )}
 
+            {availablePages.has('espacios') && (
             <button
               className={page === 'espacios' ? 'selected' : ''}
               onClick={() => setPage('espacios')}
@@ -149,7 +162,9 @@ export default function DashboardPage() {
               <Building2 size={18} />
               <span>Pabellones y aulas</span>
             </button>
+            )}
 
+            {availablePages.has('programacion') && (
             <button
               className={page === 'programacion' ? 'selected' : ''}
               onClick={() => setPage('programacion')}
@@ -157,7 +172,9 @@ export default function DashboardPage() {
               <ClipboardList size={18} />
               <span>Asignación académica</span>
             </button>
+            )}
 
+            {availablePages.has('disponibilidad') && (
             <button
               className={page === 'disponibilidad' ? 'selected' : ''}
               onClick={() => setPage('disponibilidad')}
@@ -165,6 +182,7 @@ export default function DashboardPage() {
               <Clock size={18} />
               <span>Restricciones</span>
             </button>
+            )}
 
             {context?.canReadDrafts && (
               <button
@@ -204,6 +222,7 @@ export default function DashboardPage() {
         {/* Área principal */}
         <div className="main-wrapper">
           <header className="topbar">
+            <button className="mobile-menu-toggle" aria-controls="workspace-navigation" aria-expanded={menuOpen} onClick={() => setMenuOpen(value => !value)}>Menú</button>
             <div className="topbar-left">
               <div className="topbar-periods">
                 <span className="topbar-context">{activePeriodText}</span>
@@ -257,7 +276,7 @@ export default function DashboardPage() {
                 <AccountsPage context={context} onChanged={refresh} />
               ) :
               page === 'carreras' ? (
-                <CarrerasPage canManage={context.canManageCarreras} onChanged={refresh} manageDepartments={context.isAdmin} departmentScopeVersion={context.departmentScopeVersion} />
+                <CarrerasPage canManage={context.canManageCarreras} onChanged={refresh} manageDepartments={context.isAdmin} />
               ) :
               page === 'asignaturas' ? (
                 <AsignaturasPage

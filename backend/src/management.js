@@ -17,9 +17,11 @@ import { restrictionInput, unifiedRestrictionInput } from './restriction-input.j
 import { gridInput } from './grid-input.js'
 import { programacionReport } from './programacion-report.js'
 import { importTemplate } from './import-workbook.js'
-import { accountInput, carreraInput, asignaturaInput, aulaInput, seccionInput, periodInput, positiveId } from './validation.js'
+import { accountInput, carreraInput, asignaturaInput, aulaInput, periodInput, positiveId } from './validation.js'
 
 const businessErrors = {
+ CARRERA_INACTIVA:[409,'Solo puedes asignar carreras activas al coordinador.'],
+ DEPARTAMENTO_REQUERIDO:[400,'Selecciona el departamento antes de guardar.'],
  DEPARTAMENTOS_MEZCLADOS:[409,'Un borrador solo puede incluir carreras de un mismo departamento.'],
  CARRERA_SIN_DEPARTAMENTO:[409,'Relaciona las carreras con su departamento antes de crear el borrador.'],
  DEPARTAMENTO_EN_USO:[409,'La carrera pertenece a un borrador de un semestre activo. Revisa ese borrador antes de cambiar su departamento.'],
@@ -171,7 +173,7 @@ export function createManagement({
   async function createAccount(request, data) {
     const input = accountInput(data, true)
     // Comprueba permisos, esquema y duplicados antes de crear en Auth.
-    await rpc(request, 'accounts.check', { correo: input.correo, cedula: input.cedula, rol: input.rol, funciones: input.funciones })
+    await rpc(request, 'accounts.check', { correo: input.correo, cedula: input.cedula, rol: input.rol, funciones: input.funciones, carreras: input.carreras, ...(input.id_departamento ? { id_departamento: input.id_departamento, revision_departamento: input.revision_departamento } : {}) })
     if (!serviceKey) throw new AccessError(503, 'Añade SUPABASE_SERVICE_ROLE_KEY en backend/.env y reinicia el backend para crear cuentas.')
     const adminHeaders = { apikey: serviceKey, Authorization: `Bearer ${serviceKey}`, 'Content-Type': 'application/json' }
     let response
@@ -308,10 +310,7 @@ export function createManagement({
       if (route === 'grids.list') return rpc2(request, 'list', {}, 'pwa_cuadriculas_api')
       if (route === 'grids.save') return rpc2(request, 'save', gridInput(data), 'pwa_cuadriculas_api')
       if (route === 'groupGrids.list') return rpc2(request, 'list', {}, 'pwa_grupos_turnos_api')
-      if (route === 'groupGrids.save') {
-        if (!Number.isSafeInteger(data.version) || data.version < 0) throw new AccessError(400, 'Recarga la asignación antes de guardar.')
-        return rpc2(request, 'save', {id_seccion:positiveId(data.id_seccion),id_cuadricula:positiveId(data.id_cuadricula),version:data.version}, 'pwa_grupos_turnos_api')
-      }
+
       if (['import.history', 'import.template'].includes(route)) {
         const context = await rpc(request, 'context')
         if (!hasGlobalAccess(profile) && !context.funciones?.includes('coordinador')) throw new AccessError(403, 'Solo administración o coordinación pueden importar programación.')
@@ -327,12 +326,13 @@ export function createManagement({
       if (route === 'context') {
         const context = await rpc(request, 'context')
         const isAdmin = hasGlobalAccess(profile)
+        const institutional = context.departmentScopeVersion >= 1
         const departmental = context.departmentScopeVersion >= 1 && context.esDirectorDepartamento === true
-        const canManageCarreras = isAdmin || (!departmental && Boolean(context.funciones?.includes('planificador')))
+        const canManageCarreras = isAdmin || (!institutional && Boolean(context.funciones?.includes('planificador')))
         const canManageAsignaturas = isAdmin || (!departmental && Boolean(context.funciones?.includes('coordinador')))
         const canManageEspacios = canManageCarreras
         const canManageBloques = canManageEspacios
-        const canReadDrafts = canManageBloques || (departmental ? Boolean(context.id_departamento) : Boolean(context.funciones?.includes('aprobador')))
+        const canReadDrafts = canManageBloques || (departmental ? Boolean(context.id_departamento) : !institutional && Boolean(context.funciones?.includes('aprobador')))
         const canManageSecciones = canManageAsignaturas
         const canManageDisponibilidad = isAdmin || (Boolean(context.funciones?.includes('jefe_departamento')) && (!departmental || Boolean(context.id_departamento)))
         return { ...context, isAdmin, canCreateAccounts: isAdmin && Boolean(serviceKey), canManageCarreras, canManageAsignaturas, canManageEspacios, canManageSecciones, canManageBloques, canReadDrafts, canManageDisponibilidad }
@@ -370,7 +370,6 @@ export function createManagement({
       if (route === 'aulas.update') return rpc2(request, 'update', aulaInput(data), 'pwa_inventario')
       // ── Sprint 2: H09 Secciones ──
       if (route === 'secciones.list') return rpc2(request, route)
-      if (route === 'secciones.update') return rpc2(request, route, seccionInput(data))
       // ── Sprint 2: H10 Bloques ──
       if (route === 'bloques.list') return rpc2(request, route)
       // ── Sprint 2: H11 Disponibilidad ──

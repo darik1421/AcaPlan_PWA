@@ -93,5 +93,5 @@ export function reviewDraft(data){
  }
  conflicts.push(...validateSaturdayTravel({intervals,rooms,turns,grids:data.tiempos,sites:data.sedes}))
  if(!data.asignaciones.length)pending.push({mensaje:'No hay asignaciones académicas para las carreras del borrador.'})
- return {...preparationVersion(data),id:data.borrador.id,revision:data.borrador.revision,conflictos:conflicts,pendientes:pending,valido:conflicts.length===0,completo:conflicts.length===0&&pending.length===0&&intervals.length>0,aprobado:false,aviso:'Revisión de este borrador con los datos actuales. No publica ni aprueba; no compara escenarios alternativos entre sí.'}
+ return {...preparationVersion(data),id:data.borrador.id,revision:data.borrador.revision,conflictos:conflicts,pendientes:pending,valido:conflicts.length===0,completo:conflicts.length===0&&pending.length===0&&intervals.length>0,aprobado:false,aviso:'Revisión de este borrador con los datos actuales. No publica ni aprueba; comprueba las ocupaciones externas recibidas sin comparar todos los escenarios alternativos entre sí.'}
 }

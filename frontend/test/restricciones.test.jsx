@@ -1,4 +1,4 @@
-import {cleanup,fireEvent,render,screen,waitFor} from '@testing-library/react'
+import {act,cleanup,fireEvent,render,screen,waitFor} from '@testing-library/react'
 import {afterEach,test,expect,vi} from 'vitest'
 import RestriccionesPanel from '../src/features/management/RestriccionesPanel'
 const mocks=vi.hoisted(()=>({api:vi.fn()}))
@@ -68,4 +68,44 @@ test('Retirar conserva versión e identidad; un fallo exige recargar y no anunci
  expect(mocks.api).toHaveBeenCalledWith('/restricciones/unificadas',expect.objectContaining({data:expect.objectContaining({id:1,version:1,activa:false})}))
  expect(screen.getByRole('button',{name:'Guardar restricción'}).closest('fieldset').disabled).toBe(true)
  expect(screen.queryByText('Restricción guardada.')).toBeNull()
+})
+
+test('Después de guardar se puede registrar otra restricción sin volver a entrar a la pantalla',async()=>{
+ mocks.api.mockImplementation(async(_,options)=>options?.method==='POST'?{guardado:true}:{version:2,docentes,restricciones:[row]})
+ render(<RestriccionesPanel context={context}/>)
+ fireEvent.click(await screen.findByRole('button',{name:'Corregir restricción de Ana'}))
+ fireEvent.submit(screen.getByRole('button',{name:'Guardar restricción'}).closest('form'))
+ await screen.findByText('Restricción guardada.')
+ await waitFor(()=>expect(screen.getByRole('button',{name:'Registrar restricción'}).disabled).toBe(false))
+ fireEvent.click(screen.getByRole('button',{name:'Registrar restricción'}))
+ expect(screen.getByLabelText('Docente de la restricción').value).toBe('')
+ expect(screen.getByRole('button',{name:'Guardar restricción'}).closest('fieldset').disabled).toBe(false)
+})
+
+test('Si el guardado termina pero falla la recarga, permite recuperar la consulta sin repetir el guardado',async()=>{
+ mocks.api.mockResolvedValueOnce({version:2,docentes,restricciones:[row]}).mockResolvedValueOnce({guardado:true}).mockRejectedValueOnce(new Error('Consulta interrumpida')).mockResolvedValueOnce({version:2,docentes,restricciones:[row]})
+ render(<RestriccionesPanel context={context}/>)
+ fireEvent.click(await screen.findByRole('button',{name:'Corregir restricción de Ana'}))
+ fireEvent.submit(screen.getByRole('button',{name:'Guardar restricción'}).closest('form'))
+ await screen.findByText('Consulta interrumpida')
+ const reload=screen.getByRole('button',{name:'Recargar restricciones'})
+ expect(reload.disabled).toBe(false)
+ fireEvent.click(reload)
+ await screen.findByText('Ana')
+ expect(mocks.api.mock.calls.filter(([,o])=>o?.method==='POST')).toHaveLength(1)
+ expect(screen.getByRole('button',{name:'Registrar restricción'}).disabled).toBe(false)
+})
+
+test('Perder el permiso durante el guardado ignora el resultado anterior y deja la consulta operativa',async()=>{
+ let finish
+ mocks.api.mockImplementation((_,options)=>options?.method==='POST'?new Promise(resolve=>{finish=resolve}):Promise.resolve({version:2,docentes,restricciones:[row]}))
+ const view=render(<RestriccionesPanel context={context}/>)
+ fireEvent.click(await screen.findByRole('button',{name:'Corregir restricción de Ana'}))
+ fireEvent.submit(screen.getByRole('button',{name:'Guardar restricción'}).closest('form'))
+ view.rerender(<RestriccionesPanel context={{...context,canManageDisponibilidad:false}}/>)
+ await screen.findByText('Ana')
+ await act(async()=>{finish({guardado:true})})
+ expect(screen.queryByText('Restricción guardada.')).toBeNull()
+ expect(screen.queryByRole('button',{name:'Guardar restricción'})).toBeNull()
+ expect(screen.getByRole('button',{name:'Recargar restricciones'}).disabled).toBe(false)
 })

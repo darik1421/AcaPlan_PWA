@@ -85,3 +85,12 @@ test('El recolector usa consultas autorizadas y rechaza fallos o revisiones camb
 
 
 
+
+test('El diagnóstico distingue pendientes del coordinador de los que requieren gestión institucional',()=>{
+ const data=fixture();data.rooms=[];data.years=[];data.details[0].needs.definidas=false
+ const report=preparationReview(data)
+ assert.match(report.pendientes.find(p=>p.codigo==='SIN_INVENTARIO').responsable,/Director o Administrador/)
+ assert.match(report.pendientes.find(p=>p.codigo==='ESTUDIANTES_PENDIENTES').responsable,/Coordinador de carrera/)
+ assert.match(report.pendientes.find(p=>p.codigo==='SEDE_PENDIENTE').donde,/Años de carrera y turnos/)
+ assert.match(report.pendientes.find(p=>p.codigo==='SIN_INVENTARIO').donde,/Pabellones y aulas/)
+})

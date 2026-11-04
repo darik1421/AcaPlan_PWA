@@ -30,3 +30,30 @@ test('Director tiene gestión global; las funciones de un docente no se toman de
   await assert.rejects(service.execute(request,{rol:'docente'},'departments.context',{rol:'director'}),error=>error.status===403)
   assert.equal(calls,1)
 })
+
+test('El contexto institucional no revive funciones retiradas ni conserva la carrera de un coordinador anterior', async () => {
+ let context={departmentScopeVersion:1,esDirectorDepartamento:false,funciones:['planificador','aprobador'],carreras:[]}
+ const service=createManagement({url:'https://example.test',key:'public',fetchImpl:async()=>new Response(JSON.stringify(context))})
+ const request={headers:{authorization:'Bearer prueba'}}
+ const retired=await service.execute(request,{rol:'docente'},'context',{})
+ for(const flag of ['canManageCarreras','canManageEspacios','canManageBloques','canReadDrafts','canManageAsignaturas']) assert.equal(retired[flag],false,flag)
+ context={...context,funciones:['coordinador'],carreras:[7]}
+ const coordinator=await service.execute(request,{rol:'docente'},'context',{})
+ assert.equal(coordinator.canManageAsignaturas,true)
+ assert.deepEqual(coordinator.carreras,[7])
+ context={...context,funciones:[],carreras:[]}
+ const previous=await service.execute(request,{rol:'docente'},'context',{})
+ assert.equal(previous.canManageAsignaturas,false)
+ assert.deepEqual(previous.carreras,[])
+})
+test('Un director de departamento sin vínculo no puede gestionar restricciones ni consultar borradores',async()=>{
+ let context={departmentScopeVersion:1,esDirectorDepartamento:true,funciones:['jefe_departamento'],id_departamento:null}
+ const service=createManagement({url:'https://example.test',key:'public',fetchImpl:async()=>new Response(JSON.stringify(context))})
+ const request={headers:{authorization:'Bearer prueba'}}
+ const pending=await service.execute(request,{rol:'docente'},'context',{})
+ assert.equal(pending.canReadDrafts,false);assert.equal(pending.canManageDisponibilidad,false)
+ context={...context,id_departamento:3}
+ const linked=await service.execute(request,{rol:'docente'},'context',{})
+ assert.equal(linked.canReadDrafts,true);assert.equal(linked.canManageDisponibilidad,true)
+ assert.equal(linked.canManageBloques,false);assert.equal(linked.canManageAsignaturas,false)
+})

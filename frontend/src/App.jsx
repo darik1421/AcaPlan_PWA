@@ -3,9 +3,11 @@ import AuthProvider from './features/auth/AuthProvider'
 import { useAuth } from './features/auth/AuthContext'
 import LoginPage from './features/auth/LoginPage'
 import RecoveryPage from './features/auth/RecoveryPage'
-import DashboardPage from './pages/DashboardPage'
+import DeferredWorkspace from './components/DeferredWorkspace'
 import './App.css'
 import './features/auth/auth.css'
+
+const loadWorkspace = () => import('./pages/DashboardPage')
 
 function Screens() {
   const { session, profile, loading, recovery, error, retry, logout } = useAuth()
@@ -18,7 +20,7 @@ function Screens() {
     <button className="primary" onClick={retry}>Volver a comprobar</button>
     <button className="secondary back-link" onClick={logout}>Cerrar sesión</button>
   </div></section></AppLayout>
-  return <DashboardPage />
+  return <DeferredWorkspace load={loadWorkspace} />
 }
 
 export default function App() {

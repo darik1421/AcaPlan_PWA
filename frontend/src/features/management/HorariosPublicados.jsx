@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { api } from '../../services/management'
 import { publicationCsv } from './publication-csv'
 import { RefreshCw, Download } from 'lucide-react'
@@ -11,10 +11,13 @@ export default function HorariosPublicados({ personal = false }) {
     [year, setYear] = useState(''),
     [busy, setBusy] = useState(false)
   const [identity, setIdentity] = useState(null)
+  const generation = useRef(0)
   const endpoint = personal ? '/horarios/personal' : '/horarios/publicados'
 
   useEffect(() => {
     const c = new AbortController()
+    generation.current++
+    setBusy(false)
     setData(null)
     setError('')
     setIdentity(null)
@@ -25,15 +28,23 @@ export default function HorariosPublicados({ personal = false }) {
       .catch(e => {
         if (!c.signal.aborted) setError(e.message)
       })
-    return () => c.abort()
+    return () => { c.abort(); generation.current++ }
   }, [attempt, endpoint, personal])
+
+  useEffect(() => {
+    if (!data) return
+    const rows = data.flatMap(p => p.filas)
+    const currentCareer = rows.some(r => r.carrera === career) ? career : ''
+    setCareer(currentCareer)
+    setYear(current => rows.some(r => (!currentCareer || r.carrera === currentCareer) && String(r.ano) === current) ? current : '')
+  }, [data, career])
 
   const visible = rows =>
     rows.filter(r => (!career || r.carrera === career) && (!year || String(r.ano) === year))
 
   const weeklyRows = publications => publications.flatMap(p => p.filas).sort((a, b) => {
-    const days = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo']
-    const day = value => days.indexOf(String(value).toLocaleLowerCase('es'))
+    const days = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo']
+    const day = value => days.indexOf(String(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es'))
     return day(a.dia) - day(b.dia) || a.inicio.localeCompare(b.inicio) || a.carrera.localeCompare(b.carrera)
   })
   const displayed = personal && data?.length ? [{
@@ -42,17 +53,22 @@ export default function HorariosPublicados({ personal = false }) {
   }] : data
 
   async function download(id) {
+    if (busy) return
+    const currentGeneration = generation.current
     setBusy(true)
     setError('')
     try {
       const response = await api(endpoint),
         current = personal ? response.publicaciones : response,
         publication = personal ? (current.length ? { filas: weeklyRows(current) } : null) : current.find(p => p.id === id)
+      if (currentGeneration !== generation.current) return
       setData(current)
       if (personal) setIdentity(response)
       if (!publication)
         throw new Error('La publicación cambió o perdió vigencia. Consulta el horario actualizado.')
-      const blob = new Blob([publicationCsv(visible(publication.filas))], {
+      const rows = visible(publication.filas)
+      if (!rows.length) throw new Error('Los datos cambiaron y ya no hay clases para los filtros seleccionados. Revisa el horario actualizado antes de descargar.')
+      const blob = new Blob([publicationCsv(rows)], {
           type: 'text/csv;charset=utf-8',
         }),
         url = URL.createObjectURL(blob),
@@ -62,9 +78,9 @@ export default function HorariosPublicados({ personal = false }) {
       a.click()
       setTimeout(() => URL.revokeObjectURL(url), 1000)
     } catch (e) {
-      setError(e.message)
+      if (currentGeneration === generation.current) setError(e.message)
     } finally {
-      setBusy(false)
+      if (currentGeneration === generation.current) setBusy(false)
     }
   }
 
@@ -98,7 +114,7 @@ export default function HorariosPublicados({ personal = false }) {
           <div className="filter-grid" style={{ marginBottom: '24px' }}>
             <label className="filter-card">
               <span>Carrera publicada</span>
-              <select value={career} onChange={e => setCareer(e.target.value)}>
+              <select disabled={busy} value={career} onChange={e => { setCareer(e.target.value); setYear('') }}>
                 <option value="">Todas</option>
                 {[...new Set(data.flatMap(p => p.filas.map(r => r.carrera)))].sort().map(c => (
                   <option key={c}>{c}</option>
@@ -107,9 +123,9 @@ export default function HorariosPublicados({ personal = false }) {
             </label>
             <label className="filter-card">
               <span>Año publicado</span>
-              <select value={year} onChange={e => setYear(e.target.value)}>
+              <select disabled={busy} value={year} onChange={e => setYear(e.target.value)}>
                 <option value="">Todos</option>
-                {[...new Set(data.flatMap(p => p.filas.map(r => r.ano)))]
+                {[...new Set(data.flatMap(p => p.filas.filter(r => !career || r.carrera === career).map(r => r.ano)))]
                   .sort((a, b) => a - b)
                   .map(y => (
                     <option key={y}>{y}</option>
@@ -167,6 +183,7 @@ export default function HorariosPublicados({ personal = false }) {
                     </tr>
                   </thead>
                   <tbody>
+                    {!visible(p.filas).length && <tr><td colSpan={6}>No hay clases que coincidan con los filtros seleccionados.</td></tr>}
                     {visible(p.filas).map((r, i) => (
                       <tr key={i}>
                         <td>{r.carrera} · Año {r.ano}</td>

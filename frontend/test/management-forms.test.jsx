@@ -126,3 +126,33 @@ test('Si falla actualizar cuentas se retira la lista anterior y no ofrece editar
   expect(screen.queryByText('No hay cuentas que coincidan.')).toBeNull()
   expect(screen.getByRole('button',{name:'Nueva cuenta'}).disabled).toBe(true)
 })
+
+test('No guarda un director de departamento sin departamento seleccionado',async()=>{
+ mocks.api.mockImplementation(async path=>path==='/departamentos'?{departamentos:[{id:3,nombre:'Tecnológicas y Salud'}],carreras:[]}:path==='/departamentos/directores'?[]:[{...account,id_usuario:2,nombre:'Otra persona',rol:'docente'}])
+ accounts({departmentScopeVersion:1})
+ fireEvent.click(await screen.findByRole('button',{name:'Editar cuenta de Otra persona'}))
+ fireEvent.change(within(screen.getByRole('button',{name:'Guardar cuenta'}).closest('form')).getByLabelText('Rol'),{target:{value:'jefe_departamento'}})
+ fireEvent.submit(screen.getByRole('button',{name:'Guardar cuenta'}).closest('form'))
+ await screen.findByText('Selecciona el departamento del director antes de guardar la cuenta.')
+ expect(mocks.api.mock.calls.some(([,options])=>options?.method==='PATCH')).toBe(false)
+})
+
+test('Un coordinador nuevo solo puede seleccionar carreras activas',async()=>{
+ mocks.api.mockResolvedValue([account])
+ accounts({catalogoCarreras:[{id_carrera:1,nombre:'Carrera activa',estado:'activo'},{id_carrera:2,nombre:'Carrera retirada',estado:'inactivo'}]})
+ fireEvent.click(await screen.findByRole('button',{name:'Editar cuenta de Cuenta de prueba'}))
+ fireEvent.click(screen.getByLabelText('Coordinador de carrera'))
+ expect(screen.getByLabelText('Carrera activa')).toBeTruthy()
+ expect(screen.queryByLabelText('Carrera retirada')).toBeNull()
+})
+
+test('La edición atómica del director envía el departamento y su revisión con la cuenta',async()=>{
+ const person={...account,id_usuario:2,nombre:'Director ficticio',rol:'docente',funciones:['jefe_departamento']}
+ mocks.api.mockImplementation(async(path,options)=>path==='/departamentos'?{departamentos:[{id:3,nombre:'Tecnológicas y Salud'}],carreras:[]}:path==='/departamentos/directores'?[{id_usuario:2,id_departamento:3,revision:4}]:options?.method?{id:2}:[person])
+ accounts({departmentScopeVersion:1,atomicDepartmentVersion:1})
+ fireEvent.click(await screen.findByRole('button',{name:'Editar cuenta de Director ficticio'}))
+ fireEvent.click(screen.getByRole('button',{name:'Guardar cuenta'}))
+ await screen.findByText('Cuenta actualizada.')
+ expect(mocks.api).toHaveBeenCalledWith('/accounts',expect.objectContaining({method:'PATCH',data:expect.objectContaining({id:2,id_departamento:3,revision_departamento:4})}))
+ expect(mocks.api.mock.calls.filter(([,options])=>options?.method)).toHaveLength(1)
+})

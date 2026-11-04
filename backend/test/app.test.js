@@ -10,7 +10,7 @@ test('Las operaciones retiradas no alcanzan Supabase aunque se llamen directamen
  const base=`http://127.0.0.1:${app.address().port}/api`
  try{
   for(const [path,method] of [
-   ['/asignaturas','POST'],['/pabellones','POST'],['/recursos','POST'],['/aulas','POST'],['/secciones','POST'],['/bloques','POST'],['/bloques','PATCH'],
+   ['/asignaturas','POST'],['/pabellones','POST'],['/recursos','POST'],['/aulas','POST'],['/secciones','POST'],['/secciones','PATCH'],['/grupos-turnos','POST'],['/bloques','POST'],['/bloques','PATCH'],
    ['/disponibilidad','POST'],['/disponibilidad','PATCH'],['/programacion/detalle','POST'],['/programacion/detalle','PATCH'],
    ['/importacion/vista-previa','POST'],['/importacion/confirmar','POST'],['/planificacion/reglas/guardar','POST'],
    ['/planificacion/comprobar','POST'],['/programacion','POST'],['/programacion/delete','POST'],

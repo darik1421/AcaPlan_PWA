@@ -1,26 +1,52 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, expect, test, vi } from 'vitest'
 import CarrerasPage from '../src/features/management/CarrerasPage'
 const { api } = vi.hoisted(() => ({api:vi.fn()}))
 vi.mock('../src/services/management', () => ({api}))
 afterEach(() => {cleanup(); api.mockReset()})
-test('La carrera elige departamento en su formulario y conserva el ID si falla esa relación', async () => {
- api.mockImplementation(async (path, options) => {
-  if(path==='/departamentos') return {departamentos:[{id:3,nombre:'Ciencias Tecnológicas y Salud'}],carreras:[]}
-  if(path==='/departamentos/carrera') throw new Error('Sin conexión')
-  if(options?.method==='POST') return {id:7}
-  if(options?.method==='PATCH') return {ok:true}
-  return []
- })
+test('No crea la carrera cuando falta seleccionar su departamento',async()=>{
+ api.mockImplementation(async path=>path==='/departamentos'?{departamentos:[{id:3,nombre:'Tecnológicas y Salud'}],carreras:[]}:[])
  render(<CarrerasPage canManage manageDepartments onChanged={vi.fn()} />)
+ await screen.findByText('No hay carreras que coincidan.')
+ fireEvent.click(screen.getByRole('button',{name:'Nueva carrera'}))
+ fireEvent.change(screen.getByLabelText('Nombre de la carrera'),{target:{value:'Sistemas'}})
+ fireEvent.submit(screen.getByRole('button',{name:'Guardar carrera'}).closest('form'))
+ await screen.findByText('Selecciona el departamento de la carrera antes de guardarla.')
+ expect(api.mock.calls.some(([,options])=>options?.method==='POST')).toBe(false)
+})
+
+test('El guardado atómico envía carrera y departamento en una sola escritura',async()=>{
+ api.mockImplementation(async(path,options)=>path==='/departamentos'?{departamentos:[{id:3,nombre:'Tecnológicas y Salud'}],carreras:[]}:options?.method?{id:7}:[])
+ render(<CarrerasPage canManage manageDepartments onChanged={vi.fn()}/>)
  await screen.findByText('No hay carreras que coincidan.')
  fireEvent.click(screen.getByRole('button',{name:'Nueva carrera'}))
  fireEvent.change(screen.getByLabelText('Nombre de la carrera'),{target:{value:'Sistemas'}})
  fireEvent.change(screen.getByLabelText('Departamento de la carrera'),{target:{value:'3'}})
  fireEvent.click(screen.getByRole('button',{name:'Guardar carrera'}))
- await screen.findByText('La carrera se guardó, pero su departamento no: Sin conexión')
- fireEvent.click(screen.getByRole('button',{name:'Guardar carrera'}))
- await waitFor(()=>expect(api).toHaveBeenCalledWith('/carreras',expect.objectContaining({method:'PATCH',data:expect.objectContaining({id:7})})))
- expect(api.mock.calls.filter(([,o])=>o?.method==='POST')).toHaveLength(1)
- expect(api).toHaveBeenCalledWith('/departamentos/carrera',{method:'PATCH',data:{id_carrera:7,id_departamento:3,revision:0}})
+ await screen.findByText('Carrera registrada.')
+ expect(api).toHaveBeenCalledWith('/carreras',{method:'POST',data:{nombre:'Sistemas',id_departamento:3,revision_departamento:0}})
+ expect(api.mock.calls.filter(([,options])=>options?.method)).toHaveLength(1)
+})
+
+test('Un fallo de consulta de carreras no se presenta como catálogo vacío ni permite dar altas',async()=>{
+ api.mockRejectedValueOnce(new Error('Sin conexión')).mockResolvedValueOnce([{id_carrera:1,nombre:'Sistemas',estado:'activo'}])
+ render(<CarrerasPage canManage onChanged={vi.fn()}/>)
+ await screen.findByRole('alert')
+ expect(screen.queryByText('No hay carreras que coincidan.')).toBeNull()
+ expect(screen.getByRole('button',{name:'Nueva carrera'}).disabled).toBe(true)
+ fireEvent.click(screen.getByRole('button',{name:'Actualizar lista'}))
+ await screen.findByText('Sistemas')
+ expect(screen.getByRole('button',{name:'Nueva carrera'}).disabled).toBe(false)
+})
+
+test('Retirar la gestión de carreras descarta la edición y no permite recuperarla al devolver el permiso',async()=>{
+ api.mockResolvedValue([{id_carrera:1,nombre:'Sistemas',estado:'activo'}])
+ const view=render(<CarrerasPage canManage onChanged={vi.fn()}/>)
+ fireEvent.click(await screen.findByRole('button',{name:'Editar Sistemas'}))
+ fireEvent.change(screen.getByLabelText('Nombre de la carrera'),{target:{value:'Cambio sin guardar'}})
+ view.rerender(<CarrerasPage canManage={false} onChanged={vi.fn()}/>)
+ expect(screen.queryByRole('button',{name:'Guardar carrera'})).toBeNull()
+ view.rerender(<CarrerasPage canManage onChanged={vi.fn()}/>)
+ expect(screen.queryByRole('button',{name:'Guardar carrera'})).toBeNull()
+ expect(api.mock.calls.some(([,options])=>options?.method)).toBe(false)
 })

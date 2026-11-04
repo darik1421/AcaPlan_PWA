@@ -68,6 +68,7 @@ export default function AccountsPage({ context, onChanged }) {
   }, [context.canCreateAccounts])
 
   const field = (name, value) => setForm(current => ({ ...current, [name]: value }))
+  const selectableCareers = context.catalogoCarreras.filter(c => c.estado !== 'inactivo' || form?.carreras.includes(c.id_carrera))
 
   function toggle(name, value) {
     field(
@@ -81,6 +82,10 @@ export default function AccountsPage({ context, onChanged }) {
   async function save(event) {
     event.preventDefault()
     if (busy || loading || loadFailed || !form || (!form.id && !context.canCreateAccounts)) return
+    if (institutional && institutionalRole(form) === 'jefe_departamento' && !organization?.departamentos.some(d => d.id === Number(form.departamento))) {
+      setError('Selecciona el departamento del director antes de guardar la cuenta.')
+      return
+    }
     if (
       form.id === profile.id_usuario &&
       (form.estado !== 'activo' || form.rol !== profile.rol) &&
@@ -94,20 +99,8 @@ export default function AccountsPage({ context, onChanged }) {
     setMessage('')
     try {
       const { departamento, revisionDepartamento, ...account } = form
-      const result = await api('/accounts', { method: form.id ? 'PATCH' : 'POST', data: account })
-      const savedId = form.id || result.id
-      if (institutional && institutionalRole(form) === 'jefe_departamento' && form.estado === 'activo') {
-        setForm(current => ({...current, id:savedId, password:''}))
-        try {
-          const latest = await api('/departamentos/directores')
-          const relation = latest.find(d => d.id_usuario === savedId)
-          const selected = departamento ? Number(departamento) : null
-          if ((relation?.id_departamento || null) !== selected) {
-            if ((relation?.revision || 0) !== (revisionDepartamento || 0)) throw new Error('El departamento cambió. Cierra el formulario y consulta nuevamente.')
-            await api('/departamentos/director', {method:'PATCH',data:{id_usuario:savedId,id_departamento:selected,revision:relation?.revision || 0}})
-          }
-        } catch (error) { throw new Error('La cuenta se guardó, pero su departamento no: ' + error.message) }
-      }
+      const payload = institutional && institutionalRole(form) === 'jefe_departamento' ? {...account,id_departamento:Number(departamento),revision_departamento:revisionDepartamento || 0} : account
+      await api('/accounts', { method: form.id ? 'PATCH' : 'POST', data: payload })
       const self = form.id === profile.id_usuario
       setMessage(
         form.id
@@ -292,19 +285,19 @@ export default function AccountsPage({ context, onChanged }) {
             {form.funciones.includes('coordinador') && (
               <fieldset className="choice-group">
                 <legend>Carreras asignadas (selecciona al menos una)</legend>
-                {!context.catalogoCarreras.length && (
+                {!selectableCareers.length && (
                   <p className="notice">
-                    No hay carreras registradas. Primero deben incorporarse al catálogo.
+                    No hay carreras activas disponibles. Primero deben incorporarse o activarse en el catálogo.
                   </p>
                 )}
-                {context.catalogoCarreras.map(c => (
+                {selectableCareers.map(c => (
                   <label className="check-label" key={c.id_carrera}>
                     <input
                       type="checkbox"
                       checked={form.carreras.includes(c.id_carrera)}
                       onChange={() => toggle('carreras', c.id_carrera)}
                     />
-                    {c.nombre}
+                    {c.nombre}{c.estado === 'inactivo' ? ' (inactiva; asignación anterior)' : ''}
                   </label>
                 ))}
               </fieldset>

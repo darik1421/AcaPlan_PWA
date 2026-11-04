@@ -6,6 +6,7 @@ import RevisionPreparacion from './RevisionPreparacion'
 
 export default function ProgramacionPage({ context }) {
   const [revision, setRevision] = useState(0)
+  const [reportRevision, setReportRevision] = useState(0)
   const [tab, setTab] = useState('asignaturas')
 
   return (
@@ -19,7 +20,7 @@ export default function ProgramacionPage({ context }) {
       {context?.canManageSecciones && (
         <RevisionPreparacion
           periodId={context?.activePeriod?.id_periodo}
-          revision={revision}
+          revision={`${revision}:${reportRevision}`}
         />
       )}
 
@@ -81,6 +82,7 @@ export default function ProgramacionPage({ context }) {
                   key={context.activePeriod.id_periodo}
                   periodId={context.activePeriod.id_periodo}
                   revision={revision}
+                  onDataChanged={() => setReportRevision(n => n + 1)}
                 />
               </div>
 

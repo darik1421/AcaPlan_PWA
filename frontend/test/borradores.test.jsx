@@ -83,3 +83,19 @@ test('El conflicto identifica la clase y abre corrección conservando su protecc
  expect(screen.queryByLabelText('Resultado de revisión')).toBeNull()
 })
 
+
+test('Al retirar planificación se descartan la edición y la autorización de una clase fijada',async()=>{
+ mocks.api.mockImplementation(async path=>path==='/borradores/estado'?{estado:'borrador',version:0,historial:[],canPlan:false}:path==='/borradores/consultar'?list:detail)
+ const view=render(<BorradoresPage canPlan periodId={1}/>)
+ fireEvent.change(await screen.findByLabelText('Borrador'),{target:{value:'1'}})
+ fireEvent.click(await screen.findByRole('button',{name:'Editar clase 5'}))
+ fireEvent.change(screen.getByLabelText('Motivo de la autorización'),{target:{value:'Cambio antes de retirar permisos'}})
+ fireEvent.click(screen.getByLabelText('Autorizo este cambio de la clase fijada.'))
+ view.rerender(<BorradoresPage canPlan={false} periodId={1}/>)
+ await screen.findByRole('button',{name:'Revisar borrador'})
+ expect(screen.queryByRole('button',{name:'Confirmar clase'})).toBeNull()
+ view.rerender(<BorradoresPage canPlan periodId={1}/>)
+ await screen.findByRole('group',{name:'Añadir una clase al borrador'})
+ expect(screen.queryByLabelText('Motivo de la autorización')).toBeNull()
+ expect(mocks.api.mock.calls.some(([path])=>path==='/borradores/clase')).toBe(false)
+})

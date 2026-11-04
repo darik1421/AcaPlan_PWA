@@ -27,7 +27,7 @@ export default function RevisionPreparacion({periodId,revision}){
    {report.cambios_desde_consulta!==null&&<p className="notice">{report.cambios_desde_consulta?'Los datos o las reglas cambiaron desde tu consulta anterior. Usa esta nueva revisión.':'Los datos y las reglas consultados coinciden con tu revisión anterior.'}</p>}
    <p role="status">{report.pendientes.length?`${report.pendientes.length} aspectos pendientes de revisión.`:'No se detectaron pendientes en estas comprobaciones. Esto todavía no demuestra que exista un horario posible.'}</p>
    <p className="notice">{report.aviso}</p>
-   {!!report.pendientes.length&&<div className="table-scroll"><table><caption>Datos pendientes y dónde corregirlos</caption><thead><tr><th>Asignatura o año</th><th>Qué falta revisar</th><th>Dónde corregir</th></tr></thead><tbody>{report.pendientes.map((p,index)=><tr key={index}><td>{p.asignatura}</td><td>{p.mensaje}</td><td>{p.donde}</td></tr>)}</tbody></table></div>}
+   {!!report.pendientes.length&&<div className="table-scroll"><table><caption>Datos pendientes y dónde corregirlos</caption><thead><tr><th>Asignatura o año</th><th>Qué falta revisar</th><th>Dónde corregir</th><th>Quién puede corregir</th></tr></thead><tbody>{report.pendientes.map((p,index)=><tr key={index}><td>{p.asignatura}</td><td>{p.mensaje}</td><td>{p.donde}</td><td>{p.responsable || 'Consulta al Director o al Administrador.'}</td></tr>)}</tbody></table></div>}
   </>}
  </section>
 }

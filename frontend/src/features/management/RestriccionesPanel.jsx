@@ -38,7 +38,7 @@ export default function RestriccionesPanel({ context }) {
         setReloadRequired(true)
       }
     } finally {
-      if (!signal?.aborted && current === generation.current) setLoading(false)
+      if (!signal?.aborted && current === generation.current) { setLoading(false); setBusy(false) }
     }
   }
 

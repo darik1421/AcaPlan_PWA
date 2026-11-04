@@ -51,7 +51,7 @@ export default function DisponibilidadPage({ context }) {
     <section className="management-page" aria-labelledby="disp-title">
       <div className="section-heading">
         <div>
-          <span className="screen-kicker">Jefaturas de departamento</span>
+          <span className="screen-kicker">Directores de departamento</span>
           <h2 id="disp-title">Restricciones</h2>
           <p className="muted">
             Intervalos autorizados en los que un docente no puede impartir clases.

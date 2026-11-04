@@ -20,6 +20,11 @@ export const positiveId = value => {
   if (!['string', 'number'].includes(typeof value) || !/^[0-9]+$/.test(String(value)) || !Number.isSafeInteger(Number(value)) || Number(value) < 1) fail('Identificador no válido.')
   return Number(value)
 }
+function departmentInput(data) {
+  if (!Object.hasOwn(data, 'id_departamento') && !Object.hasOwn(data, 'revision_departamento')) return {}
+  if (!Number.isInteger(data.id_departamento) || data.id_departamento < 1 || data.id_departamento > 3 || !Number.isSafeInteger(data.revision_departamento) || data.revision_departamento < 0 || data.revision_departamento > 999999999) fail('Selecciona un departamento y consulta su versión actual.')
+  return { id_departamento: data.id_departamento, revision_departamento: data.revision_departamento }
+}
 export function accountInput(data, create = false) {
   const result = {
     nombre: text(data.nombre, 'Nombre', 100),
@@ -28,6 +33,7 @@ export function accountInput(data, create = false) {
     estado: data.estado || 'activo',
     funciones: data.funciones || [],
     carreras: data.carreras || [],
+    ...departmentInput(data),
   }
   if (!['administrador', 'director', 'docente'].includes(result.rol)) fail('Rol no válido.')
   if (!['activo', 'inactivo'].includes(result.estado)) fail('Estado no válido.')
@@ -49,6 +55,7 @@ export function accountInput(data, create = false) {
 export function carreraInput(data, create = false) {
   const result = {
     nombre: text(data.nombre, 'Nombre de la carrera', 150),
+    ...departmentInput(data),
   }
   if (!create) {
     result.id = positiveId(data.id)
@@ -101,24 +108,6 @@ export function aulaInput(data, create = false) {
       if (!['activo', 'inactivo'].includes(data.estado)) fail('Estado no válido.')
       result.estado = data.estado
     }
-  }
-  return result
-}
-export function seccionInput(data, create = false) {
-  if (!Array.isArray(data.asignaturas)) fail('Envía la lista de asignaturas del grupo; una lista omitida no significa vaciarla.')
-  const year = positiveId(data.ano_estudio)
-  if (year > 10) fail('El año de estudio debe estar entre 1 y 10.')
-  const result = {
-    codigo: text(data.codigo, 'Código de la sección', 20),
-    ano_estudio: year,
-    cantidad_estudiantes: positiveId(data.cantidad_estudiantes),
-    asignaturas: [...new Set(data.asignaturas.map(positiveId))]
-  }
-  if (create) {
-    result.id_carrera = positiveId(data.id_carrera)
-    result.id_periodo = positiveId(data.id_periodo)
-  } else {
-    result.id = positiveId(data.id)
   }
   return result
 }

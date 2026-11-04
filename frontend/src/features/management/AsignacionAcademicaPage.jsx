@@ -3,14 +3,14 @@ import ProgramacionPage from './ProgramacionPage'
 import SeccionesPage from './SeccionesPage'
 import ResumenDepartamento from './ResumenDepartamento'
 
-export default function AsignacionAcademicaPage({ context, onChanged }) {
+export default function AsignacionAcademicaPage({ context }) {
   const [historical, setHistorical] = useState(false)
 
   return (
     <section className="management-page" aria-labelledby="academic-title">
       <div className="section-heading">
         <div>
-          <span className="screen-kicker">Coordinación por carrera</span>
+          <span className="screen-kicker">Coordinadores de carrera</span>
           <h2 id="academic-title">Asignación académica</h2>
           <p className="muted">Asignaturas y docentes recibidos para cada año de carrera.</p>
         </div>
@@ -36,9 +36,9 @@ export default function AsignacionAcademicaPage({ context, onChanged }) {
           Consultar datos del modelo anterior
         </summary>
         <p className="notice" style={{ marginTop: '12px' }}>
-          Estos registros se conservan para consultar y corregir datos existentes. No son un segundo paso de la entrega por Excel ni se completan automáticamente con ella.
+          Estos registros se conservan para consultar datos existentes. No son un segundo paso de la entrega por Excel ni se completan automáticamente con ella.
         </p>
-        {historical && <SeccionesPage context={context} onChanged={onChanged} />}
+        {historical && <SeccionesPage context={context} />}
       </details>}
     </section>
   )

@@ -53,30 +53,37 @@ export async function collectPreparation(call,id_periodo){
 export function preparationReview({semester,details,years,rooms,grids,restrictions,rules,sites=null}){
  const version=preparationVersion({semester,details,years,rooms,grids,restrictions,rules,sites})
  const findings=[]
- const add=(codigo,mensaje,donde,row)=>findings.push({codigo,mensaje,donde,asignatura:row?`${row.carrera} · Año ${row.ano_estudio} · ${row.codigo_asignatura}`:'General'})
+ const responsible = codigo => {
+  if(codigo==='FRECUENCIA_PENDIENTE')return 'El equipo académico debe definir la regla; no se resuelve completando un campo.'
+  if(codigo==='RESTRICCIONES_SIN_TIEMPO')return 'Director de departamento: restricciones. Director o Administrador: tiempos.'
+  if(codigo==='ESPACIO_PENDIENTE'||codigo==='SEDE_ANO_NO_RECONOCIDA')return 'Coordinador de carrera: necesidades y sede del año. Director o Administrador: aulas y sedes institucionales.'
+  if(['SIN_INVENTARIO','SEDES_TRASLADO_PENDIENTES','CARRERA_INACTIVA','TIEMPOS_PENDIENTES','TIEMPO_INSUFICIENTE','TIEMPOS_INVALIDOS'].includes(codigo))return 'Director o Administrador.'
+  return 'Coordinador de carrera; también Director o Administrador.'
+ }
+ const add=(codigo,mensaje,donde,row)=>findings.push({codigo,mensaje,donde,responsable:responsible(codigo),asignatura:row?`${row.carrera} · Año ${row.ano_estudio} · ${row.codigo_asignatura}`:'General'})
  if(!details.length)add('SIN_ENTREGA','No hay asignaciones importadas para tus carreras en este semestre.','Asignación académica → Entrega del coordinador')
- if(!rooms.some(r=>r.estado==='activo'))add('SIN_INVENTARIO','No hay aulas o laboratorios activos en el inventario.','Espacios → Inventario')
+ if(!rooms.some(r=>r.estado==='activo'))add('SIN_INVENTARIO','No hay aulas o laboratorios activos en el inventario.','Pabellones y aulas → Inventario')
  const saturday=details.some(a=>a.turno==='encuentros')&&grids.some(g=>g.turno==='encuentros'&&g.bloques.some(b=>b.dia==='Sabado'&&!b.es_receso))
  const normalize=s=>typeof s==='string'?s.trim().toLocaleLowerCase('es'):''
  const travelSites=sites?[normalize(sites.sede_cur),normalize(sites.sede_instituto)]:[]
- if(saturday&&!sites)add('SEDES_TRASLADO_PENDIENTES','Falta identificar las sedes CUR e instituto para comprobar los traslados del sábado.','Semestres → Tiempos → Traslados entre CUR e instituto')
+ if(saturday&&!sites)add('SEDES_TRASLADO_PENDIENTES','Falta identificar las sedes CUR e instituto para comprobar los traslados del sábado.','Semestres → Configuración de tiempos del semestre → Traslados entre CUR e instituto')
  const checkedYears=new Set()
  for(const row of details){
   if(row.estado_carrera!=='activo'){add('CARRERA_INACTIVA','La carrera no está activa. Reactívala antes de revisar sus datos de preparación.','Carreras',row);continue}
   const year=years.find(y=>y.id_carrera===row.id_carrera&&y.ano_estudio===row.ano_estudio),key=`${row.id_carrera}:${row.ano_estudio}`
   if(!checkedYears.has(key)){
    checkedYears.add(key)
-   if(new Set(details.filter(a=>a.id_carrera===row.id_carrera&&a.ano_estudio===row.ano_estudio).map(a=>a.turno)).size>1)add('TURNOS_INCOMPATIBLES','Este año de carrera tiene asignaturas en turnos distintos. Corrige conjuntamente su turno.','Asignación académica → Datos complementarios → Turno',row)
-   if(!Number.isInteger(year?.cantidad_estudiantes)||year.cantidad_estudiantes<1)add('ESTUDIANTES_PENDIENTES','Falta la cantidad de estudiantes de este año.','Asignación académica → Datos complementarios',row)
-   if(!year?.sede)add('SEDE_PENDIENTE','Falta indicar la sede de este año.','Asignación académica → Datos complementarios',row)
-   if(saturday&&row.turno==='encuentros'&&sites&&year?.sede&&!travelSites.includes(normalize(year.sede)))add('SEDE_ANO_NO_RECONOCIDA',`La sede «${year.sede}» de este año no coincide con las sedes configuradas para traslados. Revisa los nombres; no se supone que sean el mismo lugar.`,'Asignación académica → Datos complementarios y Semestres → Tiempos → Traslados entre CUR e instituto',row)
+   if(new Set(details.filter(a=>a.id_carrera===row.id_carrera&&a.ano_estudio===row.ano_estudio).map(a=>a.turno)).size>1)add('TURNOS_INCOMPATIBLES','Este año de carrera tiene asignaturas en turnos distintos. Corrige conjuntamente su turno.','Asignación académica → Años de carrera y turnos → Turno',row)
+   if(!Number.isInteger(year?.cantidad_estudiantes)||year.cantidad_estudiantes<1)add('ESTUDIANTES_PENDIENTES','Falta la cantidad de estudiantes de este año.','Asignación académica → Años de carrera y turnos',row)
+   if(!year?.sede)add('SEDE_PENDIENTE','Falta indicar la sede de este año.','Asignación académica → Años de carrera y turnos',row)
+   if(saturday&&row.turno==='encuentros'&&sites&&year?.sede&&!travelSites.includes(normalize(year.sede)))add('SEDE_ANO_NO_RECONOCIDA',`La sede «${year.sede}» de este año no coincide con las sedes configuradas para traslados. Revisa los nombres; no se supone que sean el mismo lugar.`,'Asignación académica → Años de carrera y turnos y Semestres → Configuración de tiempos del semestre → Traslados entre CUR e instituto',row)
    const matches=grids.filter(g=>g.turno===row.turno)
-   if(matches.length!==1)add('TIEMPOS_PENDIENTES',matches.length?'Hay varias configuraciones para este turno; falta resolver cuál corresponde a este año.':'Faltan los tiempos de clase del turno.','Semestres → Tiempos de clase',row)
+   if(matches.length!==1)add('TIEMPOS_PENDIENTES',matches.length?'Hay varias configuraciones para este turno; falta resolver cuál corresponde a este año.':'Faltan los tiempos de clase del turno.','Semestres → Configuración de tiempos del semestre de clase',row)
    else try{
     const sessions=turnSessions(matches[0])
     if(!sessions.sesiones_semanales_regla_general)add('FRECUENCIA_PENDIENTE','La frecuencia semanal de este turno sigue pendiente de definición; no se deduce de las horas semestrales.','Reglas académicas del turno',row)
-    else if(sessions.capacidad_sesiones_sin_solapar<details.filter(a=>a.id_carrera===row.id_carrera&&a.ano_estudio===row.ano_estudio).length*sessions.sesiones_semanales_regla_general)add('TIEMPO_INSUFICIENTE','Los tiempos configurados no alcanzan para las dos sesiones de 90 minutos por asignatura.','Semestres → Tiempos de clase',row)
-   }catch{add('TIEMPOS_INVALIDOS','Los tiempos del turno no cumplen las duraciones acordadas.','Semestres → Tiempos de clase',row)}
+    else if(sessions.capacidad_sesiones_sin_solapar<details.filter(a=>a.id_carrera===row.id_carrera&&a.ano_estudio===row.ano_estudio).length*sessions.sesiones_semanales_regla_general)add('TIEMPO_INSUFICIENTE','Los tiempos configurados no alcanzan para las dos sesiones de 90 minutos por asignatura.','Semestres → Configuración de tiempos del semestre de clase',row)
+   }catch{add('TIEMPOS_INVALIDOS','Los tiempos del turno no cumplen las duraciones acordadas.','Semestres → Configuración de tiempos del semestre de clase',row)}
   }
   if(!row.teachers.asignacion.docentes.length||row.teachers.asignacion.docentes.some(id=>!row.teachers.disponibles.some(d=>d.id===id&&d.activo)))add('DOCENTES_PENDIENTES','Faltan docentes asociados o hay docentes inactivos.','Asignación académica → Corregir',row)
   if(row.components?.vigente===false)add('COMPONENTES_DESACTUALIZADOS','Revisa la distribución de teoría y práctica después de los cambios académicos.','Asignación académica → Teoría y práctica',row)
@@ -87,7 +94,7 @@ export function preparationReview({semester,details,years,rooms,grids,restrictio
    if(sessions&&row.teachers.asignacion.docentes.length){
     for(const part of row.components?.componentes||[{tipo:'general',docentes:row.teachers.asignacion.docentes,sesiones:2}]){
     const capacity=restrictionCapacity(sessions.candidatos,part.docentes,row.restricciones?.filter(r=>part.docentes.includes(r.id_docente)))
-    if(capacity<part.sesiones)add('RESTRICCIONES_SIN_TIEMPO',`Con las restricciones comunicadas quedan ${capacity} sesiones de 90 minutos sin solaparse para esta asignatura; se necesitan ${part.sesiones} (${part.tipo}). Revisa los tiempos y solicita a los directores de departamento revisar las restricciones. No se retiran automáticamente.`,'Semestres → Tiempos y Restricciones docentes',row)
+    if(capacity<part.sesiones)add('RESTRICCIONES_SIN_TIEMPO',`Con las restricciones comunicadas quedan ${capacity} sesiones de 90 minutos sin solaparse para esta asignatura; se necesitan ${part.sesiones} (${part.tipo}). Revisa los tiempos y solicita a los directores de departamento revisar las restricciones. No se retiran automáticamente.`,'Semestres → Configuración de tiempos del semestre y Restricciones docentes',row)
     }
    }
   }
@@ -95,7 +102,7 @@ export function preparationReview({semester,details,years,rooms,grids,restrictio
   if(!row.needs.definidas)add('NECESIDADES_PENDIENTES','Falta revisar el tipo de aula requerido.','Asignación académica → Necesidades',row)
   else if(year?.sede&&Number.isInteger(year.cantidad_estudiantes)&&year.cantidad_estudiantes>0){
    const compatible=r=>r.estado==='activo'&&r.capacidad>=year.cantidad_estudiantes&&(!row.needs.tipo_espacio||r.tipo===row.needs.tipo_espacio)
-   if(!rooms.some(r=>compatible(r)&&r.sede&&normalize(r.sede)===normalize(year.sede)))add('ESPACIO_PENDIENTE',rooms.some(r=>compatible(r)&&!r.sede)?'Hay espacios compatibles sin sede registrada; completa el inventario para comprobarlos.':'No se encontró un espacio activo en la sede con capacidad y tipo compatibles.','Espacios → Inventario y Asignación académica → Necesidades',row)
+   if(!rooms.some(r=>compatible(r)&&r.sede&&normalize(r.sede)===normalize(year.sede)))add('ESPACIO_PENDIENTE',rooms.some(r=>compatible(r)&&!r.sede)?'Hay espacios compatibles sin sede registrada; completa el inventario para comprobarlos.':'No se encontró un espacio activo en la sede con capacidad y tipo compatibles.','Pabellones y aulas → Inventario y Asignación académica → Necesidades',row)
   }
  }
  return {...version,id_periodo:semester.id_periodo,semestre:semester.nombre,consultado_en:new Date().toISOString(),alcance:'Carreras autorizadas para tu usuario',asignaturas:details.length,anos:checkedYears.size,reglas_consecutivas:rules.filter(r=>r.activa).length,restricciones_comunicadas:restrictions.filter(r=>r.activa!==false).length,pendientes:findings,preparacion_sin_pendientes:findings.length===0,habilita_generacion:false,aviso:'Revisión orientativa de datos consultados. No comprueba la viabilidad global, no reserva espacios y no genera ni aprueba horarios. Actualiza después de corregir.'}

@@ -85,7 +85,7 @@ export default function BorradoresPage({ periodId, canPlan = false }) {
       c.abort()
       generation.current++
     }
-  }, [periodId, selected, attempt])
+  }, [periodId, selected, attempt, canPlan])
 
   async function run(path, payload, onSuccess) {
     const g = generation.current
@@ -132,6 +132,7 @@ export default function BorradoresPage({ periodId, canPlan = false }) {
 
   async function save(e) {
     e.preventDefault()
+    if (busy || !canPlan || !detail?.semestre_activo) return
     const payload = {
       id: selected,
       revision: detail.borrador.revision,

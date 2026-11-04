@@ -12,17 +12,19 @@ export default function CarrerasPage({ canManage, onChanged, manageDepartments =
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
+  const [loadFailed, setLoadFailed] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
 
   const load = useCallback(async (signal) => {
     setLoading(true)
+    setLoadFailed(false)
     setError('')
     try {
       const [data, organization] = await Promise.all([api('/carreras', { signal }), manageDepartments ? api('/departamentos', { signal }) : Promise.resolve(null)])
       if (!signal?.aborted) { setRows(data); setDepartments(organization) }
     } catch (e) {
-      if (!signal?.aborted) setError(e.message)
+      if (!signal?.aborted) { setError(e.message); setLoadFailed(true); setRows([]); setDepartments(null); setForm(null) }
     } finally {
       if (!signal?.aborted) setLoading(false)
     }
@@ -34,29 +36,23 @@ export default function CarrerasPage({ canManage, onChanged, manageDepartments =
     return () => c.abort()
   }, [load])
 
+  useEffect(() => { if (!canManage) setForm(null) }, [canManage])
+
   const field = (name, value) =>
     setForm(current => ({ ...current, [name]: value }))
 
   async function save(event) {
     event.preventDefault()
-    if (busy) return
+    if (busy || loading || loadFailed || !canManage || !form) return
+    if (manageDepartments && !departments?.departamentos.some(d => d.id === Number(form.departamento))) {
+      setError('Selecciona el departamento de la carrera antes de guardarla.')
+      return
+    }
     setBusy(true)
     setError('')
     setMessage('')
     try {
-      const result = await api('/carreras', { method: form.id ? 'PATCH' : 'POST', data: { nombre: form.nombre, ...(form.id ? { id: form.id, estado: form.estado } : {}) } })
-      const savedId = form.id || result.id
-      if (manageDepartments) {
-        setForm(current => ({...current, id: savedId, estado: current.estado || 'activo'}))
-        try {
-          const latest = await api('/departamentos')
-          const relation = latest.carreras.find(c => c.id_carrera === savedId)
-          if (relation?.id_departamento !== Number(form.departamento)) {
-            if ((relation?.revision || 0) !== (form.revisionDepartamento || 0)) throw new Error('La relación de departamento cambió. Cierra el formulario y consulta nuevamente antes de editar.')
-            await api('/departamentos/carrera', {method:'PATCH',data:{id_carrera:savedId,id_departamento:Number(form.departamento),revision:relation?.revision || 0}})
-          }
-        } catch (error) { throw new Error('La carrera se guardó, pero su departamento no: ' + error.message) }
-      }
+      await api('/carreras', { method: form.id ? 'PATCH' : 'POST', data: { nombre: form.nombre, ...(form.id ? { id: form.id, estado: form.estado } : {}), ...(manageDepartments ? {id_departamento:Number(form.departamento),revision_departamento:form.revisionDepartamento || 0} : {}) } })
       setMessage(form.id ? 'Carrera actualizada.' : 'Carrera registrada.')
       setForm(null)
       await load()
@@ -83,7 +79,7 @@ export default function CarrerasPage({ canManage, onChanged, manageDepartments =
         {canManage && (
           <button
             className="primary"
-            disabled={busy}
+            disabled={busy || loading || loadFailed}
             onClick={() => {
               setForm(empty())
               setMessage('')
@@ -174,7 +170,7 @@ export default function CarrerasPage({ canManage, onChanged, manageDepartments =
         <button
           className="secondary"
           disabled={busy || loading}
-          onClick={() => load()}
+          onClick={() => { setForm(null); load() }}
           style={{ height: '48px', marginTop: 'auto' }}
         >
           <RotateCw size={14} aria-hidden="true" />
@@ -184,6 +180,8 @@ export default function CarrerasPage({ canManage, onChanged, manageDepartments =
 
       {loading ? (
         <p role="status">Cargando carreras…</p>
+      ) : loadFailed ? (
+        <p className="notice">No se pudo cargar la lista. Pulsa «Actualizar lista» para volver a intentarlo.</p>
       ) : (
         <div className="table-scroll">
           <table>

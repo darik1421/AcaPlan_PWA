@@ -4,7 +4,7 @@ import NecesidadesAsignacion from './NecesidadesAsignacion'
 import { useEffect, useState } from 'react'
 import { api } from '../../services/management'
 
-export default function AsignacionesImportadas({ periodId, revision }) {
+export default function AsignacionesImportadas({ periodId, revision, onDataChanged }) {
   const [editing, setEditing] = useState(null)
   const [message, setMessage] = useState('')
   const [needs, setNeeds] = useState(null)
@@ -90,6 +90,7 @@ export default function AsignacionesImportadas({ periodId, revision }) {
               'Corrección guardada. Se actualizaron los docentes y las horas de la asignación.'
             )
             setAttempt(n => n + 1)
+            onDataChanged?.()
           }}
         />
       )}
@@ -104,6 +105,7 @@ export default function AsignacionesImportadas({ periodId, revision }) {
             setComponents(null)
             setMessage('Distribución guardada.')
             setAttempt(n => n + 1)
+            onDataChanged?.()
           }}
         />
       )}
@@ -118,6 +120,7 @@ export default function AsignacionesImportadas({ periodId, revision }) {
             setNeeds(null)
             setMessage('Necesidades de aula guardadas.')
             setAttempt(n => n + 1)
+            onDataChanged?.()
           }}
         />
       )}
