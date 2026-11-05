@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { api } from '../../services/management'
 import { Plus, RefreshCw, Pencil, Power } from 'lucide-react'
 
@@ -17,23 +17,31 @@ export default function PeriodsPage({ canManage, onChanged }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const generation = useRef(0)
+  useEffect(() => {
+    generation.current++
+    setBusy(false)
+    setMessage('')
+    return () => { generation.current++ }
+  }, [canManage])
 
   async function load(signal) {
+    const current = generation.current
     setLoading(true)
     setLoadFailed(false)
     setError('')
     try {
       const data = await api('/periods', { signal })
-      if (!signal?.aborted) setRows(data)
+      if (!signal?.aborted && current === generation.current) setRows(data)
     } catch (e) {
-      if (!signal?.aborted) {
+      if (!signal?.aborted && current === generation.current) {
         setError(e.message)
         setLoadFailed(true)
         setRows([])
         setForm(null)
       }
     } finally {
-      if (!signal?.aborted) setLoading(false)
+      if (!signal?.aborted && current === generation.current) setLoading(false)
     }
   }
 
@@ -41,7 +49,7 @@ export default function PeriodsPage({ canManage, onChanged }) {
     const c = new AbortController()
     load(c.signal)
     return () => c.abort()
-  }, [])
+  }, [canManage])
 
   useEffect(() => {
     if (!canManage) {
@@ -59,19 +67,21 @@ export default function PeriodsPage({ canManage, onChanged }) {
       setError('La fecha inicial debe ser anterior a la final.')
       return
     }
+    const current = generation.current
     setBusy(true)
     setError('')
     setMessage('')
     try {
       await api('/periods', { method: 'POST', data: form })
+      if (current !== generation.current) return
       setForm(null)
       setMessage('Semestre guardado.')
       await load()
-      onChanged()
+      if (current === generation.current) onChanged?.()
     } catch (e) {
-      setError(e.message)
+      if (current === generation.current) setError(e.message)
     } finally {
-      setBusy(false)
+      if (current === generation.current) setBusy(false)
     }
   }
 
@@ -88,6 +98,7 @@ export default function PeriodsPage({ canManage, onChanged }) {
       )
     )
       return
+    const current = generation.current
     setBusy(true)
     setError('')
     setMessage('')
@@ -96,13 +107,14 @@ export default function PeriodsPage({ canManage, onChanged }) {
         method: 'POST',
         data: { id: row.id_periodo, active: !row.es_activo },
       })
+      if (current !== generation.current) return
       setMessage('Semestre activo actualizado.')
       await load()
-      onChanged()
+      if (current === generation.current) onChanged?.()
     } catch (e) {
-      setError(e.message)
+      if (current === generation.current) setError(e.message)
     } finally {
-      setBusy(false)
+      if (current === generation.current) setBusy(false)
     }
   }
 

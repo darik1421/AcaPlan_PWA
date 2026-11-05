@@ -1,15 +1,29 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../../services/management'
 import { publicationCsv } from './publication-csv'
+import { orderedScheduleRows } from '../../lib/schedule-order'
 import { RefreshCw, Download } from 'lucide-react'
+
+function readPublications(response, personal) {
+  const list=personal?response?.publicaciones:response
+  if(!Array.isArray(list)||list.some(p=>!p||!Array.isArray(p.filas)||p.filas.some(r=>!r||typeof r.carrera!=='string'||typeof r.inicio!=='string'||typeof r.fin!=='string'||!Array.isArray(r.docentes)||r.docentes.some(d=>typeof d!=='string'))))throw new Error('No se pudieron leer los horarios completos. Actualiza la consulta.')
+  return list
+}
+
+function validFilters(filters, publications) {
+  const rows = publications.flatMap(p=>p.filas)
+  const career = rows.some(r=>r.carrera===filters.career) ? filters.career : ''
+  const year = rows.some(r=>(!career||r.carrera===career)&&String(r.ano)===filters.year) ? filters.year : ''
+  return {career,year}
+}
 
 export default function HorariosPublicados({ personal = false }) {
   const [data, setData] = useState(null),
     [error, setError] = useState(''),
     [attempt, setAttempt] = useState(0),
-    [career, setCareer] = useState(''),
-    [year, setYear] = useState(''),
+    [filters, setFilters] = useState({career:'',year:''}),
     [busy, setBusy] = useState(false)
+  const {career,year} = filters
   const [identity, setIdentity] = useState(null)
   const generation = useRef(0)
   const endpoint = personal ? '/horarios/personal' : '/horarios/publicados'
@@ -23,7 +37,7 @@ export default function HorariosPublicados({ personal = false }) {
     setIdentity(null)
     api(endpoint, { signal: c.signal })
       .then(d => {
-        if (!c.signal.aborted) { setData(personal ? d.publicaciones : d); if (personal) setIdentity(d) }
+        if (!c.signal.aborted) { const publications=readPublications(d,personal); setData(publications); setFilters(current => validFilters(current,publications)); if (personal) setIdentity(d) }
       })
       .catch(e => {
         if (!c.signal.aborted) setError(e.message)
@@ -31,26 +45,15 @@ export default function HorariosPublicados({ personal = false }) {
     return () => { c.abort(); generation.current++ }
   }, [attempt, endpoint, personal])
 
-  useEffect(() => {
-    if (!data) return
-    const rows = data.flatMap(p => p.filas)
-    const currentCareer = rows.some(r => r.carrera === career) ? career : ''
-    setCareer(currentCareer)
-    setYear(current => rows.some(r => (!currentCareer || r.carrera === currentCareer) && String(r.ano) === current) ? current : '')
-  }, [data, career])
 
   const visible = rows =>
     rows.filter(r => (!career || r.carrera === career) && (!year || String(r.ano) === year))
 
-  const weeklyRows = publications => publications.flatMap(p => p.filas).sort((a, b) => {
-    const days = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo']
-    const day = value => days.indexOf(String(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es'))
-    return day(a.dia) - day(b.dia) || a.inicio.localeCompare(b.inicio) || a.carrera.localeCompare(b.carrera)
-  })
+  const weeklyRows = publications => orderedScheduleRows(publications.flatMap(p => p.filas))
   const displayed = personal && data?.length ? [{
     id: 'personal', nombre: 'Mi horario semanal', semestre: [...new Set(data.map(p => p.semestre))].join(', '),
     fecha: data.reduce((latest, p) => p.fecha > latest ? p.fecha : latest, data[0].fecha), filas: weeklyRows(data),
-  }] : data
+  }] : data?.map(p => ({...p, filas: orderedScheduleRows(p.filas)}))
 
   async function download(id) {
     if (busy) return
@@ -59,10 +62,11 @@ export default function HorariosPublicados({ personal = false }) {
     setError('')
     try {
       const response = await api(endpoint),
-        current = personal ? response.publicaciones : response,
+        current = readPublications(response,personal),
         publication = personal ? (current.length ? { filas: weeklyRows(current) } : null) : current.find(p => p.id === id)
       if (currentGeneration !== generation.current) return
       setData(current)
+      setFilters(filters => validFilters(filters,current))
       if (personal) setIdentity(response)
       if (!publication)
         throw new Error('La publicación cambió o perdió vigencia. Consulta el horario actualizado.')
@@ -114,7 +118,7 @@ export default function HorariosPublicados({ personal = false }) {
           <div className="filter-grid" style={{ marginBottom: '24px' }}>
             <label className="filter-card">
               <span>Carrera publicada</span>
-              <select disabled={busy} value={career} onChange={e => { setCareer(e.target.value); setYear('') }}>
+              <select disabled={busy} value={career} onChange={e => setFilters({career:e.target.value,year:''})}>
                 <option value="">Todas</option>
                 {[...new Set(data.flatMap(p => p.filas.map(r => r.carrera)))].sort().map(c => (
                   <option key={c}>{c}</option>
@@ -123,7 +127,7 @@ export default function HorariosPublicados({ personal = false }) {
             </label>
             <label className="filter-card">
               <span>Año publicado</span>
-              <select disabled={busy} value={year} onChange={e => setYear(e.target.value)}>
+              <select disabled={busy} value={year} onChange={e => setFilters(current=>({...current,year:e.target.value}))}>
                 <option value="">Todos</option>
                 {[...new Set(data.flatMap(p => p.filas.filter(r => !career || r.carrera === career).map(r => r.ano)))]
                   .sort((a, b) => a - b)
@@ -170,7 +174,7 @@ export default function HorariosPublicados({ personal = false }) {
                 </button>
               </div>
 
-              <div className="table-scroll">
+              <div className="table-scroll published-timetable">
                 <table>
                   <caption>Horario vigente</caption>
                   <thead>
@@ -189,7 +193,7 @@ export default function HorariosPublicados({ personal = false }) {
                         <td>{r.carrera} · Año {r.ano}</td>
                         <td><strong>{r.asignatura}</strong> · {r.componente}</td>
                         <td>{r.docentes.join(', ')}</td>
-                        <td>{r.dia}</td>
+                        <td><span className="schedule-day">{r.dia}</span></td>
                         <td>{r.inicio}–{r.fin}</td>
                         <td>{r.aula} · {r.sede}</td>
                       </tr>

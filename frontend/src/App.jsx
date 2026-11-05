@@ -1,4 +1,5 @@
 import AppLayout from './components/AppLayout'
+import AccessPending from './components/AccessPending'
 import AuthProvider from './features/auth/AuthProvider'
 import { useAuth } from './features/auth/AuthContext'
 import LoginPage from './features/auth/LoginPage'
@@ -11,7 +12,7 @@ const loadWorkspace = () => import('./pages/DashboardPage')
 
 function Screens() {
   const { session, profile, loading, recovery, error, retry, logout } = useAuth()
-  if (loading) return <AppLayout><section className="recovery-wrap"><p role="status">Verificando tu acceso…</p></section></AppLayout>
+  if (loading) return <AccessPending message="Verificando tu acceso…" />
   if (recovery || window.location.pathname === '/recuperar') return <AppLayout><RecoveryPage /></AppLayout>
   if (!session) return <LoginPage />
   if (!profile) return <AppLayout><section className="recovery-wrap"><div className="auth-card">

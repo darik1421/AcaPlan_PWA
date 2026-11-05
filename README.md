@@ -4,16 +4,17 @@ Aplicación web progresiva para la gestión de horarios académicos de la UNAN-M
 
 ## Estado actual
 
-La PWA está en adaptación al flujo acordado en octubre. Se conservan los catálogos y se sustituyen las operaciones anteriores por etapas; los cierres de septiembre que se citan abajo son antecedentes. Para conocer las funciones activas y las retiradas, consulta primero [la actualización del Sprint 2](docs/sprint-2.md).
+Para continuar el desarrollo, consultar primero [el contexto vigente de traspaso](docs/CONTEXTO_ACTUAL_PWA.md). Su copia en Word es [AcaPlan Traspaso Completo Proyecto](docs/AcaPlan_Traspaso_Completo_Proyecto.docx), reemplazada con el estado del 5 de noviembre de 2026.
 
-Base local con React, JavaScript, HTML, CSS, Node.js y cliente de Supabase.
-Sprint 1 implementado: acceso, recuperación, cierre de sesión, cuentas y períodos. SQL compartido y Edge Function móvil desplegados en Supabase; redirecciones de recuperación local configuradas. Se verificaron el acceso administrativo, las consultas y el cierre con una sesión real. Las pruebas que crean datos y la aceptación completa en teléfono se pospusieron por decisión del responsable. Consulta [docs/sprint-1.md](docs/sprint-1.md).
-La comprobación del backend no comprueba el acceso a la base de datos.
+Actualizado al 5 de noviembre de 2026. La PWA usa React, JavaScript, HTML/CSS, Node.js y Supabase. Mantiene el diseño actual y el flujo por departamentos: Administrador y Director tienen acceso global; los directores de departamento registran restricciones y aprueban su borrador; los coordinadores de carrera entregan y corrigen asignaciones mediante un único Excel; los docentes consultan sus horarios publicados.
 
-Módulos H06-H12 corregidos: carreras, asignaturas, espacios, secciones, bloques, disponibilidad y programación académica. Consulta [la reparación y sus pruebas](docs/reparacion-sprint-2.md). El SQL consolidado local sustituye los scripts parciales recibidos; no volver a ejecutarlos.
-El alcance y los criterios de cierre del sprint 2 están en [docs/sprint-2.md](docs/sprint-2.md). H12 pertenece al sprint 3.
+Están implementados acceso y cuentas, semestres, carreras/departamentos, aulas completas, entrega académica, restricciones, borradores, revisión, aprobación departamental, publicación y horario personal. El generador de búsqueda MRV recibido de Oneyker está conectado a las asignaciones importadas y al guardado transaccional de sus clases. Consulta [la conexión del generador y sus límites](docs/conexion-generador-2026-11-04.md) y [la revisión de los cambios recibidos](docs/revision-cambios-recibidos-2026-11-04.md).
+
+Las pruebas automáticas y las comprobaciones aisladas no sustituyen la aceptación con archivos institucionales. Siguen pendientes las plantillas definitivas, confirmar las frecuencias semanales de los turnos no regulares y evaluar el volumen real. La recuperación de contraseña requiere su aceptación final con correo. Los documentos de sprints conservan antecedentes históricos; no todos describen el estado vigente.
 
 ## Estructura
+
+La documentación vigente parte de este README, la [conexión del generador](docs/conexion-generador-2026-11-04.md), la [prueba del recorrido completo](docs/verificacion-recorrido-generado-2026-11-05.md) y la [revisión visual](docs/revision-visual-2026-11-05.md). Los Word, ejemplos, audio y documentos de sprints en `docs/` se conservan como referencias y antecedentes; sus fechas importan al interpretar el flujo. `database.local/` contiene migraciones y comprobaciones locales excluidas de Git. `tmp/` y `.document-work/` son espacios temporales, no partes de la aplicación.
 
 ```text
 ACAPLANWEB/
@@ -36,6 +37,7 @@ ACAPLANWEB/
 │   ├── .env                  # Local, excluido de Git
 │   ├── .env.example
 │   └── package.json
+├── shared/                  # Motor MRV compartido con el backend
 ├── .gitignore
 ├── package.json              # Comandos desde la raíz
 └── Documentación del proyecto
@@ -43,7 +45,7 @@ ACAPLANWEB/
 
 ## Instalar
 
-Usar Node.js 24 LTS (versión verificada: 24.21.0, indicada en .nvmrc). El frontend usa Vite 8.3.1 y @vitejs/plugin-react 6.1.1. El lockfile conserva las versiones resueltas. Reiniciar las terminales y los servidores de desarrollo después de actualizar Node.
+Usar Node.js 24 LTS (versión verificada: 24.21.0, indicada en .nvmrc). El frontend usa Vite 8.3.6 y @vitejs/plugin-react 6.1.1. El lockfile conserva las versiones resueltas. Reiniciar las terminales y los servidores de desarrollo después de actualizar Node.
 
 Desde la raíz:
 
@@ -64,7 +66,7 @@ Se admite una clave anon o publishable. Las variables VITE_ son visibles en el n
 
 Se utilizan únicamente frontend/.env y backend/.env; el .env de la raíz fue eliminado.
 El backend utiliza HOST=127.0.0.1 y PORT=3001. Para verificar sesiones necesita SUPABASE_URL y SUPABASE_ANON_KEY del mismo proyecto. El endpoint /api/health sigue siendo público.
-La creación de cuentas requiere SUPABASE_SERVICE_ROLE_KEY exclusivamente en backend/.env.
+La creación de cuentas y la confirmación de propuestas requieren SUPABASE_SERVICE_ROLE_KEY exclusivamente en backend/.env.
 
 ## Ejecutar
 
@@ -93,16 +95,15 @@ npm run build
 npm run test:smoke
 ```
 
-La compilación se guarda en frontend/dist. Para producción falta configurar HTTPS y el proxy de /api hacia el backend. Vite preview permite inspeccionar la compilación, pero no sustituye esa configuración de producción.
+La compilación se guarda en frontend/dist. El despliegue del backend debe incluir también la carpeta shared/ situada en la raíz; allí está el motor usado por el worker. Para producción falta configurar HTTPS y el proxy de /api hacia el backend. Vite preview permite inspeccionar la compilación, pero no sustituye esa configuración de producción.
 
 Con los archivos SQL locales y su dependencia instalada (`npm --prefix database.local ci`), `npm run test:sql` comprueba las migraciones en memoria sin tocar Supabase.
 
 ## Base de datos y archivos locales
 
-La PWA y la aplicación React Native son proyectos separados que comparten Supabase.
-La autenticación verifica el correo de Supabase Auth contra un perfil activo en usuarios. Falta comprobar las políticas RLS y el flujo completo con cuentas reales.
-La gestión usa la RPC pwa_sprint1, aplicada en el proyecto compartido. Los scripts locales originales se retiraron por decisión del responsable; no son necesarios para ejecutar la PWA contra ese proyecto. Para preparar otra base se necesita una migración actualizada del esquema. Consulta docs/sprint-1.md.
-No aplicar migraciones o cambios de roles sin comprobar la compatibilidad con la app móvil.
+La PWA y la app React Native son proyectos independientes. Esta versión se mantiene en el proyecto Supabase configurado en sus archivos de entorno; no depende del backend móvil.
+La autenticación verifica Supabase Auth y el perfil activo de usuarios. Los permisos se comprueban también en las RPC; no dependen únicamente de los botones de la interfaz. El flujo de acceso, aprobación y publicación se verificó con cuentas ficticias temporales: [alcance de la prueba](docs/verificacion-flujo-2026-11-04.md).
+Las migraciones locales son para revisión y pruebas; no deben aplicarse indiscriminadamente sobre una base existente ni usarse como un esquema inicial completo. El generador requiere la migración generador-flujo-actual.sql, ya aplicada en el proyecto actual. Para preparar otra base debe conservarse y revisarse la cadena de migraciones correspondiente.
 
 .env, frontend/.env, backend/.env, Supabase.sql, database.local/, node_modules y dist están excluidos de Git.
 Supabase.sql es un esquema local de referencia, no una migración automática.
@@ -110,4 +111,4 @@ Los dos .gitignore se conservan: el de la raíz aplica a todo el repositorio y e
 
 La documentación de contexto está en AcaPlan.txt y las historias y sprints en AcaPlan_PWA_Historias_y_Planificacion_SCRUM.docx.
 
-Adaptación vigente al 9 de octubre de 2026: el flujo acordado utiliza sesiones regulares de 90 minutos formadas por dos bloques de 45. Las configuraciones por turno y sus vínculos con grupos están disponibles; el resumen comprueba posiciones temporales, sin generar horarios. Se retiraron los formularios y las rutas de escritura del modelo anterior, la pantalla de preferencias y la confirmación de importaciones antiguas. El ejemplo XLSX y su historial se consultan dentro de programación. Las plantillas definitivas, la persistencia adaptada, las restricciones comunicadas y el motor generador siguen pendientes. Consulta [el estado actual](docs/sprint-2.md) y [el traspaso para continuar](docs/AcaPlan_PWA_Traspaso_para_Gemini.docx). El registro del [Sprint 3 anterior](docs/sprint-3.md) es histórico, no una certificación del flujo nuevo.
+Regla regular vigente: dos sesiones semanales de 90 minutos, formadas por bloques contiguos de 45. Las horas semestrales del Excel no equivalen a sesiones semanales. Nocturno y encuentros mantienen 60 minutos por sesión y quedan pendientes de confirmar su frecuencia; el generador no la inventa.

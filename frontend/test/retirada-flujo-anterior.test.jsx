@@ -6,10 +6,11 @@ const mocks=vi.hoisted(()=>({api:vi.fn()}))
 vi.mock('../src/services/management',()=>({api:mocks.api}))
 afterEach(()=>{cleanup();mocks.api.mockReset()})
 
-test('La disponibilidad anterior se consulta sin permisos de tiempo libre ni bloqueo por ausencia',async()=>{
- mocks.api.mockImplementation(async path=>path==='/docentes'?[{id_docente:1,nombres:'Ana'}]:path==='/restricciones/consecutivas/contexto'?{asignaturas:[],reglas:[],huella:'a'.repeat(32)}:[])
+test('Restricciones retira las consultas de disponibilidad anterior y no exige declarar ausencia de restricciones',async()=>{
+ mocks.api.mockImplementation(async path=>path==='/restricciones/unificadas'?{version:2,docentes:[],restricciones:[]}:path==='/restricciones/consecutivas/contexto'?{asignaturas:[],reglas:[],huella:'a'.repeat(32)}:[])
  render(<DisponibilidadPage context={{activePeriod:{id_periodo:1},canManageDisponibilidad:true}}/> )
- await screen.findByText('No hay intervalos anteriores registrados para este docente.')
+ await screen.findByText('No hay restricciones comunicadas en este semestre.')
+ expect(mocks.api.mock.calls.some(([path])=>path==='/disponibilidad'||path==='/docentes')).toBe(false)
  expect(screen.queryByRole('button',{name:'Nuevo Permiso'})).toBeNull()
  expect(screen.queryByText(/no se le podrán asignar clases/)).toBeNull()
  expect(mocks.api.mock.calls.every(([path,options])=>!options?.method||(path==='/restricciones/consecutivas/contexto'&&options.method==='POST'))).toBe(true)

@@ -3,7 +3,7 @@ import { api } from '../../services/management'
 import TurnoAno from './TurnoAno'
 import { RefreshCw } from 'lucide-react'
 
-export default function DatosAnos({ periodId, revision, onChanged }) {
+export default function DatosAnos({ periodId, revision, onChanged, onDataChanged }) {
   const [turnRow, setTurnRow] = useState(null)
   const [rows, setRows] = useState([]),
     [form, setForm] = useState(null),
@@ -69,6 +69,7 @@ export default function DatosAnos({ periodId, revision, onChanged }) {
         },
       })
       if (current === generation.current) {
+        onDataChanged?.()
         setMessage('Datos del año guardados.')
         setAttempt(n => n + 1)
       }

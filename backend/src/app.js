@@ -22,11 +22,14 @@ export function createApp({ authenticateRequest = authenticate, management = cre
       'GET /api/horarios/personal': 'publications.personal',
       'POST /api/borradores/consultar': 'drafts.context',
       'POST /api/borradores': 'drafts.create',
+      'POST /api/borradores/versiones': 'drafts.version',
       'POST /api/borradores/detalle': 'draftWork.context',
       'POST /api/borradores/clase': 'draftWork.save',
       'POST /api/borradores/fijar': 'draftWork.fix',
       'POST /api/borradores/retirar': 'draftWork.retire',
       'POST /api/borradores/revisar': 'draftWork.review',
+      'POST /api/generador/proponer': 'generation.propose',
+      'POST /api/generador/guardar': 'generation.save',
       'POST /api/asignacion-academica/componentes': 'components.context',
       'PATCH /api/asignacion-academica/componentes': 'components.save',
       'POST /api/preparacion/diagnostico': 'preparation.review',
@@ -86,7 +89,7 @@ export function createApp({ authenticateRequest = authenticate, management = cre
     if (route) {
       try {
         const profile = await authenticateRequest(request)
-        const data = request.method === 'GET' ? {} : await readBody(request, ['preparation.preview','preparation.confirm'].includes(route) ? 2900000 : 16384)
+        const data = request.method === 'GET' ? {} : await readBody(request, ['preparation.preview','preparation.confirm'].includes(route) ? 2900000 : route.startsWith('generation.') ? 512000 : 16384)
         const result = await management.execute(request, profile, route, data)
         response.writeHead(200)
         response.end(JSON.stringify(result))

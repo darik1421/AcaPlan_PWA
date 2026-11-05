@@ -69,3 +69,11 @@ test('Sesión de recuperación actualiza contraseña y permite volver al acceso'
   expect(mocks.updateUser).toHaveBeenCalledWith({ password:'NuevaClave9!' })
   expect(screen.getByRole('button', { name:'Volver al inicio de sesión' })).toBeTruthy()
 })
+
+test.each([true,false])('Recordarme=%s se aplica antes de solicitar la sesión',async remember=>{
+ mocks.signInWithPassword.mockResolvedValue({error:null})
+ render(<LoginPage/>)
+ if(remember)fireEvent.click(screen.getByLabelText('Recordarme'))
+ fireEvent.submit(screen.getByRole('button',{name:'Iniciar sesión'}).closest('form'))
+ await waitFor(()=>expect(sessionStorage.getItem('acaplan-auth-persistence')).toBe(remember?'local':'session'))
+})

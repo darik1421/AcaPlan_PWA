@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import {authStorage} from './auth-storage'
 
 const url = import.meta.env.VITE_SUPABASE_URL
 const publicKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -24,6 +25,7 @@ export const supabaseConfigured = isPublicConfiguration()
 export const supabase = supabaseConfigured ? createClient(url, publicKey, {
   auth: {
     persistSession: true,
+    storage: authStorage,
     autoRefreshToken: true,
     detectSessionInUrl: true,
     storageKey: 'acaplan-pwa-auth',

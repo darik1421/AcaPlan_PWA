@@ -14,5 +14,16 @@ export function workspacePages(context) {
 }
 export function workspacePage(requested, context) {
   const pages = workspacePages(context)
+  if (requested == null) {
+    if (context?.canManageBloques && pages.has('generador')) return 'generador'
+    if (context?.esDirectorDepartamento && pages.has('borradores')) return 'borradores'
+    if (context?.canManageSecciones && pages.has('programacion')) return 'programacion'
+  }
   return pages.has(requested) ? requested : pages.has('personal') ? 'personal' : 'publicados'
+}
+
+// Invalida pantallas únicamente cuando cambia el ámbito de acceso, no en cada consulta.
+export function workspaceScope(context) {
+ const flags = Object.keys(context || {}).filter(k=>k.startsWith('can')||k.endsWith('Version')||['isAdmin','esDirectorDepartamento','id_departamento'].includes(k)).sort()
+ return JSON.stringify({flags:flags.map(k=>[k,context[k]]),carreras:[...(context?.carreras||[])].sort((a,b)=>a-b),funciones:[...(context?.funciones||[])].sort()})
 }

@@ -1,11 +1,72 @@
-import {act,cleanup,fireEvent,render,screen,waitFor} from '@testing-library/react'
-import {afterEach,test,expect,vi} from 'vitest'
+import {act,cleanup,fireEvent,render,screen,waitFor,within} from '@testing-library/react'
+import {afterEach,beforeEach,test,expect,vi} from 'vitest'
 import EstadoBorrador from '../src/features/management/EstadoBorrador'
 import HorariosPublicados from '../src/features/management/HorariosPublicados'
 import {publicationCsv} from '../src/features/management/publication-csv'
-const mocks=vi.hoisted(()=>({api:vi.fn()}))
-vi.mock('../src/services/management',()=>({api:mocks.api}))
-afterEach(()=>{cleanup();mocks.api.mockReset()})
+const mocks=vi.hoisted(()=>({api:vi.fn(),review:vi.fn()}))
+vi.mock('../src/services/management',()=>({api:(path,options)=>path==='/borradores/revisar'?mocks.review(path,options):mocks.api(path,options)}))
+beforeEach(()=>mocks.review.mockResolvedValue({completo:true,conflictos:[],pendientes:[]}))
+afterEach(()=>{cleanup();mocks.api.mockReset();mocks.review.mockReset()})
+
+test('Un conflicto entre departamentos se muestra antes de permitir la aprobación',async()=>{
+ mocks.api.mockResolvedValue({estado:'en_revision',version:1,canApprove:true,historial:[]})
+ mocks.review.mockResolvedValueOnce({completo:false,conflictos:[{motivo:'Aula ocupada por otro departamento aprobado'}],pendientes:[]}).mockResolvedValue({completo:true,conflictos:[],pendientes:[]})
+ render(<EstadoBorrador id={1} revision={4} active onChanged={vi.fn()}/>)
+ await screen.findByText('Aula ocupada por otro departamento aprobado')
+ expect(screen.getByRole('button',{name:'Aprobar borrador'}).disabled).toBe(true)
+ expect(screen.getByRole('checkbox').disabled).toBe(true)
+ fireEvent.click(screen.getByRole('button',{name:'Revisar propuesta nuevamente'}))
+ await waitFor(()=>expect(screen.getByRole('checkbox').disabled).toBe(false))
+ expect(screen.getByRole('status').textContent).toBe('Sin conflictos ni pendientes detectados.')
+ fireEvent.click(screen.getByRole('checkbox'))
+ expect(screen.getByRole('button',{name:'Aprobar borrador'}).disabled).toBe(false)
+ expect(mocks.api.mock.calls.some(([path])=>path==='/borradores/transicion')).toBe(false)
+})
+
+test.each([
+ {completo:false,conflictos:[null],pendientes:[]},
+ {completo:false,conflictos:[],pendientes:[{}]},
+ {completo:true,conflictos:[{motivo:42}],pendientes:[]},
+])('Un detalle de revisión incompleto bloquea la aprobación sin romper la pantalla: %j',async review=>{
+ mocks.api.mockResolvedValue({estado:'en_revision',version:1,canApprove:true,historial:[]})
+ mocks.review.mockResolvedValueOnce(review).mockResolvedValue({completo:true,conflictos:[],pendientes:[]})
+ render(<EstadoBorrador id={1} revision={4} active onChanged={vi.fn()}/>)
+ expect((await screen.findByRole('alert')).textContent).toContain('No se pudo comprobar la propuesta completa')
+ expect(screen.getByRole('button',{name:'Aprobar borrador'}).disabled).toBe(true)
+ fireEvent.click(screen.getByRole('button',{name:'Revisar propuesta nuevamente'}))
+ await waitFor(()=>expect(screen.getByRole('checkbox').disabled).toBe(false))
+ expect(screen.getByRole('button',{name:'Aprobar borrador'}).disabled).toBe(true)
+})
+
+test.each([false,true])('Una respuesta incompleta de horarios no rompe la pantalla (personal=%s)',async personal=>{
+ mocks.api.mockResolvedValue(personal?{publicaciones:[{id:1,filas:[{carrera:'Sistemas'}]}]}:{publicaciones:[]})
+ render(<HorariosPublicados personal={personal}/>)
+ expect((await screen.findByRole('alert')).textContent).toContain('No se pudieron leer los horarios completos')
+ expect(screen.queryByRole('table')).toBeNull()
+ mocks.api.mockResolvedValue(personal?{publicaciones:[],vinculado:false}:[])
+ fireEvent.click(screen.getByRole('button',{name:'Actualizar horarios'}))
+ await waitFor(()=>expect(screen.queryByRole('alert')).toBeNull())
+})
+
+test('Una respuesta incompleta del ciclo bloquea sus acciones y permite reconsultar',async()=>{
+ mocks.api.mockResolvedValue({estado:'aprobado',version:2,canPublish:true})
+ render(<EstadoBorrador id={1} revision={4} active onChanged={vi.fn()}/>)
+ expect((await screen.findByRole('alert')).textContent).toContain('No se pudo comprobar el estado')
+ expect(screen.queryByRole('button',{name:'Publicar horario'})).toBeNull()
+ mocks.api.mockResolvedValue({estado:'aprobado',version:2,canPublish:true,historial:[]})
+ fireEvent.click(screen.getByRole('button',{name:'Consultar nuevamente'}))
+ await screen.findByRole('button',{name:'Publicar horario'})
+})
+
+test('Los horarios publicados se leen de lunes a domingo y por hora, aunque lleguen desordenados',async()=>{
+ const base={carrera:'Sistemas',ano:3,asignatura:'Web',componente:'general',docentes:['Ana'],fin:'12:00',aula:'B4',sede:'CUR'}
+ mocks.api.mockResolvedValue([{id:1,nombre:'Tecnología',semestre:'2026',fecha:'2026-11-05',filas:[{...base,dia:'Jueves',inicio:'08:00'},{...base,dia:'Lunes',inicio:'09:40'},{...base,dia:'Miércoles',inicio:'08:00'},{...base,dia:'Lunes',inicio:'08:00'}]}])
+ render(<HorariosPublicados />)
+ const table=await screen.findByRole('table')
+ const rows=within(table).getAllByRole('row').slice(1)
+ expect(rows.map(row=>within(row).getAllByRole('cell')[3].textContent)).toEqual(['Lunes','Lunes','Miércoles','Jueves'])
+ expect(within(rows[0]).getAllByRole('cell')[4].textContent).toContain('08:00')
+})
 
 test('Un director de departamento puede aprobar, pero no recibe el control de publicar',async()=>{
  mocks.api.mockResolvedValue({estado:'aprobado',version:2,historial:[],canPlan:false,canApprove:true,canPublish:false})

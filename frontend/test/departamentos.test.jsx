@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, expect, test, vi } from 'vitest'
 import CarrerasPage from '../src/features/management/CarrerasPage'
 const { api } = vi.hoisted(() => ({api:vi.fn()}))
@@ -49,4 +49,18 @@ test('Retirar la gestión de carreras descarta la edición y no permite recupera
  view.rerender(<CarrerasPage canManage onChanged={vi.fn()}/>)
  expect(screen.queryByRole('button',{name:'Guardar carrera'})).toBeNull()
  expect(api.mock.calls.some(([,options])=>options?.method)).toBe(false)
+})
+
+test('Un guardado de carrera anterior no anuncia éxito ni refresca después de retirar y devolver el permiso',async()=>{
+ let finish
+ api.mockImplementation((_,options)=>options?.method?new Promise(resolve=>{finish=resolve}):Promise.resolve([{id_carrera:1,nombre:'Sistemas',estado:'activo'}]))
+ const changed=vi.fn(),view=render(<CarrerasPage canManage onChanged={changed}/>)
+ fireEvent.click(await screen.findByRole('button',{name:'Editar Sistemas'}))
+ fireEvent.click(screen.getByRole('button',{name:'Guardar carrera'}))
+ view.rerender(<CarrerasPage canManage={false} onChanged={changed}/>)
+ view.rerender(<CarrerasPage canManage onChanged={changed}/>)
+ await act(async()=>{finish({guardado:true})})
+ expect(screen.queryByText('Carrera actualizada.')).toBeNull()
+ expect(screen.queryByRole('button',{name:'Guardar carrera'})).toBeNull()
+ expect(changed).not.toHaveBeenCalled()
 })

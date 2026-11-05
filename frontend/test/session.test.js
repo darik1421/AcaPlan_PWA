@@ -6,6 +6,9 @@ function setup(signOut) {
   localStorage.setItem('acaplan-pwa-auth', 'sesion-de-prueba')
   localStorage.setItem('acaplan-pwa-auth-code-verifier', 'verificador')
   localStorage.setItem('otra-aplicacion', 'conservar')
+  sessionStorage.setItem('acaplan-pwa-auth','sesion-temporal')
+  sessionStorage.setItem('acaplan-pwa-auth-code-verifier','temporal')
+  sessionStorage.setItem('acaplan-auth-persistence','session')
   sessionStorage.setItem('acaplan-recovery', 'id-de-prueba')
   return { auth: { signOut, stopAutoRefresh: vi.fn().mockResolvedValue() },
     storage: localStorage, sessionStorage, navigate: vi.fn() }
@@ -14,6 +17,9 @@ function assertCleared(ctx, destination) {
   expect(localStorage.getItem('acaplan-pwa-auth')).toBeNull()
   expect(localStorage.getItem('acaplan-pwa-auth-code-verifier')).toBeNull()
   expect(sessionStorage.getItem('acaplan-recovery')).toBeNull()
+  expect(sessionStorage.getItem('acaplan-pwa-auth')).toBeNull()
+  expect(sessionStorage.getItem('acaplan-pwa-auth-code-verifier')).toBeNull()
+  expect(sessionStorage.getItem('acaplan-auth-persistence')).toBeNull()
   expect(localStorage.getItem('otra-aplicacion')).toBe('conservar')
   expect(ctx.navigate).toHaveBeenCalledWith(destination)
 }

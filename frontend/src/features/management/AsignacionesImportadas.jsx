@@ -46,6 +46,15 @@ export default function AsignacionesImportadas({ periodId, revision, onDataChang
   const [year, setYear] = useState('')
   const [turn, setTurn] = useState('')
 
+  useEffect(() => { setCareer(''); setYear(''); setTurn('') }, [periodId])
+  useEffect(() => {
+    if (loading) return
+    const current = rows.filter(r => r.id_periodo === periodId)
+    setCareer(value => current.some(r => r.carrera === value) ? value : '')
+    setYear(value => current.some(r => String(r.ano_estudio) === value) ? value : '')
+    setTurn(value => current.some(r => r.turno === value) ? value : '')
+  }, [rows,periodId,loading])
+
   const semesterRows = rows.filter(r => r.id_periodo === periodId)
   const careers = [...new Set(semesterRows.map(r => r.carrera))].sort()
   const years = [...new Set(semesterRows.map(r => String(r.ano_estudio)))].sort(
@@ -68,7 +77,7 @@ export default function AsignacionesImportadas({ periodId, revision, onDataChang
   )
 
   const selectedRecord =
-    visible.find(r => r.id === selectedId) || visible[0] || semesterRows[0] || null
+    visible.find(r => r.id === selectedId) || visible[0] || null
 
   return (
     <div style={{ marginTop: '8px' }}>
@@ -183,10 +192,10 @@ export default function AsignacionesImportadas({ periodId, revision, onDataChang
       ) : loading ? (
         <p role="status">Consultando asignación importada…</p>
       ) : (
-        <div className="two-column-layout">
+        <div className="academic-delivery-layout">
           {/* Columna Izquierda: Tabla de asignaturas */}
           <div>
-            <div className="table-scroll">
+            <div className="table-scroll academic-delivery-table">
               <table>
                 <caption>Entrega recibida para el semestre activo</caption>
                 <thead>
@@ -211,8 +220,8 @@ export default function AsignacionesImportadas({ periodId, revision, onDataChang
                           background: isSelected ? '#EFEEFA' : undefined,
                         }}
                       >
-                        <td>{r.carrera} · Año {r.ano_estudio}</td>
-                        <td>{r.codigo_asignatura} · {r.nombre_asignatura}</td>
+                        <td>{r.carrera}<span className="cell-detail delivery-subline">Año {r.ano_estudio}</span></td>
+                        <td><strong>{r.nombre_asignatura}</strong><span className="cell-detail delivery-subline">{r.codigo_asignatura}</span></td>
                         <td>{r.docentes?.join(', ')}</td>
                         <td>
                           <span className="status-pill active">
@@ -278,8 +287,8 @@ export default function AsignacionesImportadas({ periodId, revision, onDataChang
           </div>
 
           {/* Columna Derecha: Tarjeta de Registro seleccionado (Figma asignaturas_docentes_233_2490) */}
-          <aside className="side-panel-card">
-            <h3 className="card-title">Registro seleccionado</h3>
+          {semesterRows.length > 0 && <details className="side-panel-card delivery-detail">
+            <summary>Detalle de la asignatura seleccionada</summary>
             <p className="card-subtitle">
               {selectedRecord
                 ? 'Detalle y necesidades de la asignatura seleccionada'
@@ -359,7 +368,7 @@ export default function AsignacionesImportadas({ periodId, revision, onDataChang
                 Haz clic sobre cualquier asignatura de la tabla para ver su información y gestionar necesidades.
               </p>
             )}
-          </aside>
+          </details>}
         </div>
       )}
     </div>

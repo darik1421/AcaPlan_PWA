@@ -3,7 +3,7 @@ import {
   solveScheduleAI,
   timeToMinutes,
   intervalsOverlap,
-} from '../src/features/management/schedule-ai-solver'
+} from '../../shared/schedule-ai-solver.js'
 
 describe('Motor Generador de Horarios con IA (schedule-ai-solver)', () => {
   it('convierte horas HH:MM a minutos correctamente', () => {

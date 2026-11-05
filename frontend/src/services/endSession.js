@@ -12,6 +12,9 @@ export async function endSession({ auth, storage, sessionStorage, navigate, time
   finally { clearTimeout(timer) }
   storage.removeItem('acaplan-pwa-auth')
   storage.removeItem('acaplan-pwa-auth-code-verifier')
+  sessionStorage.removeItem('acaplan-pwa-auth')
+  sessionStorage.removeItem('acaplan-pwa-auth-code-verifier')
+  sessionStorage.removeItem('acaplan-auth-persistence')
   sessionStorage.removeItem('acaplan-recovery')
   try { await auth.stopAutoRefresh() } catch { /* No impedir la salida por un fallo del SDK. */ }
   navigate(confirmed ? '/?salida=ok' : '/?salida=local')

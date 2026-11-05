@@ -1,0 +1,215 @@
+{
+  "desktop": [
+    {
+      "page": "Generador de horarios",
+      "body": 1280,
+      "content": {
+        "scroll": 1010,
+        "width": 1010
+      },
+      "heading": "Generador de Horarios con IA",
+      "width": 1280
+    },
+    {
+      "page": "Asignación académica",
+      "body": 1280,
+      "content": {
+        "scroll": 995,
+        "width": 995
+      },
+      "heading": "Asignación académica",
+      "width": 1280
+    },
+    {
+      "page": "Restricciones",
+      "body": 1280,
+      "content": {
+        "scroll": 995,
+        "width": 995
+      },
+      "heading": "Restricciones",
+      "width": 1280
+    },
+    {
+      "page": "Borradores",
+      "body": 1280,
+      "content": {
+        "scroll": 1010,
+        "width": 1010
+      },
+      "heading": "Borradores de horarios",
+      "width": 1280
+    },
+    {
+      "page": "Mi horario",
+      "body": 1280,
+      "content": {
+        "scroll": 1010,
+        "width": 1010
+      },
+      "heading": "Mi horario",
+      "width": 1280
+    },
+    {
+      "page": "Horarios publicados",
+      "body": 1280,
+      "content": {
+        "scroll": 1010,
+        "width": 1010
+      },
+      "heading": "Horarios publicados",
+      "width": 1280
+    },
+    {
+      "page": "Semestres",
+      "body": 1280,
+      "content": {
+        "scroll": 995,
+        "width": 995
+      },
+      "heading": "Semestres académicos",
+      "width": 1280
+    },
+    {
+      "page": "Carreras",
+      "body": 1280,
+      "content": {
+        "scroll": 1010,
+        "width": 1010
+      },
+      "heading": "Gestión de carreras",
+      "width": 1280
+    },
+    {
+      "page": "Pabellones y aulas",
+      "body": 1280,
+      "content": {
+        "scroll": 995,
+        "width": 995
+      },
+      "heading": "Pabellones y aulas",
+      "width": 1280
+    },
+    {
+      "page": "Asignaturas",
+      "body": 1280,
+      "content": {
+        "scroll": 995,
+        "width": 995
+      },
+      "heading": "Gestión de asignaturas",
+      "width": 1280
+    },
+    {
+      "page": "Gestión de Cuentas",
+      "body": 1280,
+      "content": {
+        "scroll": 1010,
+        "width": 1010
+      },
+      "heading": "Gestión de cuentas",
+      "width": 1280
+    }
+  ],
+  "mobile": [
+    {
+      "page": "Generador de horarios",
+      "body": 390,
+      "content": {
+        "scroll": 375,
+        "width": 375
+      },
+      "width": 390
+    },
+    {
+      "page": "Asignación académica",
+      "body": 390,
+      "content": {
+        "scroll": 375,
+        "width": 375
+      },
+      "width": 390
+    },
+    {
+      "page": "Restricciones",
+      "body": 390,
+      "content": {
+        "scroll": 375,
+        "width": 375
+      },
+      "width": 390
+    },
+    {
+      "page": "Borradores",
+      "body": 390,
+      "content": {
+        "scroll": 390,
+        "width": 390
+      },
+      "width": 390
+    },
+    {
+      "page": "Mi horario",
+      "body": 390,
+      "content": {
+        "scroll": 375,
+        "width": 375
+      },
+      "width": 390
+    },
+    {
+      "page": "Horarios publicados",
+      "body": 390,
+      "content": {
+        "scroll": 375,
+        "width": 375
+      },
+      "width": 390
+    },
+    {
+      "page": "Semestres",
+      "body": 390,
+      "content": {
+        "scroll": 375,
+        "width": 375
+      },
+      "width": 390
+    },
+    {
+      "page": "Carreras",
+      "body": 390,
+      "content": {
+        "scroll": 390,
+        "width": 390
+      },
+      "width": 390
+    },
+    {
+      "page": "Pabellones y aulas",
+      "body": 390,
+      "content": {
+        "scroll": 375,
+        "width": 375
+      },
+      "width": 390
+    },
+    {
+      "page": "Asignaturas",
+      "body": 390,
+      "content": {
+        "scroll": 390,
+        "width": 390
+      },
+      "width": 390
+    },
+    {
+      "page": "Gestión de Cuentas",
+      "body": 390,
+      "content": {
+        "scroll": 375,
+        "width": 375
+      },
+      "width": 390
+    }
+  ]
+}

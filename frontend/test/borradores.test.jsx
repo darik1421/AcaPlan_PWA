@@ -99,3 +99,24 @@ test('Al retirar planificación se descartan la edición y la autorización de u
  expect(screen.queryByLabelText('Motivo de la autorización')).toBeNull()
  expect(mocks.api.mock.calls.some(([path])=>path==='/borradores/clase')).toBe(false)
 })
+
+
+test('Un borrador recibido desde el generador se abre directamente sin otra selección',async()=>{
+ mocks.api.mockImplementation(async path=>path==='/borradores/estado'?{estado:'borrador',version:0,historial:[]}:path==='/borradores/consultar'?list:detail)
+ render(<BorradoresPage periodId={1} canPlan initialDraftId={1}/>)
+ await screen.findByRole('button',{name:'Editar clase 5'})
+ expect(screen.getByLabelText('Borrador').value).toBe('1')
+ expect(mocks.api).toHaveBeenCalledWith('/borradores/detalle',expect.objectContaining({data:{id:1}}))
+})
+
+test('Los accesos de restricciones y regeneración conservan el borrador sin escribir datos',async()=>{
+ mocks.api.mockImplementation(async path=>path==='/borradores/estado'?{estado:'borrador',version:0,historial:[]}:path==='/borradores/consultar'?list:detail)
+ const restrictions=vi.fn(), regenerate=vi.fn()
+ render(<BorradoresPage periodId={1} canPlan initialDraftId={1} onNavigateToRestrictions={restrictions} onRegenerate={regenerate}/>)
+ fireEvent.click(await screen.findByRole('button',{name:'Revisar o registrar restricciones'}))
+ expect(restrictions).toHaveBeenCalledWith(1)
+ await waitFor(()=>expect(screen.getByRole('button',{name:'Volver a generar este borrador'}).disabled).toBe(false))
+ fireEvent.click(screen.getByRole('button',{name:'Volver a generar este borrador'}))
+ expect(regenerate).toHaveBeenCalledWith(1)
+ expect(mocks.api.mock.calls.every(([path])=>['/borradores/consultar','/borradores/detalle','/borradores/estado'].includes(path))).toBe(true)
+})

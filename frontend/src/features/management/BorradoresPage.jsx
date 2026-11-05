@@ -1,6 +1,8 @@
 import EstadoBorrador from './EstadoBorrador'
 import VistaSemanalBorrador from './VistaSemanalBorrador'
 import RevisionBorrador from './RevisionBorrador'
+import { orderedScheduleRows } from '../../lib/schedule-order'
+import NuevaVersionBorrador from './NuevaVersionBorrador'
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../../services/management'
 import { RefreshCw, Plus } from 'lucide-react'
@@ -19,7 +21,7 @@ const describe = c =>
     ? `${c.dia} ${c.hora_inicio}–${c.hora_fin}, aula ${c.id_aula}, asignación ${c.id_asignacion} (${c.componente})`
     : 'Nueva clase'
 
-export default function BorradoresPage({ periodId, canPlan = false }) {
+export default function BorradoresPage({ periodId, canPlan = false, initialDraftId = null, onNavigateToRestrictions, onRegenerate }) {
   const [list, setList] = useState(null),
     [selected, setSelected] = useState(null),
     [detail, setDetail] = useState(null),
@@ -36,13 +38,16 @@ export default function BorradoresPage({ periodId, canPlan = false }) {
     [attempt, setAttempt] = useState(0)
   const generation = useRef(0)
   const [department,setDepartment] = useState('')
+  const [cycle,setCycle] = useState(null)
+  const currentCycle=cycle?.id===selected&&cycle?.revision===detail?.borrador.revision?cycle:null
+  const editable=Boolean(canPlan&&detail?.semestre_activo&&currentCycle?.estado==='borrador')
 
   useEffect(() => {
-    setSelected(null)
+    setSelected(initialDraftId)
     setName('')
     setCareers([])
     setDepartment('')
-  }, [periodId])
+  }, [periodId, initialDraftId])
 
   useEffect(() => {
     const c = new AbortController(),
@@ -110,6 +115,7 @@ export default function BorradoresPage({ periodId, canPlan = false }) {
   const parts = course?.componentes || [{ tipo: 'general' }]
 
   function prepare(c, action) {
+    if(!editable||busy)return
     setEditing(c)
     setOperation(action)
     setForm({
@@ -132,7 +138,7 @@ export default function BorradoresPage({ periodId, canPlan = false }) {
 
   async function save(e) {
     e.preventDefault()
-    if (busy || !canPlan || !detail?.semestre_activo) return
+    if (busy || !editable) return
     const payload = {
       id: selected,
       revision: detail.borrador.revision,
@@ -294,6 +300,11 @@ export default function BorradoresPage({ periodId, canPlan = false }) {
         <>
           <div className="surface-card" style={{ marginBottom: '24px' }}>
             <h3 className="card-title">{detail.borrador.nombre}</h3>
+            {detail.semestre_activo && <div className="form-actions">
+              {onNavigateToRestrictions && <button className="secondary" disabled={busy} onClick={() => onNavigateToRestrictions(Number(selected))}>Revisar o registrar restricciones</button>}
+              {onRegenerate && <button className="secondary" disabled={busy||!editable} onClick={() => onRegenerate(Number(selected))}>Volver a generar este borrador</button>}
+            </div>}
+            {canPlan && detail.semestre_activo && ['aprobado','publicado'].includes(currentCycle?.estado) && <NuevaVersionBorrador id={selected} revision={detail.borrador.revision} version={currentCycle.version} onCreated={id=>{setSelected(id);refresh()}}/>}
             <p className="card-subtitle">
               Versión {detail.borrador.revision} · {detail.clases.length} clases · Consulta el
               estado de publicación abajo
@@ -305,6 +316,7 @@ export default function BorradoresPage({ periodId, canPlan = false }) {
               revision={detail.borrador.revision}
               active={detail.semestre_activo}
               onChanged={refresh}
+              onStateLoaded={setCycle}
             />
           </div>
 
@@ -312,7 +324,7 @@ export default function BorradoresPage({ periodId, canPlan = false }) {
             key={selected}
             detail={detail}
             onEdit={prepare}
-            disabled={!canPlan || busy || !detail.semestre_activo}
+            disabled={!editable || busy}
           />
 
           <div className="table-scroll" style={{ marginTop: '24px', marginBottom: '24px' }}>
@@ -328,7 +340,7 @@ export default function BorradoresPage({ periodId, canPlan = false }) {
                 </tr>
               </thead>
               <tbody>
-                {detail.clases.map(c => (
+                {orderedScheduleRows(detail.clases).map(c => (
                   <tr key={c.id}>
                     <td>
                       <strong>
@@ -357,7 +369,7 @@ export default function BorradoresPage({ periodId, canPlan = false }) {
                       </span>
                     </td>
                     <td>
-                      {canPlan && (
+                      {editable && (
                         <div className="row-actions">
                           {[
                             ['clase', 'Editar'],
@@ -382,9 +394,9 @@ export default function BorradoresPage({ periodId, canPlan = false }) {
             </table>
           </div>
 
-          {canPlan && (
+          {editable && (
             <form onSubmit={save} className="management-form">
-              <fieldset disabled={!canPlan || busy || !detail.semestre_activo}>
+              <fieldset disabled={!editable || busy}>
                 <legend style={{ fontSize: '16px', fontWeight: 700, color: '#1B2C48', marginBottom: '16px' }}>
                   {editing
                     ? `${
@@ -575,7 +587,7 @@ export default function BorradoresPage({ periodId, canPlan = false }) {
               report={report}
               detail={detail}
               onEdit={prepare}
-              disabled={!canPlan || busy || !detail.semestre_activo}
+              disabled={!editable || busy}
             />
           )}
 

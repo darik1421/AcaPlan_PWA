@@ -839,3 +839,61 @@ details[open] summary,
   font-size: 12px;
   margin: 0;
 }
+
+/* Agrupación de navegación; conserva los botones y tokens institucionales. */
+.sidebar-section { display: flex; flex-direction: column; gap: 4px; }
+.sidebar-section + .sidebar-section { margin-top: 14px; }
+.sidebar-section-title { padding: 8px 14px 4px; color: var(--text-secondary, #64748b); font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+
+/* Lectura de tablas y composición fluida, con la paleta institucional. */
+.main-wrapper, .content-area, .management-page, .surface-card, .side-panel-card,
+.two-column-layout > *, .management-two-col > * { min-width: 0; }
+.management-page { gap: 18px; }
+.management-page .section-heading { margin-bottom: 4px; }
+.two-column-layout, .management-two-col { grid-template-columns: minmax(0, 1fr) 320px; }
+.filter-grid, .form-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); }
+.management-page input:not([type="checkbox"]):not([type="radio"]),
+.management-page select, .management-page textarea { max-width: 100%; min-width: 0; }
+.table-scroll { max-width: 100%; }
+.table-scroll td { overflow-wrap: anywhere; }
+.weekly-timetable table { min-width: 1080px; table-layout: fixed; }
+.weekly-timetable th:first-child { width: 112px; position: sticky; left: 0; z-index: 1; background: var(--surface-card); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.weekly-timetable thead th { background: var(--primary-light); color: var(--primary-indigo); padding: 14px 12px; text-align: center; }
+.weekly-timetable td { padding: 10px; vertical-align: top; background: #fafbfe; border-right: 1px solid #edf0f6; }
+.weekly-timetable .weekly-class { padding: 12px; gap: 7px; background: white; border: 1px solid var(--border-card); border-top: 3px solid var(--primary-indigo); box-shadow: 0 2px 5px #1b2c4808; }
+.weekly-timetable .weekly-class + .weekly-class { margin-top: 8px; }
+.weekly-timetable .weekly-class button { font-size: 12px; padding: 6px 8px; }
+.schedule-day { display: inline-block; background: var(--primary-light); color: var(--primary-indigo); padding: 5px 10px; border-radius: 7px; font-weight: 600; white-space: nowrap; }
+.schedule-time { white-space: nowrap; font-variant-numeric: tabular-nums; font-weight: 600; }
+.published-timetable tbody tr:nth-child(even) td { background: #fafbfe; }
+.user-info { min-width: 0; }
+.user-name { overflow-wrap: anywhere; }
+@media (max-width: 1350px) {
+ .two-column-layout, .management-two-col { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 760px) {
+ .management-page { gap: 16px; }
+ .management-form, .surface-card, .side-panel-card { padding: 18px; border-radius: 12px; }
+ .table-scroll th, .table-scroll td { padding: 12px 14px; }
+ .table-scroll caption { padding: 14px; font-size: 14px; }
+ .header-actions, .form-actions { flex-wrap: wrap; }
+ .section-heading { gap: 12px; }
+ .section-heading h2 { font-size: 24px; }
+}
+
+/* Tablas de gestión: lectura por filas y acciones compactas. */
+.table-scroll tbody tr:nth-child(even) td { background-color: #fafbfe; }
+.table-scroll tbody tr:hover td { background-color: var(--primary-light); }
+.table-scroll th { border-top: 1px solid #edf0f6; }
+.academic-delivery-layout { display: grid; gap: 16px; min-width: 0; }
+.academic-delivery-table table { min-width: 960px; }
+.academic-delivery-table td { vertical-align: top; padding: 18px 16px; }
+.academic-delivery-table th { padding: 14px 16px; white-space: normal; }
+.academic-delivery-table td:nth-child(2) { min-width: 190px; }
+.academic-delivery-table td:last-child { width: 240px; }
+.academic-delivery-table .row-actions { gap: 6px; }
+.academic-delivery-table .row-actions button { font-size: 12px; padding: 7px 10px; }
+.delivery-subline { display: block; margin-top: 5px; }
+.delivery-detail > summary { cursor: pointer; color: var(--primary-indigo); font-weight: 600; }
+.delivery-detail[open] > summary { margin-bottom: 18px; }
+.academic-delivery-layout > * { min-width: 0; }

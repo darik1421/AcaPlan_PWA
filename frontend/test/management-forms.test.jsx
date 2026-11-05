@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, within, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, within, waitFor } from '@testing-library/react'
 import { afterEach, expect, test, vi } from 'vitest'
 import PeriodsPage from '../src/features/management/PeriodsPage'
 import AccountsPage from '../src/features/management/AccountsPage'
@@ -15,7 +15,7 @@ function accounts(overrides = {}) {
 }
 
 test('Los cinco roles institucionales se seleccionan sin funciones de planificación o aprobación independientes',async()=>{
- mocks.api.mockImplementation(async path => path === '/departamentos' ? {departamentos:[{id:3,nombre:'Ciencias Tecnológicas y Salud'}],carreras:[]} : path === '/departamentos/directores' ? [] : path === '/accounts' ? [{...account,id_usuario:2,nombre:'Otra persona',rol:'docente'}] : {guardado:true})
+ mocks.api.mockImplementation(async path => path === '/departamentos' ? {departamentos:[{id:3,nombre:'Ciencias, Tecnología y Salud'}],carreras:[]} : path === '/departamentos/directores' ? [] : path === '/accounts' ? [{...account,id_usuario:2,nombre:'Otra persona',rol:'docente'}] : {guardado:true})
  accounts({departmentScopeVersion:1,institutionalRolesVersion:1})
  fireEvent.click(await screen.findByRole('button',{name:'Editar cuenta de Otra persona'}))
  const form=screen.getByRole('button',{name:'Guardar cuenta'}).closest('form')
@@ -70,7 +70,7 @@ test('Cancelar un semestre no modifica registros', async () => {
   fireEvent.click(screen.getByRole('button',{name:'Editar Semestre de prueba'}))
   fireEvent.click(screen.getByRole('button',{name:'Cancelar'}))
   expect(screen.queryByRole('button',{name:'Guardar semestre'})).toBeNull()
-  expect(mocks.api).toHaveBeenCalledTimes(1)
+  expect(mocks.api.mock.calls.some(([,options])=>options?.method)).toBe(false)
 })
 test('Editar una cuenta conserva el correo compartido y muestra sus funciones', async () => {
   mocks.api.mockResolvedValue([account])
@@ -113,7 +113,7 @@ test('Retirar el permiso descarta la edición del semestre aunque después se re
   view.rerender(<PeriodsPage canManage={false} onChanged={vi.fn()}/>)
   view.rerender(<PeriodsPage canManage onChanged={vi.fn()}/>)
   expect(screen.queryByRole('button',{name:'Guardar semestre'})).toBeNull()
-  expect(mocks.api).toHaveBeenCalledTimes(1)
+  expect(mocks.api.mock.calls.some(([,options])=>options?.method)).toBe(false)
 })
 
 test('Si falla actualizar cuentas se retira la lista anterior y no ofrece editarla', async () => {
@@ -155,4 +155,34 @@ test('La edición atómica del director envía el departamento y su revisión co
  await screen.findByText('Cuenta actualizada.')
  expect(mocks.api).toHaveBeenCalledWith('/accounts',expect.objectContaining({method:'PATCH',data:expect.objectContaining({id:2,id_departamento:3,revision_departamento:4})}))
  expect(mocks.api.mock.calls.filter(([,options])=>options?.method)).toHaveLength(1)
+})
+
+test('Una respuesta de semestre anterior no confirma ni refresca tras retirar el permiso',async()=>{
+ let finish
+ const changed=vi.fn()
+ mocks.api.mockImplementation((_,options)=>options?.method?new Promise(resolve=>{finish=resolve}):Promise.resolve([period]))
+ const view=render(<PeriodsPage canManage onChanged={changed}/>)
+ fireEvent.click(await screen.findByRole('button',{name:'Editar Semestre de prueba'}))
+ fireEvent.click(screen.getByRole('button',{name:'Guardar semestre'}))
+ view.rerender(<PeriodsPage canManage={false} onChanged={changed}/>)
+ await act(async()=>{finish({guardado:true})})
+ expect(changed).not.toHaveBeenCalled()
+ expect(screen.queryByText('Semestre guardado.')).toBeNull()
+ expect(screen.queryByRole('button',{name:'Guardar semestre'})).toBeNull()
+})
+
+test('Retirar creación de cuentas durante un alta ignora su confirmación en la pantalla nueva',async()=>{
+ let finish
+ mocks.api.mockImplementation((_,options)=>options?.method?new Promise(resolve=>{finish=resolve}):Promise.resolve([account]))
+ const changed=vi.fn()
+ const page=create=><AuthContext.Provider value={{profile:account,retry:vi.fn()}}><AccountsPage context={{...context,canCreateAccounts:create}} onChanged={changed}/></AuthContext.Provider>
+ const view=render(page(true))
+ await screen.findByText('Cuenta de prueba')
+ fireEvent.click(screen.getByRole('button',{name:'Nueva cuenta'}))
+ fireEvent.submit(screen.getByRole('button',{name:'Guardar cuenta'}).closest('form'))
+ view.rerender(page(false))
+ await act(async()=>{finish({guardado:true})})
+ expect(changed).not.toHaveBeenCalled()
+ expect(screen.queryByText('Cuenta creada. Entrega la contraseña inicial por un canal privado.')).toBeNull()
+ expect(screen.queryByRole('button',{name:'Guardar cuenta'})).toBeNull()
 })

@@ -1,7 +1,7 @@
 import PreparacionExcel from './PreparacionExcel'
 import { useEffect, useState } from 'react'
 import { api } from '../../services/management'
-import { Pencil, Building2 } from 'lucide-react'
+import { Pencil, Building2, RefreshCw } from 'lucide-react'
 
 export default function EspaciosPage({ canManage, onChanged, periodId }) {
   const [tab, setTab] = useState('aulas')
@@ -13,6 +13,7 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
 
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
+  const [loadFailed, setLoadFailed] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
 
@@ -21,6 +22,7 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
 
   async function load(signal) {
     setLoading(true)
+    setLoadFailed(false)
     setError('')
     try {
       const [dataAulas, dataPabellones] = await Promise.all([
@@ -29,10 +31,11 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
       ])
       if (!signal?.aborted) {
         setAulas(dataAulas)
+        setTypeFilter(current => dataAulas.some(a => a.tipo === current) ? current : '')
         setPabellones(dataPabellones)
       }
     } catch (e) {
-      if (!signal?.aborted) setError(e.message)
+      if (!signal?.aborted) { setError(e.message); setLoadFailed(true); setAulas([]); setPabellones([]); setFormAula(null); setSelectedAulaId(null) }
     } finally {
       if (!signal?.aborted) setLoading(false)
     }
@@ -52,7 +55,7 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
   }, [canManage])
 
   async function saveEntity(endpoint, payload, resetForm, successMsg) {
-    if (busy || !canManage || !payload.id) return
+    if (busy || loading || loadFailed || !canManage || !payload.id) return
     setBusy(true)
     setError('')
     setMessage('')
@@ -132,8 +135,11 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
         </p>
       )}
 
+      <button className="secondary" disabled={busy || loading || !!formAula} onClick={()=>load()}><RefreshCw size={14} aria-hidden="true"/> Actualizar inventario</button>
+      {loadFailed && <p className="notice">No se pudo consultar el inventario. Usa «Actualizar inventario» antes de corregir sus datos.</p>}
+
       {/* TABS */}
-      {tab === 'aulas' && (
+      {tab === 'aulas' && !loadFailed && (
         <div>
           <div className="filter-grid">
             <label className="filter-card">
@@ -214,7 +220,7 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
                               <td>
                                 <button
                                   className="secondary"
-                                  disabled={busy}
+                                  disabled={busy || loading || loadFailed}
                                   onClick={e => {
                                     e.stopPropagation()
                                     setSelectedAulaId(row.id_aula)
@@ -406,7 +412,7 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
         </div>
       )}
 
-      {tab === 'pabellones' && (
+      {tab === 'pabellones' && !loadFailed && (
         <div className="surface-card">
           <h3 className="card-title">Pabellones registrados</h3>
           <p className="card-subtitle">Infraestructura del recinto universitario</p>

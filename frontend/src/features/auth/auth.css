@@ -19,6 +19,8 @@
 /* Viewport general */
 .login-viewport {
   min-height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
   background-color: var(--acaplan-canvas);
   display: flex;
   flex-direction: column;

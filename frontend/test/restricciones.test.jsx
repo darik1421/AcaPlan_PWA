@@ -109,3 +109,25 @@ test('Perder el permiso durante el guardado ignora el resultado anterior y deja 
  expect(screen.queryByRole('button',{name:'Guardar restricción'})).toBeNull()
  expect(screen.getByRole('button',{name:'Recargar restricciones'}).disabled).toBe(false)
 })
+
+
+test('Buscar un docente distingue falta de coincidencias de ausencia de restricciones',async()=>{
+ mocks.api.mockResolvedValue({version:2,docentes,restricciones:[row]})
+ render(<RestriccionesPanel context={context}/>);await screen.findByText('Lunes')
+ fireEvent.change(screen.getByLabelText('Buscar restricciones de un docente'),{target:{value:'Beatriz'}})
+ expect(screen.getByText('No hay restricciones que coincidan con ese docente.')).toBeTruthy()
+ expect(screen.queryByText('No hay restricciones comunicadas en este semestre.')).toBeNull()
+ fireEvent.change(screen.getByLabelText('Buscar restricciones de un docente'),{target:{value:'ana'}})
+ expect(screen.getByText('Lunes')).toBeTruthy()
+})
+
+test('La restricción muestra una explicación legible antes de guardarse',async()=>{
+ mocks.api.mockResolvedValue({version:2,docentes,restricciones:[]})
+ render(<RestriccionesPanel context={context}/>);await screen.findByText('No hay restricciones comunicadas en este semestre.')
+ fireEvent.click(screen.getByRole('button',{name:'Registrar restricción'}))
+ fireEvent.change(screen.getByLabelText('Docente de la restricción'),{target:{value:'historico:4'}})
+ fireEvent.change(screen.getByLabelText('Desde'),{target:{value:'08:00'}})
+ fireEvent.change(screen.getByLabelText('Hasta'),{target:{value:'09:30'}})
+ expect(screen.getByText('Ana no podrá dar clase el Lunes de 08:00 a 09:30.')).toBeTruthy()
+ expect(mocks.api.mock.calls.some(([,options])=>options?.method==='POST')).toBe(false)
+})

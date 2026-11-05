@@ -49,3 +49,17 @@ test('Una consulta fallida no se presenta como ausencia de años o asignaturas',
  view.unmount();render(<AsignaturasImportadas context={{isAdmin:true}} canManage/>);await screen.findByRole('alert')
  expect(screen.queryByText('No hay asignaturas importadas.')).toBeNull()
 })
+
+test('Guardar datos del año avisa al diagnóstico solo después de la confirmación del servidor',async()=>{
+ let finish
+ const changed=vi.fn()
+ mocks.api.mockImplementation(async(_,options)=>options?.method==='PATCH'?new Promise(resolve=>{finish=resolve}):[row])
+ render(<DatosAnos periodId={1} onDataChanged={changed}/>)
+ fireEvent.click(await screen.findByRole('button',{name:'Completar Sistemas · Año 3'}))
+ fireEvent.change(screen.getByLabelText('Cantidad de estudiantes'),{target:{value:'25'}})
+ fireEvent.click(screen.getByRole('button',{name:'Guardar datos del año'}))
+ expect(changed).not.toHaveBeenCalled()
+ finish({guardado:true})
+ await screen.findByText('Datos del año guardados.')
+ expect(changed).toHaveBeenCalledTimes(1)
+})

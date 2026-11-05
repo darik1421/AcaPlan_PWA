@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { api } from '../../services/management'
 import { useAuth } from '../auth/AuthContext'
 import { FUNCTION_LABELS, roleLabel } from '../../lib/role-labels'
@@ -37,23 +37,33 @@ export default function AccountsPage({ context, onChanged }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const generation = useRef(0)
+  const accessScope = JSON.stringify([profile?.id_usuario,profile?.rol,context.canCreateAccounts,institutional])
+  useEffect(() => {
+    generation.current++
+    setForm(null)
+    setBusy(false)
+    setMessage('')
+    return () => { generation.current++ }
+  }, [accessScope])
 
   const load = useCallback(async (signal) => {
+    const current = generation.current
     setLoading(true)
     setLoadFailed(false)
     setError('')
     try {
       const [data, departments, directors] = await Promise.all([api('/accounts', { signal }), institutional ? api('/departamentos', {signal}) : Promise.resolve(null), institutional ? api('/departamentos/directores', {signal}) : Promise.resolve([])])
-      if (!signal?.aborted) { setRows(data); setOrganization(departments ? {...departments, directors} : null) }
+      if (!signal?.aborted && current === generation.current) { setRows(data); setOrganization(departments ? {...departments, directors} : null) }
     } catch (e) {
-      if (!signal?.aborted) {
+      if (!signal?.aborted && current === generation.current) {
         setError(e.message)
         setLoadFailed(true)
         setRows([])
         setForm(null)
       }
     } finally {
-      if (!signal?.aborted) setLoading(false)
+      if (!signal?.aborted && current === generation.current) setLoading(false)
     }
   }, [institutional])
 
@@ -61,7 +71,7 @@ export default function AccountsPage({ context, onChanged }) {
     const c = new AbortController()
     load(c.signal)
     return () => c.abort()
-  }, [load])
+  }, [load,accessScope])
 
   useEffect(() => {
     if (!context.canCreateAccounts) setForm(current => (current?.id ? current : null))
@@ -94,6 +104,7 @@ export default function AccountsPage({ context, onChanged }) {
       )
     )
       return
+    const current = generation.current
     setBusy(true)
     setError('')
     setMessage('')
@@ -101,6 +112,7 @@ export default function AccountsPage({ context, onChanged }) {
       const { departamento, revisionDepartamento, ...account } = form
       const payload = institutional && institutionalRole(form) === 'jefe_departamento' ? {...account,id_departamento:Number(departamento),revision_departamento:revisionDepartamento || 0} : account
       await api('/accounts', { method: form.id ? 'PATCH' : 'POST', data: payload })
+      if (current !== generation.current) return
       const self = form.id === profile.id_usuario
       setMessage(
         form.id
@@ -109,12 +121,12 @@ export default function AccountsPage({ context, onChanged }) {
       )
       setForm(null)
       await load()
-      onChanged()
-      if (self) retry()
+      if (current === generation.current) onChanged?.()
+      if (self && current === generation.current) retry()
     } catch (e) {
-      setError(e.message)
+      if (current === generation.current) setError(e.message)
     } finally {
-      setBusy(false)
+      if (current === generation.current) setBusy(false)
     }
   }
 

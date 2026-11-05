@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { api } from '../../services/management'
 import { Plus, Pencil, RotateCw } from 'lucide-react'
 
@@ -15,18 +15,27 @@ export default function CarrerasPage({ canManage, onChanged, manageDepartments =
   const [loadFailed, setLoadFailed] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const generation = useRef(0)
+  useEffect(() => {
+    generation.current++
+    setForm(null)
+    setBusy(false)
+    setMessage('')
+    return () => { generation.current++ }
+  }, [canManage, manageDepartments])
 
   const load = useCallback(async (signal) => {
+    const current = generation.current
     setLoading(true)
     setLoadFailed(false)
     setError('')
     try {
       const [data, organization] = await Promise.all([api('/carreras', { signal }), manageDepartments ? api('/departamentos', { signal }) : Promise.resolve(null)])
-      if (!signal?.aborted) { setRows(data); setDepartments(organization) }
+      if (!signal?.aborted && current === generation.current) { setRows(data); setDepartments(organization) }
     } catch (e) {
-      if (!signal?.aborted) { setError(e.message); setLoadFailed(true); setRows([]); setDepartments(null); setForm(null) }
+      if (!signal?.aborted && current === generation.current) { setError(e.message); setLoadFailed(true); setRows([]); setDepartments(null); setForm(null) }
     } finally {
-      if (!signal?.aborted) setLoading(false)
+      if (!signal?.aborted && current === generation.current) setLoading(false)
     }
   }, [manageDepartments])
 
@@ -34,7 +43,7 @@ export default function CarrerasPage({ canManage, onChanged, manageDepartments =
     const c = new AbortController()
     load(c.signal)
     return () => c.abort()
-  }, [load])
+  }, [load, canManage])
 
   useEffect(() => { if (!canManage) setForm(null) }, [canManage])
 
@@ -48,19 +57,21 @@ export default function CarrerasPage({ canManage, onChanged, manageDepartments =
       setError('Selecciona el departamento de la carrera antes de guardarla.')
       return
     }
+    const current = generation.current
     setBusy(true)
     setError('')
     setMessage('')
     try {
       await api('/carreras', { method: form.id ? 'PATCH' : 'POST', data: { nombre: form.nombre, ...(form.id ? { id: form.id, estado: form.estado } : {}), ...(manageDepartments ? {id_departamento:Number(form.departamento),revision_departamento:form.revisionDepartamento || 0} : {}) } })
+      if (current !== generation.current) return
       setMessage(form.id ? 'Carrera actualizada.' : 'Carrera registrada.')
       setForm(null)
       await load()
-      onChanged()
+      if (current === generation.current) onChanged?.()
     } catch (e) {
-      setError(e.message)
+      if (current === generation.current) setError(e.message)
     } finally {
-      setBusy(false)
+      if (current === generation.current) setBusy(false)
     }
   }
 

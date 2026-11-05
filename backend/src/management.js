@@ -7,9 +7,11 @@ import {consecutiveInput} from './consecutive-input.js'
 import {collectPreparation,preparationReview} from './preparation-review.js'
 import {travelSitesInput} from './travel-sites-input.js'
 import {draftInput} from './draft-input.js'
+import {draftVersionInput} from './draft-version.js'
 import {componentsInput,draftWorkInput} from './academic-workflow-input.js'
 import {reviewDraft} from './draft-review.js'
 import {preparationVersion} from './preparation-version.js'
+import {proposeGeneration,saveGeneration} from './generation-service.js'
 import {assignmentTemplate,readAssignments} from './assignment-workbook.js'
 import {preparationTemplate,previewPreparation} from './preparation-workbook.js'
 import { AccessError } from './auth.js'
@@ -129,6 +131,8 @@ export function createManagement({
     }
     const body = await response.json().catch(() => null)
     if (!response.ok) {
+      if(functionName==='pwa_nueva_version_borrador'&&body?.code==='PGRST202')throw new AccessError(503,'La creación de nuevas versiones todavía no está habilitada en esta base de datos.')
+      if(functionName==='pwa_generador'&&body?.code==='PGRST202')throw new AccessError(503,'La conexión del generador requiere aplicar generador-flujo-actual.sql en Supabase.')
       if(functionName==='pwa_departamentos_api'&&body?.code==='PGRST202')throw new AccessError(503,'La organización por departamentos está pendiente de aplicar departamentos-base.sql en Supabase.')
       if(functionName==='pwa_necesidades_academicas'&&body?.code==='PGRST202')throw new AccessError(503,'Las necesidades de aula y equipamiento requieren aplicar su migración en Supabase.')
       if (['pwa_inventario','pwa_preparacion_academica'].includes(functionName) && body?.code==='PGRST202') throw new AccessError(503,'Esta función necesita aplicar la migración de cierre funcional del Sprint 2 en Supabase.');
@@ -161,10 +165,10 @@ export function createManagement({
     return body
   }
 
-  async function confirmCycle(action,payload){
+  async function confirmCycle(action,payload,functionName='pwa_ciclo_confirmar'){
     if(!serviceKey)throw new AccessError(503,'Falta la clave privada del backend para confirmar el estado.')
     let response
-    try{response=await fetchImpl(`${url}/rest/v1/rpc/pwa_ciclo_confirmar`,{method:'POST',headers:{apikey:serviceKey,Authorization:`Bearer ${serviceKey}`,'Content-Type':'application/json'},body:JSON.stringify({action,payload}),signal:AbortSignal.timeout(15000)})}catch{throw new AccessError(503,'No se pudo confirmar el resultado. Consulta el estado antes de reintentar.')}
+    try{response=await fetchImpl(`${url}/rest/v1/rpc/${functionName}`,{method:'POST',headers:{apikey:serviceKey,Authorization:`Bearer ${serviceKey}`,'Content-Type':'application/json'},body:JSON.stringify({action,payload}),signal:AbortSignal.timeout(15000)})}catch{throw new AccessError(503,'No se pudo confirmar el resultado. Consulta el estado antes de reintentar.')}
     const body=await response.json().catch(()=>null)
     if(!response.ok){const mapped=businessErrors[body?.message];if(mapped)throw new AccessError(...mapped);throw new AccessError(503,'No se pudo confirmar el estado. Revisa la migración y consulta nuevamente.')}
     if(!body?.guardado)throw new AccessError(503,'Respuesta incompleta. Consulta el estado antes de reintentar.')
@@ -211,6 +215,12 @@ export function createManagement({
 
   return {
     async execute(request, profile, route, data) {
+      if(route==='drafts.version')return rpc2(request,'create',{...draftVersionInput(data),version_reglas:PREPARATION_RULE_VERSION},'pwa_nueva_version_borrador')
+      if(route==='generation.propose'||route==='generation.save'){
+        const load=id=>rpc2(request,'context',{id,version_reglas:PREPARATION_RULE_VERSION},'pwa_generador')
+        if(route==='generation.propose')return proposeGeneration({data,load})
+        return saveGeneration({data,actor:profile.id_usuario,load,confirm:payload=>confirmCycle('save',payload,'pwa_generador_confirmar')})
+      }
       if (route.startsWith('departments.')) {
         if (!hasGlobalAccess(profile)) throw new AccessError(403, 'Solo administración puede organizar los departamentos en esta etapa.')
         if (route === 'departments.directors') return rpc2(request,'context',{},'pwa_vincular_director')

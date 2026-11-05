@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { api } from '../../services/management'
-import { solveScheduleAI } from './schedule-ai-solver'
+import {useDraftCycle} from './useDraftCycle'
+import NuevaVersionBorrador from './NuevaVersionBorrador'
 import {
   Sparkles,
   Lock,
@@ -14,209 +15,108 @@ import {
   Calendar,
 } from 'lucide-react'
 
-const DAYS = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado']
+const DAYS = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo']
 
-export default function GeneradorPage({ _context, periodId, onNavigateToDrafts }) {
+export default function GeneradorPage({ context, periodId, onNavigateToDrafts, initialDraftId = null, onNavigateToRestrictions }) {
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
-  const [genStage, setGenStage] = useState('')
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
-
-  // Datos base
-  const [sections, setSections] = useState([])
-  const [subjects, setSubjects] = useState([])
-  const [teachers, setTeachers] = useState([])
-  const [rooms, setRooms] = useState([])
-  const [blocks, setBlocks] = useState([])
-  const [restrictions, setRestrictions] = useState([])
-  const [programacion, setProgramacion] = useState([])
-
-  // Opciones del generador
-  const [considerarAulas, setConsiderarAulas] = useState(false)
+  const [list, setList] = useState(null)
+  const [selectedDraft, setSelectedDraft] = useState('')
+  const [department, setDepartment] = useState('')
+  const [automaticDraft, setAutomaticDraft] = useState(null)
   const [modoProfundo, setModoProfundo] = useState(true)
   const [selectedDay, setSelectedDay] = useState('Todos')
   const [selectedSection, setSelectedSection] = useState('')
   const [lockedDays, setLockedDays] = useState([])
-  const [pinnedClassIds, setPinnedClassIds] = useState(new Set())
-
-  // Resultado
   const [result, setResult] = useState(null)
-  const [draftName, setDraftName] = useState('')
   const [showSaveModal, setShowSaveModal] = useState(false)
   const [savingDraft, setSavingDraft] = useState(false)
-
-  async function loadData(signal) {
-    setLoading(true)
-    setError('')
-    try {
-      const [
-        dataSections,
-        dataSubjects,
-        dataTeachers,
-        dataRooms,
-        dataBlocks,
-        dataRestrictions,
-        dataProgramacion,
-      ] = await Promise.all([
-        api('/secciones', { signal }).catch(() => []),
-        api('/asignaturas', { signal }).catch(() => []),
-        api('/docentes', { signal }).catch(() => []),
-        api('/inventario', { signal }).catch(() => []),
-        api('/bloques', { signal }).catch(() => []),
-        api('/restricciones', { signal }).catch(() => []),
-        api('/programacion', { signal }).catch(() => []),
-      ])
-
-      if (!signal?.aborted) {
-        setSections(dataSections || [])
-        setSubjects(dataSubjects || [])
-        setTeachers(dataTeachers || [])
-        setRooms(dataRooms || [])
-        setBlocks(dataBlocks || [])
-        setRestrictions(dataRestrictions || [])
-        setProgramacion(dataProgramacion || [])
-      }
-    } catch (e) {
-      if (!signal?.aborted) setError(e.message)
-    } finally {
-      if (!signal?.aborted) setLoading(false)
-    }
-  }
+  const [attempt, setAttempt] = useState(0)
+  const generation = useRef(0)
+  const cycle = useDraftCycle(selectedDraft,periodId)
+  const editableDraft = Boolean(selectedDraft && cycle.data?.estado==='borrador')
+  const canGenerate = Boolean(context?.canManageBloques && list?.semestre_activo && (editableDraft || department))
+  const draft = list?.borradores.find(d => String(d.id) === selectedDraft)
+  const sections = [...new Map((result?.clases || []).map(c => [c.id_seccion,{id_seccion:c.id_seccion,codigo:c.seccion_codigo}])).values()]
 
   useEffect(() => {
-    const c = new AbortController()
-    loadData(c.signal)
-    return () => c.abort()
-  }, [periodId])
-
-  // Bloqueo de días interactivo
-  const toggleLockDay = day => {
-    setLockedDays(prev =>
-      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
-    )
+    const controller = new AbortController()
+    generation.current++; setList(null); setSelectedDraft(''); setDepartment(''); setAutomaticDraft(null); setResult(null)
+    setLoading(Boolean(periodId)); setBusy(false); setSavingDraft(false)
+    setShowSaveModal(false); setError(''); setMessage(''); setLockedDays([])
+    if (periodId) api('/borradores/consultar', {method:'POST',data:{id_periodo:periodId},signal:controller.signal})
+      .then(data => {
+        if (controller.signal.aborted) return
+        if (!Array.isArray(data?.borradores) || typeof data.semestre_activo !== 'boolean') throw new Error('No se pudieron consultar los borradores. Vuelve a intentarlo.')
+        setList(data)
+        if (data.borradores.some(d => String(d.id) === String(initialDraftId))) setSelectedDraft(String(initialDraftId))
+      })
+      .catch(e => {if (!controller.signal.aborted) setError(e.message)})
+      .finally(() => {if (!controller.signal.aborted) setLoading(false)})
+    return () => {controller.abort();generation.current++}
+  }, [periodId, attempt, initialDraftId])
+  function invalidate() {
+    generation.current++; setResult(null); setShowSaveModal(false)
+    setError(''); setMessage(''); setSelectedSection(''); setSelectedDay('Todos')
   }
-
-  // Fijación de clase interactiva
-  const togglePinClass = id_horario => {
-    setPinnedClassIds(prev => {
-      const next = new Set(prev)
-      if (next.has(id_horario)) next.delete(id_horario)
-      else next.add(id_horario)
-      return next
-    })
+  function toggleLockDay(day) {
+    invalidate()
+    setLockedDays(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev,day])
   }
-
-  // Ejecución del Generador IA
-  const handleRunGenerator = async () => {
-    setBusy(true)
-    setError('')
-    setMessage('')
-    setGenStage('1. Identificando clases fijadas y días protegidos…')
-
-    await new Promise(r => setTimeout(r, 200))
-    setGenStage('2. Podando dominios y aplicando restricciones docentes…')
-
-    await new Promise(r => setTimeout(r, 200))
-    setGenStage('3. Explorando combinaciones óptimas sin colisiones…')
-
+  async function handleRunGenerator() {
+    if (!canGenerate || busy || savingDraft || loading) return
+    const current = ++generation.current
+    const previas = result?.clases.map(c => Object.fromEntries(['id_asignacion','componente','numero_sesion','dia','hora_inicio','hora_fin'].map(k => [k,c[k]])))
+    setBusy(true); setError(''); setMessage(''); setResult(null); setShowSaveModal(false)
     try {
-      // Clases ya fijadas que se deben preservar intactas
-      const fixedClassesToKeep = (result?.clases || [])
-        .filter(c => lockedDays.includes(c.dia) || pinnedClassIds.has(c.id_horario))
-        .map(c => ({ ...c, es_fijada: true }))
-
-      // Clases no fijadas para permitir que explore franjas alternativas
-      const previousUnfixedPlacements = (result?.clases || [])
-        .filter(c => !lockedDays.includes(c.dia) && !pinnedClassIds.has(c.id_horario))
-        .map(c => ({
-          id_seccion: c.id_seccion,
-          id_asignatura: c.id_asignatura,
-          sessionNumber: c.numero_sesion,
-          id_bloque: c.id_bloque,
-        }))
-
-      // Mapeo de necesidades con compatibilidad de campos
-      const mappedNeeds = (programacion || []).map(p => ({
-        id_componente: p.id_programacion || p.id,
-        id_seccion: p.id_seccion,
-        id_asignatura: p.id_asignatura,
-        id_docente: p.id_docente || p.id_docentes?.[0],
-        sesiones_semana: p.sesiones_semanales || 2,
-        duracion_minutos: (p.duracion_bloques || 2) * 45,
-        requiere_espacio_especializado: p.requisito_laboratorio || false,
-        observacion_espacio: p.requisito_laboratorio ? 'laboratorio' : '',
-        recursos_requeridos: p.recursos_requeridos || [],
-      }))
-
-      const solverRes = solveScheduleAI({
-        sections,
-        subjects,
-        teachers,
-        rooms,
-        blocks,
-        restrictions,
-        needs: mappedNeeds,
-        fixedClasses: fixedClassesToKeep,
-        lockedDays,
-        considerarAulas,
-        previousUnfixedPlacements,
-        maxNodos: modoProfundo ? 15000 : 4000,
-        maxTimeMs: modoProfundo ? 8000 : 3000,
-      })
-
-      setResult(solverRes)
-
-      // Sincronizar clases fijadas con el resultado
-      const newPinned = new Set(pinnedClassIds)
-      solverRes.clases.forEach(c => {
-        if (c.es_fijada) newPinned.add(c.id_horario)
-      })
-      setPinnedClassIds(newPinned)
-
-      if (solverRes.estado === 'propuesta') {
-        setMessage(solverRes.mensaje)
-      } else {
-        setError(solverRes.mensaje)
+      let targetId = Number(selectedDraft)
+      let firstGeneration = automaticDraft === targetId
+      if (!targetId) {
+        const selectedDepartment = list.departamentos.find(d => String(d.id) === department)
+        const careers = list.carreras.filter(c => String(c.id_departamento) === department).map(c => c.id_carrera)
+        if (!selectedDepartment || !careers.length) throw new Error('Este departamento no tiene carreras disponibles para generar.')
+        const baseName = 'Borrador · '+selectedDepartment.nombre
+        const names = new Set(list.borradores.map(d => d.nombre.trim().toLocaleLowerCase('es')))
+        let draftName = baseName, suffix = 2
+        while (names.has(draftName.toLocaleLowerCase('es'))) draftName = baseName+' ('+(suffix++)+')'
+        const created = await api('/borradores',{method:'POST',data:{id_periodo:periodId,id_departamento:Number(department),carreras:careers,nombre:draftName}})
+        if (current !== generation.current) return
+        targetId = created.id; firstGeneration = true
+        setAutomaticDraft(targetId); setSelectedDraft(String(targetId))
+        setList(prev => ({...prev,borradores:[{id:targetId,id_departamento:Number(department),departamento:selectedDepartment.nombre,nombre:draftName},...prev.borradores]}))
       }
-    } catch (err) {
-      setError(`Error durante la optimización: ${err.message}`)
-    } finally {
-      setBusy(false)
-      setGenStage('')
-    }
+      const proposal = await api('/generador/proponer',{method:'POST',data:{id:targetId,lockedDays,modoProfundo,...(previas?.length ? {previas} : {})}})
+      if (current !== generation.current) return
+      if (firstGeneration && proposal.listo_para_guardar) {
+        const clases = proposal.clases.map(c => Object.fromEntries(['id','id_asignacion','componente','id_aula','dia','hora_inicio','hora_fin'].map(k => [k,c[k]])))
+        const saved = await api('/generador/guardar',{method:'POST',data:{id:targetId,huella:proposal.huella,clases}})
+        if (current !== generation.current) return
+        setAutomaticDraft(null); setDepartment(''); setResult(null)
+        setMessage('Primer borrador generado y guardado con '+saved.clases+' clases. Ya está disponible para revisión; aún no está aprobado ni publicado.')
+        return
+      }
+      setResult(proposal)
+      if (proposal.listo_para_guardar) setMessage(proposal.mensaje)
+      else setError(proposal.mensaje)
+    } catch (e) {if (current === generation.current) setError(e.message)}
+    finally {if (current === generation.current) setBusy(false)}
   }
-
-  // Guardar como Borrador Oficial
-  const handleSaveDraft = async () => {
-    if (!result || !result.clases.length) return
-    setSavingDraft(true)
-    setError('')
+  async function handleSaveDraft() {
+    if (!canGenerate || busy || savingDraft || !result?.listo_para_guardar) return
+    const current = generation.current
+    setSavingDraft(true); setError('')
     try {
-      const name = draftName.trim() || `Propuesta IA - ${new Date().toLocaleDateString()}`
-      // Obtener carreras involucradas
-      const careerIds = [...new Set(sections.map(s => s.id_carrera).filter(Boolean))]
-
-      // Crear borrador en el sistema
-      const draftRes = await api('/borradores', {
-        method: 'POST',
-        data: {
-          id_periodo: periodId,
-          nombre: name,
-          carreras: careerIds,
-        },
-      })
-
-      setMessage(`Borrador "${name}" registrado correctamente.`)
-      setShowSaveModal(false)
-      if (onNavigateToDrafts && draftRes?.id) {
-        onNavigateToDrafts(draftRes.id)
-      }
+      const clases = result.clases.map(c => Object.fromEntries(['id','id_asignacion','componente','id_aula','dia','hora_inicio','hora_fin'].map(k => [k,c[k]])))
+      const saved = await api('/generador/guardar',{method:'POST',data:{id:Number(selectedDraft),huella:result.huella,clases}})
+      if (current !== generation.current) return
+      setMessage('Se guardaron '+saved.clases+' clases en «'+draft.nombre+'». El horario sigue sin aprobar ni publicar.')
+      setResult(null); setShowSaveModal(false)
+      onNavigateToDrafts?.(saved.id)
     } catch (e) {
-      setError(`No se pudo guardar el borrador: ${e.message}`)
-    } finally {
-      setSavingDraft(false)
-    }
+      if (current === generation.current) {setError(e.message+' Consulta el borrador antes de reintentar.');setResult(null);setShowSaveModal(false)}
+    } finally {if (current === generation.current) setSavingDraft(false)}
   }
 
   // Filtrado de clases generadas para la visualización
@@ -239,8 +139,9 @@ export default function GeneradorPage({ _context, periodId, onNavigateToDrafts }
           <span className="screen-kicker">Inteligencia Artificial Institucional</span>
           <h2 id="generador-title">Generador de Horarios con IA</h2>
           <p className="muted">
-            Motor heurístico de optimización: asigna franjas horarias y aulas respetando restricciones y continuidad académica.
+            Generación automática por departamento.
           </p>
+          <p className="muted">Respeta los horarios aprobados/publicados. Los borradores pendientes de otros departamentos todavía no reservan aulas ni docentes.</p>
         </div>
       </div>
 
@@ -255,49 +156,48 @@ export default function GeneradorPage({ _context, periodId, onNavigateToDrafts }
         </p>
       )}
 
+      {loading && <div className="surface-card" aria-busy="true" style={{ minHeight: 330, marginBottom: 24 }}><p role="status">Preparando generador…</p></div>}
+      {!loading && periodId && !list && <button className="secondary" onClick={() => setAttempt(n => n+1)}>Volver a consultar borradores</button>}
+      {!periodId && <p className="notice">Activa un semestre antes de generar.</p>}
+      {message.startsWith('Primer borrador') && <button className="secondary" onClick={() => onNavigateToDrafts?.(Number(selectedDraft))}>Revisar borrador generado</button>}
+      {result?.revision && !result.listo_para_guardar && <div className="surface-card"><h3>Comprobación de la propuesta</h3><ul>{result.revision.conflictos.map((f,i) => <li key={'c'+i}>{f.motivo}</li>)}{result.revision.pendientes.map((f,i) => <li key={'p'+i}>{f.mensaje}</li>)}</ul></div>}
+
       {/* Tarjeta de Configuración y Parámetros */}
-      <div className="surface-card" style={{ marginBottom: '24px' }}>
+      {!loading && list && onNavigateToRestrictions && <div className="form-actions"><span>Se usarán las restricciones vigentes del semestre.</span><button className="secondary" disabled={busy || savingDraft} onClick={() => onNavigateToRestrictions(selectedDraft ? Number(selectedDraft) : null)}>Revisar restricciones antes de generar</button></div>}
+      {!loading && (list || !periodId) && <div className="surface-card" style={{ marginBottom: '24px' }}>
+        {cycle.loading && <p role="status">Comprobando estado del borrador…</p>}
+        {cycle.error && <p role="alert" className="error">{cycle.error} <button className="secondary" onClick={cycle.retry}>Consultar estado nuevamente</button></p>}
+        {selectedDraft && cycle.data?.estado==='en_revision' && <p className="notice">Este borrador está en revisión. Consulta su estado en Borradores antes de continuar.</p>}
+        {selectedDraft && ['aprobado','publicado'].includes(cycle.data?.estado) && <div className="banner-notice"><p>Este horario ya está {cycle.data.estado}. Prepara una nueva versión para reorganizarlo.</p><NuevaVersionBorrador id={Number(selectedDraft)} revision={draft?.revision} version={cycle.data.version} disabled={busy||savingDraft||!draft?.revision} onCreated={id=>onNavigateToDrafts?.(id)}/></div>}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Sparkles size={20} color="#302C91" />
             <h3 className="card-title" style={{ margin: 0 }}>
-              Parámetros de Optimización
+              Generar horario
             </h3>
           </div>
           <span className="status-pill active">
             <span className="status-dot" aria-hidden="true">●</span>
-            <span>Semestre Activo</span>
+            <span>{list?.semestre_activo ? 'Semestre activo' : 'Sin semestre activo'}</span>
           </span>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px', marginBottom: '20px' }}>
-          {/* Opción Aulas */}
-          <label
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              padding: '14px 18px',
-              background: '#F8FAFC',
-              borderRadius: '12px',
-              border: '1px solid #E2E8F0',
-              cursor: 'pointer',
-            }}
-          >
-            <input
-              type="checkbox"
-              checked={considerarAulas}
-              onChange={e => setConsiderarAulas(e.target.checked)}
-              disabled={busy}
-            />
-            <div>
-              <strong style={{ display: 'block', fontSize: '13.5px', color: '#1B2C48' }}>
-                Asignar aulas físicas
-              </strong>
-              <span className="muted" style={{ fontSize: '12px' }}>
-                Verificar capacidad y laboratorios (opcional en borrador)
-              </span>
-            </div>
+          {list?.departamentos?.length > 0 && <label style={{display:'flex',flexDirection:'column',gap:'8px'}}>
+            <strong>Generar un nuevo horario</strong>
+            <select aria-label="Departamento para generar" value={department} disabled={loading || busy || savingDraft} onChange={e => {invalidate();setDepartment(e.target.value);setSelectedDraft('');setAutomaticDraft(null);setLockedDays([])}}>
+              <option value="">Selecciona un departamento</option>
+              {list.departamentos.map(d => <option key={d.id} value={d.id}>{d.nombre}</option>)}
+            </select>
+            <span className="muted">Se guardará un primer borrador para revisión.</span>
+          </label>}
+          <label style={{display:'flex',flexDirection:'column',gap:'8px'}}>
+            <strong>Continuar un borrador existente</strong>
+            <select aria-label="Borrador del departamento" value={selectedDraft} disabled={loading || busy || savingDraft} onChange={e => {invalidate();setSelectedDraft(e.target.value);setDepartment('');setAutomaticDraft(null);setLockedDays([])}}>
+              <option value="">Selecciona un borrador</option>
+              {(list?.borradores || []).filter(d => d.id_departamento).map(d => <option key={d.id} value={d.id}>{d.departamento} · {d.nombre}</option>)}
+            </select>
+            <span className="muted">Reorganizar una propuesta guardada.</span>
           </label>
 
           {/* Opción Modo Profundo */}
@@ -316,15 +216,15 @@ export default function GeneradorPage({ _context, periodId, onNavigateToDrafts }
             <input
               type="checkbox"
               checked={modoProfundo}
-              onChange={e => setModoProfundo(e.target.checked)}
-              disabled={busy}
+              onChange={e => {invalidate();setModoProfundo(e.target.checked)}}
+              disabled={busy || savingDraft}
             />
             <div>
               <strong style={{ display: 'block', fontSize: '13.5px', color: '#1B2C48' }}>
-                Búsqueda en profundidad (MRV)
+                Búsqueda más exhaustiva
               </strong>
               <span className="muted" style={{ fontSize: '12px' }}>
-                Hasta 15,000 pasos de retroceso para optimizar huecos
+                Dedicar más tiempo a buscar una solución.
               </span>
             </div>
           </label>
@@ -333,8 +233,9 @@ export default function GeneradorPage({ _context, periodId, onNavigateToDrafts }
         {/* Protección de días */}
         <div style={{ marginBottom: '20px' }}>
           <span className="detail-label" style={{ display: 'block', marginBottom: '8px' }}>
-            Días protegidos / bloqueados (haz clic para bloquear franjas):
+            Conservar días de este borrador: no mover sus clases ni añadir otras en esos días.
           </span>
+          {!selectedDraft && <p className="muted">Disponible al seleccionar un borrador existente.</p>}
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             {DAYS.map(day => {
               const isLocked = lockedDays.includes(day)
@@ -343,7 +244,8 @@ export default function GeneradorPage({ _context, periodId, onNavigateToDrafts }
                   key={day}
                   type="button"
                   onClick={() => toggleLockDay(day)}
-                  disabled={busy}
+                  disabled={!editableDraft || busy || savingDraft}
+                  aria-pressed={isLocked}
                   className="secondary"
                   style={{
                     padding: '6px 14px',
@@ -365,7 +267,7 @@ export default function GeneradorPage({ _context, periodId, onNavigateToDrafts }
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
           <button
             className="primary"
-            disabled={busy || loading}
+            disabled={!canGenerate || busy || savingDraft || loading}
             onClick={handleRunGenerator}
             style={{ padding: '12px 24px', fontSize: '14.5px', fontWeight: 600 }}
           >
@@ -376,7 +278,7 @@ export default function GeneradorPage({ _context, periodId, onNavigateToDrafts }
           {result && (
             <button
               className="secondary"
-              disabled={busy}
+              disabled={busy || savingDraft}
               onClick={handleRunGenerator}
               title="Explora una combinación alternativa manteniendo las clases fijadas"
             >
@@ -385,14 +287,14 @@ export default function GeneradorPage({ _context, periodId, onNavigateToDrafts }
             </button>
           )}
 
-          {result && result.clases.length > 0 && (
+          {result?.listo_para_guardar && (
             <button
               className="secondary"
               style={{ marginLeft: 'auto', borderColor: '#302C91', color: '#302C91' }}
               onClick={() => setShowSaveModal(true)}
             >
               <Save size={15} aria-hidden="true" />
-              <span>Guardar como Borrador Oficial</span>
+              <span>Guardar propuesta en el borrador</span>
             </button>
           )}
         </div>
@@ -411,33 +313,21 @@ export default function GeneradorPage({ _context, periodId, onNavigateToDrafts }
           >
             <div className="spinner" style={{ width: '18px', height: '18px' }} />
             <span style={{ fontSize: '13.5px', color: '#302C91', fontWeight: 600 }}>
-              {genStage || 'Procesando algoritmo…'}
+              Consultando datos y calculando una propuesta con las restricciones actuales…
             </span>
           </div>
         )}
-      </div>
-
+      </div>}
       {/* Modal / Card para guardar borrador */}
       {showSaveModal && (
         <div className="surface-card" style={{ marginBottom: '24px', border: '2px solid #302C91' }}>
-          <h3 className="card-title">Registrar como Borrador Oficial</h3>
-          <p className="card-subtitle">
-            Al registrar la propuesta, quedará disponible en el ciclo de revisión y aprobación docente.
-          </p>
+          <h3 className="card-title">Guardar propuesta en «{draft?.nombre}»</h3>
+          <p className="card-subtitle">Se sustituirán las clases no protegidas por todas las sesiones comprobadas de esta propuesta. Las fijadas se conservan. Esto no aprueba ni publica el horario.</p>
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', marginTop: '12px' }}>
-            <label style={{ flex: 1, minWidth: '240px' }}>
-              <input
-                type="text"
-                value={draftName}
-                onChange={e => setDraftName(e.target.value)}
-                placeholder="Nombre del borrador (ej. Propuesta IA - Semestre I 2026)"
-                style={{ width: '100%' }}
-              />
-            </label>
             <button className="primary" disabled={savingDraft} onClick={handleSaveDraft}>
               {savingDraft ? 'Guardando…' : 'Confirmar guardado'}
             </button>
-            <button className="secondary" type="button" onClick={() => setShowSaveModal(false)}>
+            <button className="secondary" type="button" disabled={savingDraft} onClick={() => setShowSaveModal(false)}>
               Cancelar
             </button>
           </div>
@@ -485,9 +375,9 @@ export default function GeneradorPage({ _context, periodId, onNavigateToDrafts }
           <div className="surface-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <span className="detail-label">Estado de la Solución</span>
             <div style={{ marginTop: '6px' }}>
-              <span className={result.estado === 'propuesta' ? 'status-pill active' : 'status-pill inactive'}>
+              <span className={result.listo_para_guardar ? 'status-pill active' : 'status-pill inactive'}>
                 <span className="status-dot">●</span>
-                <span>{result.estado === 'propuesta' ? '100% Óptimo' : 'Parcial'}</span>
+                <span>{result.listo_para_guardar ? 'Completa y comprobada' : 'Pendiente de revisión'}</span>
               </span>
             </div>
           </div>
@@ -511,9 +401,9 @@ export default function GeneradorPage({ _context, periodId, onNavigateToDrafts }
             </label>
 
             <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px' }}>
-              <strong>Grupo / Sección:</strong>
+              <strong>Carrera y año:</strong>
               <select value={selectedSection} onChange={e => setSelectedSection(e.target.value)}>
-                <option value="">Todos los grupos</option>
+                <option value="">Todas las carreras y años</option>
                 {sections.map(s => (
                   <option key={s.id_seccion} value={s.id_seccion}>
                     {s.codigo}
@@ -558,10 +448,10 @@ export default function GeneradorPage({ _context, periodId, onNavigateToDrafts }
                   }}
                 >
                   {dayClasses.map(c => {
-                    const isPinned = pinnedClassIds.has(c.id_horario) || c.es_fijada
+                    const isPinned = c.es_fijada
                     return (
                       <div
-                        key={c.id_horario}
+                        key={c.id}
                         style={{
                           background: isPinned ? '#FEFCE8' : '#FFFFFF',
                           border: isPinned ? '1px solid #CA8A04' : '1px solid #E2E8F0',
@@ -579,7 +469,7 @@ export default function GeneradorPage({ _context, periodId, onNavigateToDrafts }
                           </span>
                           <button
                             type="button"
-                            onClick={() => togglePinClass(c.id_horario)}
+                            disabled title="Las fijaciones y sus autorizaciones se administran en Borradores"
                             className="secondary"
                             style={{
                               padding: '4px 8px',
@@ -588,10 +478,9 @@ export default function GeneradorPage({ _context, periodId, onNavigateToDrafts }
                               borderColor: isPinned ? '#CA8A04' : '#E2E8F0',
                               color: isPinned ? '#854D0E' : '#637086',
                             }}
-                            title={isPinned ? 'Desfijar clase' : 'Fijar clase (se preservará al re-generar)'}
                           >
                             {isPinned ? <Pin size={12} color="#CA8A04" /> : <PinOff size={12} />}
-                            <span>{isPinned ? 'Fijada' : 'Fijar'}</span>
+                            <span>{isPinned ? 'Protegida' : 'Sin fijar'}</span>
                           </button>
                         </div>
 
@@ -600,7 +489,7 @@ export default function GeneradorPage({ _context, periodId, onNavigateToDrafts }
                         </strong>
 
                         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', fontSize: '12.5px', color: '#637086' }}>
-                          <span><strong>Grupo:</strong> {c.seccion_codigo}</span>
+                          <span><strong>Año:</strong> {c.seccion_codigo}</span>
                           <span>·</span>
                           <span><strong>Docente:</strong> {c.docente_nombre}</span>
                         </div>
@@ -608,7 +497,7 @@ export default function GeneradorPage({ _context, periodId, onNavigateToDrafts }
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px', fontSize: '12px' }}>
                           <Building2 size={13} color="#94A3B8" />
                           <span style={{ color: c.aula_codigo ? '#15803D' : '#94A3B8', fontWeight: 600 }}>
-                            {c.aula_codigo ? `Aula ${c.aula_codigo}` : 'Sin aula física (opcional)'}
+                            {c.aula_codigo ? `Aula ${c.aula_codigo}` : 'Aula pendiente'}
                           </span>
                         </div>
                       </div>
@@ -642,7 +531,7 @@ export default function GeneradorPage({ _context, periodId, onNavigateToDrafts }
             <table>
               <thead>
                 <tr>
-                  <th>Grupo</th>
+                  <th>Carrera y año</th>
                   <th>Asignatura</th>
                   <th>Sesión</th>
                   <th>Motivo</th>

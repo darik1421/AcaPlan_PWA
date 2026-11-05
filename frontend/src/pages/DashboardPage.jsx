@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import {
   Building2,
   BookOpen,
@@ -14,7 +14,7 @@ import { useAuth } from '../features/auth/AuthContext'
 import { api } from '../services/management'
 import acaplanLogo from '../assets/acaplan-logo.png'
 import { roleLabel } from '../lib/role-labels'
-import { workspacePages, workspacePage } from '../lib/workspace-pages'
+import { workspacePages, workspacePage, workspaceScope } from '../lib/workspace-pages'
 
 import GeneradorPage from '../features/management/GeneradorPage'
 import HorariosPublicados from '../features/management/HorariosPublicados'
@@ -44,7 +44,7 @@ const PAGE_TITLES = {
 }
 
 export default function DashboardPage() {
-  const { profile, logout } = useAuth()
+  const { profile, logout, error: accessError, retry: retryAccess, accessRevision = 0 } = useAuth()
   const [closing, setClosing] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [workspace, setWorkspace] = useState(null)
@@ -52,9 +52,18 @@ export default function DashboardPage() {
   const context = workspace?.profileKey === profileKey ? workspace.data : null
   const [error, setError] = useState('')
   const [revision, setRevision] = useState(0)
-  const [requestedPage, setPage] = useState('periods')
+  const [requestedPage, setPage] = useState(null)
+  const [generatedDraft, setGeneratedDraft] = useState(null)
   const availablePages = workspacePages(context)
   const page = workspacePage(requestedPage, context)
+  const contentRef = useRef(null)
+
+  useLayoutEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.scrollTop = 0
+      contentRef.current.scrollLeft = 0
+    }
+  }, [page])
 
   const refresh = () => setRevision(value => value + 1)
 
@@ -68,11 +77,11 @@ export default function DashboardPage() {
       .catch(e => {
         if (!controller.signal.aborted) {
           setError(e.message)
-          setWorkspace(null)
+          if ([401,403].includes(e.status)) setWorkspace(null)
         }
       })
     return () => controller.abort()
-  }, [revision, profileKey])
+  }, [revision, profileKey, accessRevision])
 
   async function close() {
     setClosing(true)
@@ -107,102 +116,17 @@ export default function DashboardPage() {
           </div>
 
           <nav className="sidebar-nav" aria-label="Navegación principal" onClick={event => { if (event.target.closest('button')) setMenuOpen(false) }}>
-            {context?.personalScheduleVersion >= 1 && <button className={page === 'personal' ? 'selected' : ''} onClick={() => setPage('personal')}><Calendar size={18} /><span>Mi horario</span></button>}
-            {context?.canManageBloques && <button
-              className={page === 'generador' ? 'selected' : ''}
-              onClick={() => setPage('generador')}
-            >
-              <Sparkles size={18} />
-              <span>Generador de horarios</span>
-            </button>}
-
-            <button
-              className={page === 'publicados' ? 'selected' : ''}
-              onClick={() => setPage('publicados')}
-            >
-              <Calendar size={18} />
-              <span>Horarios publicados</span>
-            </button>
-
-            {availablePages.has('periods') && (
-            <button
-              className={page === 'periods' ? 'selected' : ''}
-              onClick={() => setPage('periods')}
-            >
-              <Calendar size={18} />
-              <span>Semestres</span>
-            </button>
-            )}
-
-            {availablePages.has('carreras') && (
-            <button
-              className={page === 'carreras' ? 'selected' : ''}
-              onClick={() => setPage('carreras')}
-            >
-              <Layers size={18} />
-              <span>Carreras</span>
-            </button>
-            )}
-
-            {availablePages.has('asignaturas') && (
-            <button
-              className={page === 'asignaturas' ? 'selected' : ''}
-              onClick={() => setPage('asignaturas')}
-            >
-              <BookOpen size={18} />
-              <span>Asignaturas</span>
-            </button>
-            )}
-
-            {availablePages.has('espacios') && (
-            <button
-              className={page === 'espacios' ? 'selected' : ''}
-              onClick={() => setPage('espacios')}
-            >
-              <Building2 size={18} />
-              <span>Pabellones y aulas</span>
-            </button>
-            )}
-
-            {availablePages.has('programacion') && (
-            <button
-              className={page === 'programacion' ? 'selected' : ''}
-              onClick={() => setPage('programacion')}
-            >
-              <ClipboardList size={18} />
-              <span>Asignación académica</span>
-            </button>
-            )}
-
-            {availablePages.has('disponibilidad') && (
-            <button
-              className={page === 'disponibilidad' ? 'selected' : ''}
-              onClick={() => setPage('disponibilidad')}
-            >
-              <Clock size={18} />
-              <span>Restricciones</span>
-            </button>
-            )}
-
-            {context?.canReadDrafts && (
-              <button
-                className={page === 'borradores' ? 'selected' : ''}
-                onClick={() => setPage('borradores')}
-              >
-                <Calendar size={18} />
-                <span>Borradores</span>
-              </button>
-            )}
-
-            {context?.canManageAccounts && (
-              <button
-                className={page === 'accounts' ? 'selected' : ''}
-                onClick={() => setPage('accounts')}
-              >
-                <User size={18} />
-                <span>Gestión de Cuentas</span>
-              </button>
-            )}
+            {[
+              ['Planificación', [['programacion','Asignación académica',ClipboardList],['disponibilidad','Restricciones',Clock],['generador','Generador de horarios',Sparkles],['borradores','Borradores',Calendar]]],
+              ['Horarios', [['personal','Mi horario',Calendar],['publicados','Horarios publicados',Calendar]]],
+              ['Configuración', [['periods','Semestres',Calendar],['carreras','Carreras',Layers],['espacios','Pabellones y aulas',Building2],['asignaturas','Asignaturas',BookOpen],['accounts','Gestión de Cuentas',User]]],
+            ].map(([group,items]) => {
+              const visible = items.filter(([id]) => availablePages.has(id))
+              return visible.length > 0 && <div className="sidebar-section" role="group" aria-label={group} key={group}>
+                <span className="sidebar-section-title">{group}</span>
+                {visible.map(([id,label,Icon]) => <button key={id} className={page === id ? 'selected' : ''} aria-current={page === id ? 'page' : undefined} onClick={() => setPage(id)}><Icon size={18}/><span>{label}</span></button>)}
+              </div>
+            })}
           </nav>
 
           <div className="sidebar-footer">
@@ -243,7 +167,8 @@ export default function DashboardPage() {
             </div>
           </header>
 
-          <main className="content-area">
+          <main className="content-area" ref={contentRef}>
+            {accessError && <div className="notice" role="status"><p>No se pudo volver a comprobar tu acceso. Comprueba la conexión y reintenta. El servidor verificará tus permisos en cada operación.</p><button className="secondary" onClick={retryAccess}>Comprobar acceso</button></div>}
             {error && (
               <div className="error" role="alert" style={{ marginBottom: '20px' }}>
                 <p style={{ margin: 0, marginBottom: '10px' }}>{error}</p>
@@ -255,12 +180,14 @@ export default function DashboardPage() {
 
             {!context && !error && <p role="status">Cargando tu espacio de trabajo…</p>}
 
-            {context && (
+            {context && <Fragment key={workspaceScope(context)}>{
               page === 'generador' && context.canManageBloques ? (
                 <GeneradorPage
                   context={context}
                   periodId={context.activePeriod?.id_periodo}
-                  onNavigateToDrafts={() => setPage('borradores')}
+                  initialDraftId={generatedDraft?.period === context.activePeriod?.id_periodo ? generatedDraft?.id ?? null : null}
+                  onNavigateToRestrictions={id => {setGeneratedDraft({id,period:context.activePeriod?.id_periodo});setPage('disponibilidad')}}
+                  onNavigateToDrafts={id => {setGeneratedDraft({id,period:context.activePeriod?.id_periodo});setPage('borradores')}}
                 />
               ) :
               page === 'personal' && context.personalScheduleVersion >= 1 ? <HorariosPublicados key="personal" personal /> :
@@ -270,6 +197,9 @@ export default function DashboardPage() {
                   key={context.activePeriod?.id_periodo}
                   periodId={context.activePeriod?.id_periodo}
                   canPlan={context.canManageBloques}
+                  onNavigateToRestrictions={availablePages.has('disponibilidad') ? id => {setGeneratedDraft({id,period:context.activePeriod?.id_periodo});setPage('disponibilidad')} : undefined}
+                  onRegenerate={context.canManageBloques ? id => {setGeneratedDraft({id,period:context.activePeriod?.id_periodo});setPage('generador')} : undefined}
+                  initialDraftId={generatedDraft?.period === context.activePeriod?.id_periodo ? generatedDraft?.id ?? null : null}
                 />
               ) :
               page === 'accounts' && context.canManageAccounts ? (
@@ -296,7 +226,11 @@ export default function DashboardPage() {
                 <AsignacionAcademicaPage context={context} onChanged={refresh} />
               ) :
               page === 'disponibilidad' ? (
-                <DisponibilidadPage context={context} />
+                <DisponibilidadPage context={context}
+                  draftId={generatedDraft?.period === context.activePeriod?.id_periodo ? generatedDraft?.id ?? null : null}
+                  onRegenerate={context.canManageBloques ? () => setPage('generador') : undefined}
+                  onReturnToDraft={context.canReadDrafts ? () => setPage('borradores') : undefined}
+                />
               ) : (
                 <>
                   <PeriodsPage canManage={context.canManagePeriods} onChanged={refresh} />
@@ -312,7 +246,7 @@ export default function DashboardPage() {
                   )}
                 </>
               )
-            )}
+            }</Fragment>}
           </main>
         </div>
       </div>

@@ -169,8 +169,8 @@ export default function PreparacionExcel({ tipo, periodId, onConfirmed }) {
 
       <p className="muted" style={{ fontSize: '13.5px', margin: '4px 0 14px 0' }}>
         {tipo === 'asignaciones'
-          ? 'Plantilla provisional única: completa cédulas, nombres, códigos de asignatura, carrera, año, turno y horas totales del semestre. Revisa qué se reconoce y qué se creará antes de confirmar. No se generan horarios ni cuentas de acceso.'
-          : 'Sube el inventario, revisa las coincidencias y confirma su guardado. Se incorporan pabellones y aulas completas; los datos existentes que no coincidan requieren revisión.'}
+          ? 'Descarga la plantilla provisional, complétala y sube el Excel.'
+          : 'Sube el Excel de pabellones y aulas. Revisa los datos antes de confirmar.'}
       </p>
 
       <div className="excel-importer-actions">

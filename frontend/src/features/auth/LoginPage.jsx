@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import {setRememberSession} from '../../lib/auth-storage'
 import { User, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
 import { supabase, supabaseConfigured } from '../../lib/supabase'
 import acaplanLogo from '../../assets/acaplan-logo.png'
@@ -12,10 +13,12 @@ export default function LoginPage() {
 
   async function submit(event) {
     event.preventDefault()
+    if (busy || !supabaseConfigured) return
     const values = new FormData(event.currentTarget)
     setError('')
     setBusy(true)
     try {
+      setRememberSession(values.get('remember') === 'on')
       const { error: authError } = await supabase.auth.signInWithPassword({
         email: values.get('email').trim().toLowerCase(),
         password: values.get('password'),

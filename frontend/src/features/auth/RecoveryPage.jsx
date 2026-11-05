@@ -13,6 +13,7 @@ export default function RecoveryPage() {
     || new URLSearchParams(window.location.search).has('error'))
   async function submit(event) {
     event.preventDefault()
+    if (busy || !supabaseConfigured) return
     const values = new FormData(event.currentTarget)
     setError('')
     if (recovery && values.get('password') !== values.get('confirmation')) {

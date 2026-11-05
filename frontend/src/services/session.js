@@ -14,6 +14,11 @@ export async function getProfile(token, signal) {
     error.status = response.status
     throw error
   }
+  if (!body.profile || typeof body.profile !== 'object' || Array.isArray(body.profile)) {
+    const error = new Error('No se recibió un perfil completo. Vuelve a comprobar tu acceso.')
+    error.status = 503
+    throw error
+  }
   return body.profile
 }
 

@@ -47,7 +47,8 @@ test('El flujo reúne los ejemplos con asignaciones y retira la pantalla de pref
  expect(screen.queryByRole('button',{name:'Registrar Impartición'})).toBeNull()
  fireEvent.click(screen.getByRole('button',{name:'Restricciones'}))
  await screen.findByRole('heading',{name:'Restricciones'})
- expect(screen.getByText('Consultar disponibilidad del modelo anterior')).toBeTruthy()
+ expect(screen.queryByText('Consultar disponibilidad del modelo anterior')).toBeNull()
+ expect(screen.getByText('Horarios en los que un docente no puede dar clase')).toBeTruthy()
  expect(mocks.api.mock.calls.some(([path])=>path.startsWith('/planificacion/'))).toBe(false)
 })
 
@@ -68,6 +69,7 @@ test('Asignación académica integra años de carrera y tiempos quedan en Semest
  const context={isAdmin:true,canManageSecciones:true,canManageBloques:true,activePeriod:{id_periodo:1,nombre:'Semestre'}}
  mocks.api.mockImplementation(async path=>path==='/workspace'?context:path==='/programacion/resumen'?{detalles:[],secciones_sin_asignaturas:[]}:[])
  render(<DashboardPage/> )
+ fireEvent.click(await screen.findByRole('button',{name:'Semestres',exact:true}))
  await screen.findByText('Configuración de tiempos del semestre')
  expect(screen.queryByRole('button',{name:'Grupos',exact:true})).toBeNull()
  expect(screen.queryByRole('button',{name:'Demanda de carga',exact:true})).toBeNull()

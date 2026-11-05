@@ -16,6 +16,7 @@ export default function RestriccionesPanel({ context }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const [search, setSearch] = useState('')
   const [reloadRequired, setReloadRequired] = useState(false)
 
   async function load(signal) {
@@ -80,7 +81,8 @@ export default function RestriccionesPanel({ context }) {
     }
   }
 
-  const visible = rows.filter(r => r.id_periodo === period)
+  const semesterRows = rows.filter(r => r.id_periodo === period)
+  const visible = semesterRows.filter(r => docentes.find(d => d.origen === r.origen && d.id_docente === r.id_docente)?.nombre.toLocaleLowerCase('es').includes(search.trim().toLocaleLowerCase('es')) || !search.trim())
   const key = (origen, id) => `${origen}:${id}`
   const name = (origen, id) =>
     docentes.find(d => d.origen === origen && d.id_docente === id)?.nombre ||
@@ -88,24 +90,13 @@ export default function RestriccionesPanel({ context }) {
 
   return (
     <div style={{ marginTop: '16px' }}>
-      <p className="muted" style={{ fontSize: '13.5px', marginBottom: '16px' }}>
-        Los directores de departamento registran los intervalos autorizados en los que un docente no
-        puede impartir clases. Los coordinadores pueden consultarlos. Sin restricciones comunicadas
-        no hay bloqueo por disponibilidad.
-      </p>
-
       {schemaVersion === 1 && (
         <p className="notice">
           Las restricciones existentes siguen disponibles. Falta aplicar en Supabase la conexión con
           docentes recibidos por Excel.
         </p>
       )}
-      {schemaVersion === 2 && (
-        <p className="muted" style={{ fontSize: '13px', marginBottom: '16px' }}>
-          La lista incluye docentes recibidos por Excel aunque no tengan una cuenta. Los que ya están
-          vinculados a un docente existente utilizan ese registro.
-        </p>
-      )}
+
 
       {error && (
         <p role="alert" className="error">
@@ -118,6 +109,9 @@ export default function RestriccionesPanel({ context }) {
         </p>
       )}
 
+      <label className="filter-card" style={{marginBottom:'16px'}}>Buscar restricciones de un docente
+        <input type="search" value={search} placeholder="Escribe el nombre del docente" onChange={e => setSearch(e.target.value)}/>
+      </label>
       <div
         style={{
           display: 'flex',
@@ -251,6 +245,7 @@ export default function RestriccionesPanel({ context }) {
               )}
             </div>
 
+            {form.id_docente && form.hora_inicio && form.hora_fin && <p className="notice">{name(form.origen,form.id_docente)} {form.activa ? 'no podrá dar clase' : 'dejará de tener esta restricción'} el {form.dia} de {form.hora_inicio} a {form.hora_fin}.</p>}
             <div className="form-actions">
               <button className="primary" type="submit">
                 Guardar restricción
@@ -331,7 +326,7 @@ export default function RestriccionesPanel({ context }) {
                 {!visible.length && (
                   <tr>
                     <td colSpan={editable ? 6 : 5}>
-                      No hay restricciones comunicadas en este semestre.
+                      {search.trim() ? 'No hay restricciones que coincidan con ese docente.' : 'No hay restricciones comunicadas en este semestre.'}
                     </td>
                   </tr>
                 )}

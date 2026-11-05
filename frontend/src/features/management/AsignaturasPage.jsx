@@ -13,11 +13,13 @@ export default function AsignaturasPage({ context, canManage, onChanged }) {
   const [yearFilter, setYearFilter] = useState('')
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
+  const [loadFailed, setLoadFailed] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
 
   async function load(signal) {
     setLoading(true)
+    setLoadFailed(false)
     setError('')
     try {
       const [dataAsignaturas, dataCarreras] = await Promise.all([
@@ -29,7 +31,7 @@ export default function AsignaturasPage({ context, canManage, onChanged }) {
         setCarreras(dataCarreras)
       }
     } catch (e) {
-      if (!signal?.aborted) setError(e.message)
+      if (!signal?.aborted) { setError(e.message); setLoadFailed(true); setRows([]); setCarreras([]); setForm(null) }
     } finally {
       if (!signal?.aborted) setLoading(false)
     }
@@ -52,7 +54,7 @@ export default function AsignaturasPage({ context, canManage, onChanged }) {
 
   async function save(event) {
     event.preventDefault()
-    if (busy || !form?.id || !canEdit(form.id_carrera)) return
+    if (busy || loading || loadFailed || !form?.id || !canEdit(form.id_carrera)) return
     setBusy(true)
     setError('')
     setMessage('')
@@ -129,7 +131,7 @@ export default function AsignaturasPage({ context, canManage, onChanged }) {
         {form && canEdit(form.id_carrera) && (
           <form className="management-form" onSubmit={save} style={{ marginBottom: '20px' }}>
             <h3>Corregir asignatura</h3>
-            <fieldset disabled={busy}>
+            <fieldset disabled={busy || loading || loadFailed}>
               <div className="form-grid">
                 <label>
                   Carrera
@@ -285,6 +287,8 @@ export default function AsignaturasPage({ context, canManage, onChanged }) {
 
         {loading ? (
           <p role="status">Cargando asignaturas…</p>
+        ) : loadFailed ? (
+          <p className="notice">No se pudo consultar el catálogo anterior. Usa «Actualizar lista» para reintentar.</p>
         ) : (
           <div className="table-scroll">
             <table>

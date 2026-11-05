@@ -32,7 +32,7 @@ export default function CuadriculasPage({context}) {
    {period&&editable&&<button className="secondary" disabled={busy} onClick={()=>{setForm({nombre:'',turno:turn,id_periodo:period,bloques:[block()]});setError('');setMessage('')}}>Añadir configuración de turno</button>}
   </div>
   <p className="muted">Matutino y vespertino: bloques de 45 minutos; dos seguidos forman una sesión de 90. Nocturno y encuentros: bloques de 60 minutos. El nocturno no lleva recesos. Registra el viernes dentro de encuentros cuando corresponda.</p>
-  <p className="notice">El año y el turno se reciben en el único Excel de Asignación académica. Los vínculos de grupos anteriores se consultan en Consultar datos del modelo anterior. Si un grupo ya tiene clases, no se pueden cambiar los tiempos ni el turno de su configuración; sí puedes corregir el nombre. La generación de horarios sigue pendiente.</p>
+  <p className="notice">El año y el turno se reciben en el único Excel de Asignación académica. Si un año ya tiene clases, no se pueden cambiar los tiempos ni el turno de su configuración; sí puedes corregir el nombre. El generador utiliza estos tiempos para distribuir las clases.</p>
   <p className="muted">Los descansos son intervalos sin clase: impiden asignar clases durante ese tiempo y no cuentan como huecos. No son asignaturas ni implican añadir una fila «Receso» al horario que se publique.</p>
   <label>Turno a consultar<select disabled={busy} value={turn} onChange={e=>setTurn(e.target.value)}>{Object.entries(turns).map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label>
   {!period&&<p className="notice">Activa un semestre para configurar sus bloques y recesos.</p>}

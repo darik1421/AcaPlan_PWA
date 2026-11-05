@@ -24,7 +24,7 @@ export default function NecesidadesAsignacion({id,periodId,onSaved,onClose}) {
   finally{if(current===generation.current)setBusy(false)}
  }
  return <section className="management-form" aria-label="Necesidades de aula"><h3>Necesidades de aula</h3>
-  <p>El coordinador indica qué tipo de aula necesita esta asignatura. Estos datos preparan la revisión y la generación futura de los horarios.</p>
+  <p>El coordinador indica qué tipo de aula necesita esta asignatura. El generador utiliza esta información al distribuir las clases.</p>
   {loading&&<p role="status">Consultando necesidades…</p>}{error&&<p role="alert" className="error">{error}</p>}
   {data&&!loading&&<form onSubmit={save}>
    <p><strong>{data.asignacion.codigo} · {data.asignacion.nombre}</strong> · Año {data.asignacion.ano_estudio}</p>

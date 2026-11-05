@@ -25,3 +25,12 @@ test('Una sesión con perfil puede abrir el espacio de trabajo',async()=>{
  render(<App/>);await screen.findByText('Espacio autorizado')
  expect(mocks.workspace).toHaveBeenCalled()
 })
+
+test('La carga inicial utiliza el logo actual y no el contenedor provisional',()=>{
+ mocks.auth={session:null,loading:true}
+ const view=render(<App/>)
+ expect(screen.getByRole('status').textContent).toBe('Verificando tu acceso…')
+ expect(screen.getByRole('img',{name:'AcaPlan'})).toBeTruthy()
+ expect(view.container.querySelector('.brand-mark')).toBeNull()
+ expect(view.container.querySelector('.access-status')).toBeTruthy()
+})
