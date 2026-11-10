@@ -1,4 +1,4 @@
-import {cleanup,fireEvent,render,screen,waitFor,within} from '@testing-library/react'
+import {act,cleanup,fireEvent,render,screen,waitFor,within} from '@testing-library/react'
 import {afterEach,test,expect,vi} from 'vitest'
 import BorradoresPage from '../src/features/management/BorradoresPage'
 import ComponentesAsignacion from '../src/features/management/ComponentesAsignacion'
@@ -7,6 +7,34 @@ vi.mock('../src/services/management',()=>({api:mocks.api}))
 afterEach(()=>{cleanup();mocks.api.mockReset()})
 const detail={borrador:{id:1,nombre:'Propuesta uno',revision:4},semestre_activo:true,clases:[{id:5,id_asignacion:2,componente:'general',id_aula:3,dia:'Lunes',hora_inicio:'08:00:00',hora_fin:'09:30:00',fijada:true}],asignaciones:[{id:2,carrera:'Sistemas',ano_estudio:3,nombre:'Web',codigo:'WEB'}],espacios:[{id_aula:3,codigo:'A1',estado:'activo',sede:'CUR'}],movimientos:[]}
 const list={borradores:[{id:1,nombre:'Propuesta uno'}],carreras:[{id_carrera:1,nombre:'Sistemas'}],semestre_activo:true}
+
+test('Eliminar pide confirmación y retira el borrador de la lista',async()=>{
+ const confirm=vi.spyOn(window,'confirm').mockReturnValueOnce(false).mockReturnValueOnce(true)
+ let deleted=false
+ mocks.api.mockImplementation(async (path,options)=>{
+  if(path==='/borradores/estado')return {estado:'borrador',version:0,historial:[],canPlan:true,canPublish:true}
+  if(path==='/borradores/consultar')return deleted?{...list,borradores:[]}:list
+  if(path==='/borradores'&&options.method==='DELETE'){deleted=true;return {eliminado:true}}
+  return detail
+ })
+ try{
+  render(<BorradoresPage canPlan periodId={1} initialDraftId={1}/>)
+  const remove=await screen.findByRole('button',{name:'Eliminar borrador'})
+  fireEvent.click(remove)
+  expect(mocks.api.mock.calls.some(([path])=>path==='/borradores')).toBe(false)
+  fireEvent.click(remove)
+  await waitFor(()=>expect(screen.getByLabelText('Borrador').options.length).toBe(1))
+  expect(mocks.api).toHaveBeenCalledWith('/borradores',{method:'DELETE',data:{id:1,revision:4,version:0}})
+ }finally{confirm.mockRestore()}
+})
+
+test('Borradores oculta un horario ya publicado aunque se intente abrir por su ID',async()=>{
+ mocks.api.mockImplementation(async path=>path==='/borradores/consultar'?{...list,borradores:[{...list.borradores[0],publicado:true},{id:2,nombre:'Propuesta nueva'}]}:detail)
+ render(<BorradoresPage periodId={1} initialDraftId={1}/>)
+ await screen.findByRole('option',{name:'Propuesta nueva'})
+ expect(screen.queryByText('Propuesta uno')).toBeNull()
+ expect(screen.getByLabelText('Borrador').value).toBe('')
+})
 
 test('Al cambiar el departamento del borrador se retiran las carreras de la selección anterior',async()=>{
  const grouped={...list,departmentDraftVersion:1,departamentos:[{id:1,nombre:'Económicas'},{id:3,nombre:'Tecnología'}],carreras:[{id_carrera:1,id_departamento:1,nombre:'Economía'},{id_carrera:2,id_departamento:3,nombre:'Sistemas'}]}
@@ -66,12 +94,16 @@ test('Después de fijar una clase vuelve a edición nueva sin conservar la opera
  render(<BorradoresPage canPlan periodId={1}/>);fireEvent.change(await screen.findByLabelText('Borrador'),{target:{value:'1'}})
  fireEvent.click(await screen.findByRole('button',{name:'Desfijar clase 5'}))
  fireEvent.change(screen.getByLabelText('Motivo de la autorización'),{target:{value:'Corrección autorizada'}})
- fireEvent.click(screen.getByLabelText('Autorizo este cambio de la clase fijada.'));fireEvent.click(screen.getByRole('button',{name:'Confirmar estado'}))
+ fireEvent.click(screen.getByLabelText('Autorizo este cambio de la clase fijada.'))
+ await act(async()=>fireEvent.click(screen.getByRole('button',{name:'Confirmar estado'})))
  await waitFor(()=>expect(mocks.api).toHaveBeenCalledWith('/borradores/fijar',expect.objectContaining({data:expect.objectContaining({id:1,id_clase:5,revision:4,fijada:false,autorizar:true})})))
- await waitFor(async () => {
-   fireEvent.click(await screen.findByRole('button',{name:'Añadir clase al borrador'}))
-   await screen.findByRole('group',{name:'Añadir una clase al borrador'})
+ const add=await waitFor(()=>{
+  const button=screen.getByRole('button',{name:'Añadir clase al borrador'})
+  expect(button.disabled).toBe(false)
+  return button
  })
+ fireEvent.click(add)
+ await screen.findByRole('group',{name:'Añadir una clase al borrador'})
  expect(screen.getByLabelText('Asignatura de la propuesta').value).toBe('')
  expect(screen.queryByLabelText('Motivo de la autorización')).toBeNull()
 })

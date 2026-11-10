@@ -165,6 +165,7 @@ export default function DashboardPage() {
                 <div className="user-info">
                   <span className="user-name">{profile?.nombre || profile?.email || 'Usuario'}</span>
                   <span className="user-role">{roleLabel(profile, context?.funciones || [])}</span>
+                  {context?.departamento_nombre && <span className="user-department">{context.departamento_nombre}</span>}
                 </div>
               </div>
             </div>
@@ -194,12 +195,13 @@ export default function DashboardPage() {
                 />
               ) :
               page === 'personal' && context.personalScheduleVersion >= 1 ? <HorariosPublicados key="personal" personal /> :
-              page === 'publicados' ? <HorariosPublicados key="publicados" /> :
+              page === 'publicados' ? <HorariosPublicados key="publicados" onDraftCreated={context.isAdmin ? id => {setGeneratedDraft({id,period:context.activePeriod?.id_periodo});setPage('borradores')} : undefined} /> :
               page === 'borradores' && context.canReadDrafts ? (
                 <BorradoresPage
                   key={context.activePeriod?.id_periodo}
                   periodId={context.activePeriod?.id_periodo}
                   canPlan={context.canManageBloques}
+                  onPublished={() => {setGeneratedDraft(null);setPage('publicados')}}
                   onNavigateToRestrictions={availablePages.has('disponibilidad') ? id => {setGeneratedDraft({id,period:context.activePeriod?.id_periodo});setPage('disponibilidad')} : undefined}
                   onRegenerate={context.canManageBloques ? id => {setGeneratedDraft({id,period:context.activePeriod?.id_periodo});setPage('generador')} : undefined}
                   initialDraftId={generatedDraft?.period === context.activePeriod?.id_periodo ? generatedDraft?.id ?? null : null}

@@ -46,7 +46,7 @@ const stateLabels = {
   publicado: { text: 'Publicado', pill: 'active' },
 }
 
-export default function BorradoresPage({ periodId, canPlan = false, initialDraftId = null, onNavigateToRestrictions, onRegenerate }) {
+export default function BorradoresPage({ periodId, canPlan = false, initialDraftId = null, onNavigateToRestrictions, onRegenerate, onPublished }) {
   const [list, setList] = useState(null),
     [selected, setSelected] = useState(initialDraftId),
     [detail, setDetail] = useState(null),
@@ -67,6 +67,8 @@ export default function BorradoresPage({ periodId, canPlan = false, initialDraft
   const [cycle, setCycle] = useState(null)
   const currentCycle = cycle?.id === selected && cycle?.revision === detail?.borrador.revision ? cycle : null
   const editable = Boolean(canPlan && detail?.semestre_activo && currentCycle?.estado === 'borrador')
+  const openDrafts = list?.borradores.filter(d => !d.publicado)
+  const selectedIsOpen = openDrafts?.some(d => String(d.id) === String(selected))
 
   useEffect(() => {
     setSelected(initialDraftId)
@@ -82,6 +84,7 @@ export default function BorradoresPage({ periodId, canPlan = false, initialDraft
     setDetail(null)
     setReport(null)
     setEditing(null)
+    setIsModalOpen(false)
     setForm(empty)
     setOperation('clase')
     setAccepted(false)
@@ -116,15 +119,15 @@ export default function BorradoresPage({ periodId, canPlan = false, initialDraft
       c.abort()
       generation.current++
     }
-  }, [periodId, selected, attempt])
+  }, [periodId, selected, attempt, canPlan])
 
-  async function run(path, payload, onSuccess) {
+  async function run(path, payload, onSuccess, method = 'POST') {
     const g = generation.current
     setBusy(true)
     setError('')
     setReport(null)
     try {
-      const d = await api(path, { method: 'POST', data: payload })
+      const d = await api(path, { method, data: payload })
       if (g === generation.current) onSuccess(d)
     } catch (e) {
       if (g === generation.current) {
@@ -132,11 +135,23 @@ export default function BorradoresPage({ periodId, canPlan = false, initialDraft
         setDetail(null)
       }
     } finally {
-      setBusy(false)
+      if (g === generation.current) setBusy(false)
     }
   }
 
   const refresh = () => setAttempt(n => n + 1)
+
+  async function deleteDraft() {
+    if (busy || !currentCycle?.canPublish || !detail?.semestre_activo) return
+    const {id, nombre, revision} = detail.borrador
+    if (!window.confirm(`¿Eliminar «${nombre}»? Se borrarán sus clases y su historial. Esta acción es permanente.`)) return
+    await run('/borradores', {id, revision, version:currentCycle.version}, result => {
+      if (result?.eliminado !== true) throw new Error('No se pudo confirmar la eliminación.')
+      setSelected(null)
+      refresh()
+    }, 'DELETE')
+  }
+
   const course = detail?.asignaciones.find(a => a.id === Number(form.id_asignacion))
   const parts = course?.componentes || [{ tipo: 'general' }]
 
@@ -282,14 +297,14 @@ export default function BorradoresPage({ periodId, canPlan = false, initialDraft
               <span>Borrador</span>
               <select
                 disabled={busy}
-                value={selected || ''}
+                value={selectedIsOpen ? selected : ''}
                 onChange={e => {
                   setSelected(Number(e.target.value) || null)
                   cancel()
                 }}
               >
                 <option value="">Seleccionar borrador</option>
-                {list.borradores.map(d => (
+                {openDrafts.map(d => (
                   <option key={d.id} value={d.id}>
                     {d.nombre}{d.departamento ? ` · ${d.departamento}` : ''}
                   </option>
@@ -391,7 +406,7 @@ export default function BorradoresPage({ periodId, canPlan = false, initialDraft
       )}
 
       {/* ── Detalle del Borrador Seleccionado ── */}
-      {detail && (
+      {detail && selectedIsOpen && (
         <>
           {/* Tarjeta de Resumen y KPIs */}
           <div className="surface-card" style={{ marginBottom: '20px', padding: '24px' }}>
@@ -538,6 +553,12 @@ export default function BorradoresPage({ periodId, canPlan = false, initialDraft
                     <span>Volver a generar este borrador</span>
                   </button>
                 )}
+                {currentCycle?.canPublish && currentCycle.estado !== 'publicado' && (
+                  <button type="button" className="secondary danger-btn" disabled={busy} onClick={deleteDraft}>
+                    <Trash2 size={14} aria-hidden="true" />
+                    Eliminar borrador
+                  </button>
+                )}
                 <button
                   className="primary"
                   disabled={busy}
@@ -556,7 +577,7 @@ export default function BorradoresPage({ periodId, canPlan = false, initialDraft
               </div>
             )}
 
-            {canPlan && detail.semestre_activo && ['aprobado', 'publicado'].includes(currentCycle?.estado) && (
+            {canPlan && detail.semestre_activo && currentCycle?.estado === 'aprobado' && (
               <div style={{ marginTop: '16px' }}>
                 <NuevaVersionBorrador
                   id={selected}
@@ -576,7 +597,13 @@ export default function BorradoresPage({ periodId, canPlan = false, initialDraft
                 id={selected}
                 revision={detail.borrador.revision}
                 active={detail.semestre_activo}
-                onChanged={refresh}
+                onChanged={estado => {
+                  if (estado === 'publicado') {
+                    setSelected(null)
+                    onPublished?.()
+                  }
+                  refresh()
+                }}
                 onStateLoaded={setCycle}
               />
             </div>

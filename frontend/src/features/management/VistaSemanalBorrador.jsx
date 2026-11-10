@@ -66,7 +66,7 @@ export default function VistaSemanalBorrador({ detail, onEdit, disabled }) {
               Vista semanal por carrera y año
             </h3>
             <p className="muted" style={{ margin: '2px 0 0 0', fontSize: '13px' }}>
-              Horario en revisión. Las celdas vacías no indican disponibilidad.
+              Las celdas vacías no indican disponibilidad.
             </p>
           </div>
         </div>

@@ -7,7 +7,7 @@ import {consecutiveInput} from './consecutive-input.js'
 import {collectPreparation,preparationReview} from './preparation-review.js'
 import {travelSitesInput} from './travel-sites-input.js'
 import {draftInput} from './draft-input.js'
-import {draftVersionInput} from './draft-version.js'
+import {draftDeleteInput,draftVersionInput} from './draft-version.js'
 import {componentsInput,draftWorkInput} from './academic-workflow-input.js'
 import {reviewDraft} from './draft-review.js'
 import {preparationVersion} from './preparation-version.js'
@@ -57,6 +57,8 @@ const businessErrors = {
   RECURSO_REQUERIDO: [409, 'El aula no dispone de todos los recursos obligatorios.'],
   REGLAS_SIN_CONFIGURAR: [409, 'Guarda las reglas del semestre antes de publicar.'],
   VERSION_CAMBIO: [409, 'Otro usuario modificó este registro. Recarga los datos antes de guardar.'],
+  BORRADOR_PUBLICADO: [409, 'Este horario ya se publicó.'],
+  BORRADOR_CON_VERSIONES: [409, 'Este borrador es el origen de otra versión y debe conservarse.'],
   CONFIRMACION_REQUERIDA: [409, 'Confirma las sustituciones mostradas en la vista previa antes de guardar.'],
   CARGA_INCOMPATIBLE: [400, 'La base de datos conserva una equivalencia de carga del modelo anterior. No cambies las horas del catálogo para forzar esa equivalencia; la programación requiere adaptación.'],
   PROGRAMACION_EXISTENTE: [409, 'Esta asignatura ya tiene programación en la sección. Utiliza Editar para modificarla.'],
@@ -132,6 +134,7 @@ export function createManagement({
     const body = await response.json().catch(() => null)
     if (!response.ok) {
       if(functionName==='pwa_nueva_version_borrador'&&body?.code==='PGRST202')throw new AccessError(503,'La creación de nuevas versiones todavía no está habilitada en esta base de datos.')
+      if(functionName==='pwa_eliminar_borrador'&&body?.code==='PGRST202')throw new AccessError(503,'Falta aplicar borradores-eliminar.sql en Supabase.')
       if(functionName==='pwa_generador'&&body?.code==='PGRST202')throw new AccessError(503,'La conexión del generador requiere aplicar generador-flujo-actual.sql en Supabase.')
       if(functionName==='pwa_departamentos_api'&&body?.code==='PGRST202')throw new AccessError(503,'La organización por departamentos está pendiente de aplicar departamentos-base.sql en Supabase.')
       if(functionName==='pwa_necesidades_academicas'&&body?.code==='PGRST202')throw new AccessError(503,'Las necesidades de aula y equipamiento requieren aplicar su migración en Supabase.')
@@ -216,6 +219,7 @@ export function createManagement({
   return {
     async execute(request, profile, route, data) {
       if(route==='drafts.version')return rpc2(request,'create',{...draftVersionInput(data),version_reglas:PREPARATION_RULE_VERSION},'pwa_nueva_version_borrador')
+      if(route==='drafts.delete')return rpc2(request,'delete',draftDeleteInput(data),'pwa_eliminar_borrador')
       if(route==='generation.propose'||route==='generation.save'){
         const load=id=>rpc2(request,'context',{id,version_reglas:PREPARATION_RULE_VERSION},'pwa_generador')
         if(route==='generation.propose')return proposeGeneration({data,load})
@@ -539,7 +543,16 @@ export function createManagement({
         const canReadDrafts = canManageBloques || (departmental ? Boolean(context.id_departamento) : !institutional && Boolean(context.funciones?.includes('aprobador')))
         const canManageSecciones = canManageAsignaturas
         const canManageDisponibilidad = isAdmin || (Boolean(context.funciones?.includes('jefe_departamento')) && (!departmental || Boolean(context.id_departamento)))
-        return { ...context, isAdmin, canCreateAccounts: isAdmin && Boolean(serviceKey), canManageCarreras, canManageAsignaturas, canManageEspacios, canManageSecciones, canManageBloques, canReadDrafts, canManageDisponibilidad }
+        let departamento_nombre = null
+        if (departmental && Number.isSafeInteger(context.id_departamento) && context.id_departamento > 0 && serviceKey) {
+          const response = await fetchImpl(`${url}/rest/v1/pwa_departamentos?select=nombre&id=eq.${context.id_departamento}`, {
+            headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` },
+            signal: AbortSignal.timeout(4000),
+          }).catch(() => null)
+          const rows = response?.ok ? await response.json().catch(() => null) : null
+          if (Array.isArray(rows) && typeof rows[0]?.nombre === 'string') departamento_nombre = rows[0].nombre
+        }
+        return { ...context, departamento_nombre, isAdmin, canCreateAccounts: isAdmin && Boolean(serviceKey), canManageCarreras, canManageAsignaturas, canManageEspacios, canManageSecciones, canManageBloques, canReadDrafts, canManageDisponibilidad }
       }
       if (route === 'accounts.create') return createAccount(request, data)
       if (route === 'accounts.update') return rpc(request, route, accountInput(data))

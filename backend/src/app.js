@@ -26,6 +26,7 @@ export function createApp({ authenticateRequest = authenticate, management = cre
       'GET /api/horarios/personal': 'publications.personal',
       'POST /api/borradores/consultar': 'drafts.context',
       'POST /api/borradores': 'drafts.create',
+      'DELETE /api/borradores': 'drafts.delete',
       'POST /api/borradores/versiones': 'drafts.version',
       'POST /api/borradores/detalle': 'draftWork.context',
       'POST /api/borradores/clase': 'draftWork.save',

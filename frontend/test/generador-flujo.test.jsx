@@ -163,14 +163,23 @@ test('Conservar días solo se habilita al continuar un borrador y comunica su se
  expect(monday.getAttribute('aria-pressed')).toBe('false')
 })
 
-test.each(['aprobado','publicado'])('No regenera directamente un horario %s y ofrece una nueva versión',async estado=>{
+test('No regenera directamente un borrador aprobado y ofrece una nueva versión',async()=>{
  mocks.api.mockResolvedValue({...list,borradores:list.borradores.map(d=>({...d,revision:4}))})
- mocks.cycle.mockResolvedValue({estado,version:3,canPlan:true})
+ mocks.cycle.mockResolvedValue({estado:'aprobado',version:3,canPlan:true})
  render(<GeneradorPage context={{canManageBloques:true}} periodId={1} initialDraftId={8}/>)
  await screen.findByRole('button',{name:'Crear nueva versión'})
  expect(screen.getByRole('button',{name:'Generar Horario con IA'}).disabled).toBe(true)
  expect(screen.getByRole('button',{name:'Lunes',exact:true}).disabled).toBe(true)
  expect(mocks.api.mock.calls.some(([path])=>path==='/generador/proponer')).toBe(false)
+})
+
+test('Un horario publicado queda fuera de la selección del generador',async()=>{
+ mocks.api.mockResolvedValue({...list,borradores:list.borradores.map(d=>({...d,publicado:d.id===8}))})
+ render(<GeneradorPage context={{canManageBloques:true}} periodId={1} initialDraftId={8}/>)
+ await screen.findByRole('option',{name:'Economía · Segundo'})
+ expect(screen.queryByRole('option',{name:'Tecnología · Primero'})).toBeNull()
+ expect(screen.getByLabelText('Borrador del departamento').value).toBe('')
+ expect(screen.getByRole('button',{name:'Generar Horario con IA'}).disabled).toBe(true)
 })
 
 test('Si no puede comprobar el estado, bloquea la generación y permite consultar de nuevo',async()=>{

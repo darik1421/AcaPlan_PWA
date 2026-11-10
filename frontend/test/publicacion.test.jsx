@@ -8,6 +8,21 @@ vi.mock('../src/services/management',()=>({api:(path,options)=>path==='/borrador
 beforeEach(()=>mocks.review.mockResolvedValue({completo:true,conflictos:[],pendientes:[]}))
 afterEach(()=>{cleanup();mocks.api.mockReset();mocks.review.mockReset()})
 
+test('El director de departamento ve la aprobación al volver a un borrador enviado por otro usuario',async()=>{
+ const permissions={canApprove:true,canPlan:false,canPublish:false}
+ mocks.api.mockResolvedValueOnce({estado:'borrador',version:1,historial:[],desactualizado:true,...permissions})
+  .mockResolvedValue({estado:'en_revision',version:2,historial:[],...permissions})
+ render(<EstadoBorrador id={1} revision={4} active onChanged={vi.fn()}/>)
+ await screen.findByText('En edición')
+ expect(screen.queryByRole('button',{name:'Aprobar borrador'})).toBeNull()
+ fireEvent.focus(window)
+ const approve=await screen.findByRole('button',{name:'Aprobar borrador'})
+ const confirmation=screen.getByLabelText('Confirmo: aprobar borrador.')
+ await waitFor(()=>expect(confirmation.disabled).toBe(false))
+ fireEvent.click(confirmation)
+ expect(approve.disabled).toBe(false)
+})
+
 test('Un conflicto entre departamentos se muestra antes de permitir la aprobación',async()=>{
  mocks.api.mockResolvedValue({estado:'en_revision',version:1,canApprove:true,historial:[]})
  mocks.review.mockResolvedValueOnce({completo:false,conflictos:[{motivo:'Aula ocupada por otro departamento aprobado'}],pendientes:[]}).mockResolvedValue({completo:true,conflictos:[],pendientes:[]})
@@ -112,7 +127,9 @@ test('Publicar exige confirmación y envía versiones, sin decidir el resultado 
  mocks.api.mockResolvedValueOnce({estado:'aprobado',version:2,historial:[],canApprove:true}).mockResolvedValueOnce({guardado:true});const changed=vi.fn()
  render(<EstadoBorrador id={1} revision={4} active onChanged={changed}/>);
  const button=await screen.findByRole('button',{name:'Publicar horario'});expect(button.disabled).toBe(true)
- fireEvent.click(screen.getByLabelText('Confirmo: publicar horario.'));fireEvent.click(button)
+ const confirmation=screen.getByLabelText('Confirmo: publicar horario.')
+ await waitFor(()=>expect(confirmation.disabled).toBe(false))
+ fireEvent.click(confirmation);fireEvent.click(button)
  await waitFor(()=>expect(changed).toHaveBeenCalled())
  expect(mocks.api).toHaveBeenLastCalledWith('/borradores/transicion',{method:'POST',data:{id:1,revision:4,version:2,estado:'publicado'}})
 })

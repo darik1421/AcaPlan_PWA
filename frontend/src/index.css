@@ -312,6 +312,15 @@ a {
   line-height: 1.2;
 }
 
+.user-department {
+  margin-top: 3px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--acaplan-indigo);
+  overflow-wrap: anywhere;
+}
+
 .user-role {
   font-size: 11px;
   color: var(--text-muted);

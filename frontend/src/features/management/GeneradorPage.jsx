@@ -149,7 +149,7 @@ export default function GeneradorPage({
             throw new Error('No se pudieron consultar los borradores. Vuelve a intentarlo.')
           }
           setList(data)
-          if (data.borradores.some(d => String(d.id) === String(initialDraftId))) {
+          if (data.borradores.some(d => !d.publicado && String(d.id) === String(initialDraftId))) {
             setSelectedDraft(String(initialDraftId))
           }
         })
@@ -506,7 +506,7 @@ export default function GeneradorPage({
             </div>
           )}
 
-          {selectedDraft && ['aprobado', 'publicado'].includes(cycle.data?.estado) && (
+          {selectedDraft && cycle.data?.estado === 'aprobado' && (
             <div className="banner-notice" style={{ marginBottom: '16px' }}>
               <p style={{ margin: '0 0 10px 0', fontSize: '13.5px' }}>
                 Este horario ya está <strong>{cycle.data.estado}</strong>. Prepara una nueva versión para reorganizarlo.
@@ -657,7 +657,7 @@ export default function GeneradorPage({
               >
                 <option value="">Selecciona un borrador</option>
                 {(list?.borradores || [])
-                  .filter(d => d.id_departamento)
+                  .filter(d => d.id_departamento && !d.publicado)
                   .map(d => (
                     <option key={d.id} value={d.id}>
                       {d.departamento} · {d.nombre}

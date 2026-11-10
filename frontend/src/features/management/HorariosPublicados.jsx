@@ -3,6 +3,7 @@ import { api } from '../../services/management'
 import { publicationCsv } from './publication-csv'
 import { orderedScheduleRows } from '../../lib/schedule-order'
 import { RefreshCw, Download } from 'lucide-react'
+import NuevaVersionBorrador from './NuevaVersionBorrador'
 
 function readPublications(response, personal) {
   const list=personal?response?.publicaciones:response
@@ -17,7 +18,7 @@ function validFilters(filters, publications) {
   return {career,year}
 }
 
-export default function HorariosPublicados({ personal = false }) {
+export default function HorariosPublicados({ personal = false, onDraftCreated }) {
   const [data, setData] = useState(null),
     [error, setError] = useState(''),
     [attempt, setAttempt] = useState(0),
@@ -173,6 +174,10 @@ export default function HorariosPublicados({ personal = false }) {
                   <span>Descargar CSV de {p.nombre}</span>
                 </button>
               </div>
+
+              {onDraftCreated && p.nueva_version?.version != null && (
+                <NuevaVersionBorrador {...p.nueva_version} onCreated={onDraftCreated} />
+              )}
 
               <div className="table-scroll published-timetable">
                 <table>
