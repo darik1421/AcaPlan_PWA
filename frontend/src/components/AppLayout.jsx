@@ -1,15 +1,12 @@
+import acaplanLogo from '../assets/acaplan-logo.png'
+
 export default function AppLayout({ children }) {
-  return (
-    <div className="app-shell">
-      <header className="app-header">
-        <a className="brand" href="/" aria-label="AcaPlan, inicio">
-          <span className="brand-mark" aria-hidden="true">A</span>
-          <span>AcaPlan<small>PLANIFICACIÓN ACADÉMICA</small></span>
-        </a>
-        <span className="institution">UNAN-Managua <strong>CUR-Chontales</strong></span>
-      </header>
-      <main>{children}</main>
-      <footer>UNAN-Managua · CUR-Chontales <span>AcaPlan PWA · En desarrollo</span></footer>
+  return <div className="login-viewport access-viewport">
+    <div className="institutional-stripe" aria-hidden="true"><span className="stripe-blue"/><span className="stripe-yellow"/><span className="stripe-red"/></div>
+    <div className="login-container">
+      <header className="login-header"><a href="/" aria-label="AcaPlan, inicio"><img src={acaplanLogo} alt="AcaPlan" className="login-logo-img"/></a></header>
+      <main className="access-main">{children}</main>
+      <footer className="login-footer">AcaPlan · UNAN-Managua · CUR-Chontales</footer>
     </div>
-  )
+  </div>
 }

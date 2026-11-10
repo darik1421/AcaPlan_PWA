@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prototipo Horarios - CUR Chontales</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Transiciones suaves */
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body class="bg-gray-50 flex h-screen overflow-hidden text-gray-800 font-sans">
+
+    <!-- Menú Lateral -->
+    <aside class="w-64 bg-slate-900 text-white flex flex-col shadow-lg z-10">
+        <div class="p-6 border-b border-slate-700">
+            <h1 class="text-xl font-bold tracking-wide">UNAN-Managua</h1>
+            <p class="text-sm text-slate-400">CUR - Chontales</p>
+        </div>
+        
+        <nav class="flex-1 p-4 space-y-6 overflow-y-auto">
+            <!-- Módulo Admin -->
+            <div>
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Secretaría Académica</p>
+                <a href="#" onclick="showView('admin-espacios')" class="block py-2 px-3 rounded hover:bg-slate-800 transition text-sm">🏛️ Gestión de Espacios</a>
+                <a href="#" onclick="showView('admin-generador')" class="block py-2 px-3 rounded hover:bg-slate-800 transition text-sm">⚙️ Generador Automático</a>
+            </div>
+
+            <!-- Módulo Jefatura -->
+            <div>
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Jefatura de Carrera</p>
+                <a href="#" onclick="showView('jefe-oferta')" class="block py-2 px-3 rounded hover:bg-slate-800 transition text-sm">📁 Carga de Oferta</a>
+                <a href="#" onclick="showView('jefe-restricciones')" class="block py-2 px-3 rounded hover:bg-slate-800 transition text-sm">⏳ Disponibilidad Docente</a>
+            </div>
+
+            <!-- Módulo Docente -->
+            <div>
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Docentes</p>
+                <a href="#" onclick="showView('docente-horario')" class="block py-2 px-3 rounded hover:bg-slate-800 transition text-sm">📅 Mi Horario</a>
+            </div>
+        </nav>
+        
+        <div class="p-4 border-t border-slate-700 text-xs text-center text-slate-400">
+            Prototipo Base
+        </div>
+    </aside>
+
+    <!-- Área de Contenido Principal -->
+    <main class="flex-1 flex flex-col overflow-hidden relative">
+        
+        <!-- Header Top -->
+        <header class="bg-white h-16 shadow-sm flex items-center justify-between px-8 z-0">
+            <h2 id="header-title" class="text-lg font-semibold text-slate-700">Seleccione un módulo</h2>
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold shadow">U</div>
+            </div>
+        </header>
+
+        <!-- Contenedor de Vistas -->
+        <div class="flex-1 overflow-auto p-8">
+
+            <!-- VISTA: ADMIN - ESPACIOS -->
+            <div id="admin-espacios" class="view-section hidden fade-in max-w-4xl mx-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold">Catálogo de Espacios</h3>
+                    <button class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 transition">+ Nuevo Espacio</button>
+                </div>
+
+                <!-- Formulario de Mockup -->
+                <div class="bg-white p-6 rounded-lg shadow-sm border mb-8">
+                    <h4 class="text-lg font-semibold mb-4 border-b pb-2">Registrar Aula/Laboratorio</h4>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Código (Ej. B3)</label>
+                            <input type="text" class="w-full border rounded p-2 outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Tipo de Espacio</label>
+                            <select class="w-full border rounded p-2 outline-none focus:border-blue-500">
+                                <option>Aula Normal</option>
+                                <option>Laboratorio Cómputo</option>
+                                <option>Laboratorio Bioanálisis</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Lógica de Muro Desplegable -->
+                    <div class="mb-4 bg-slate-50 p-4 rounded border">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="check-divisible" class="w-4 h-4 text-blue-600" onchange="toggleSubaulas()">
+                            <span class="font-medium">¿Es un espacio divisible? (Muro desplegable)</span>
+                        </label>
+                        <div id="panel-subaulas" class="hidden mt-4 grid grid-cols-2 gap-4 fade-in">
+                            <div>
+                                <label class="block text-sm mb-1 text-slate-600">Código Sub-sección 1</label>
+                                <input type="text" placeholder="Ej. E3" class="w-full border rounded p-2">
+                            </div>
+                            <div>
+                                <label class="block text-sm mb-1 text-slate-600">Código Sub-sección 2</label>
+                                <input type="text" placeholder="Ej. E4" class="w-full border rounded p-2">
+                            </div>
+                        </div>
+                    </div>
+                    <button class="bg-slate-800 text-white px-4 py-2 rounded hover:bg-slate-900">Guardar Espacio</button>
+                </div>
+            </div>
+
+            <!-- VISTA: ADMIN - GENERADOR -->
+            <div id="admin-generador" class="view-section hidden fade-in max-w-5xl mx-auto">
+                <div class="bg-white p-8 rounded-lg shadow border text-center">
+                    <h3 class="text-3xl font-bold text-slate-800 mb-2">Motor de Optimización</h3>
+                    <p class="text-slate-500 mb-8">Resuelve los horarios de todas las carreras evitando colisiones de docentes, grupos y aulas.</p>
+                    
+                    <div class="flex justify-center gap-4 mb-8">
+                        <select class="border rounded px-4 py-2 text-lg outline-none w-48">
+                            <option>II Semestre 2026</option>
+                        </select>
+                        <select class="border rounded px-4 py-2 text-lg outline-none w-48">
+                            <option>Matutino</option>
+                            <option>Vespertino</option>
+                        </select>
+                    </div>
+
+                    <button id="btn-generar" onclick="simularCarga()" class="bg-green-600 text-white text-xl font-bold px-8 py-4 rounded-lg shadow-lg hover:bg-green-700 transition flex items-center justify-center mx-auto w-64">
+                        ▶️ Ejecutar Algoritmo
+                    </button>
+
+                    <!-- Loader (Oculto por defecto) -->
+                    <div id="loader" class="hidden mt-8 text-blue-600 fade-in">
+                        <svg class="animate-spin h-10 w-10 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <p class="font-medium animate-pulse">Resolviendo restricciones (Google OR-Tools)...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA: JEFATURA - CARGA DE OFERTA -->
+            <div id="jefe-oferta" class="view-section hidden fade-in max-w-4xl mx-auto">
+                <h3 class="text-2xl font-bold mb-6">Carga de Oferta Académica</h3>
+                
+                <div class="border-2 border-dashed border-blue-300 bg-blue-50 rounded-xl p-12 text-center mb-8">
+                    <div class="text-4xl mb-4">📄</div>
+                    <h4 class="text-lg font-semibold mb-2">Arrastra tu matriz de asignaturas (Excel)</h4>
+                    <p class="text-sm text-slate-500 mb-4">El archivo debe contener Asignatura, Docente, Grupo y Tipo de Aula.</p>
+                    <button class="bg-blue-600 text-white px-4 py-2 rounded shadow text-sm">Explorar archivos</button>
+                </div>
+            </div>
+
+            <!-- VISTA: JEFATURA - RESTRICCIONES (INTERACTIVA) -->
+            <div id="jefe-restricciones" class="view-section hidden fade-in max-w-5xl mx-auto">
+                <h3 class="text-2xl font-bold mb-2">Disponibilidad de Docentes Horario</h3>
+                <p class="text-slate-600 mb-6">Haz clic en los bloques para marcarlos en <span class="text-red-500 font-bold">rojo</span> (No disponible).</p>
+                
+                <div class="bg-white p-6 rounded-lg shadow border">
+                    <div class="mb-6 w-1/3">
+                        <label class="block text-sm font-medium mb-1">Seleccionar Docente</label>
+                        <select class="w-full border rounded p-2 outline-none">
+                            <option>Prof. Laura Rosa Pérez Requenes</option>
+                            <option>Prof. Heyder Antonio Rivas López</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-5 gap-4">
+                        <div class="font-bold text-center border-b pb-2">Lunes</div>
+                        <div class="font-bold text-center border-b pb-2">Martes</div>
+                        <div class="font-bold text-center border-b pb-2">Miércoles</div>
+                        <div class="font-bold text-center border-b pb-2">Jueves</div>
+                        <div class="font-bold text-center border-b pb-2">Viernes</div>
+
+                        <!-- Fila: Bloque 1 -->
+                        <button onclick="toggleBloque(this)" class="bg-green-100 hover:bg-green-200 text-green-800 p-4 rounded text-sm text-center transition">B1: 08:00 - 09:20<br>Disponible</button>
+                        <button onclick="toggleBloque(this)" class="bg-green-100 hover:bg-green-200 text-green-800 p-4 rounded text-sm text-center transition">B1: 08:00 - 09:20<br>Disponible</button>
+                        <button onclick="toggleBloque(this)" class="bg-green-100 hover:bg-green-200 text-green-800 p-4 rounded text-sm text-center transition">B1: 08:00 - 09:20<br>Disponible</button>
+                        <button onclick="toggleBloque(this)" class="bg-red-500 text-white p-4 rounded text-sm text-center transition shadow-inner">B1: 08:00 - 09:20<br>Ocupado</button>
+                        <button onclick="toggleBloque(this)" class="bg-green-100 hover:bg-green-200 text-green-800 p-4 rounded text-sm text-center transition">B1: 08:00 - 09:20<br>Disponible</button>
+
+                        <!-- Fila: Bloque 2 -->
+                        <button onclick="toggleBloque(this)" class="bg-green-100 hover:bg-green-200 text-green-800 p-4 rounded text-sm text-center transition">B2: 09:30 - 10:50<br>Disponible</button>
+                        <button onclick="toggleBloque(this)" class="bg-green-100 hover:bg-green-200 text-green-800 p-4 rounded text-sm text-center transition">B2: 09:30 - 10:50<br>Disponible</button>
+                        <button onclick="toggleBloque(this)" class="bg-red-500 text-white p-4 rounded text-sm text-center transition shadow-inner">B2: 09:30 - 10:50<br>Ocupado</button>
+                        <button onclick="toggleBloque(this)" class="bg-red-500 text-white p-4 rounded text-sm text-center transition shadow-inner">B2: 09:30 - 10:50<br>Ocupado</button>
+                        <button onclick="toggleBloque(this)" class="bg-green-100 hover:bg-green-200 text-green-800 p-4 rounded text-sm text-center transition">B2: 09:30 - 10:50<br>Disponible</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA: DOCENTE - HORARIO -->
+            <div id="docente-horario" class="view-section hidden fade-in max-w-5xl mx-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 class="text-2xl font-bold">Mi Horario de Clases</h3>
+                        <p class="text-slate-500">II Semestre 2026</p>
+                    </div>
+                    <button class="bg-slate-800 text-white px-4 py-2 rounded shadow hover:bg-slate-900">📥 Exportar PDF</button>
+                </div>
+
+                <div class="bg-white p-1 rounded-lg shadow border overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-sm uppercase tracking-wide text-slate-600">
+                                <th class="p-3 border-b border-r">Bloque</th>
+                                <th class="p-3 border-b border-r">Lunes</th>
+                                <th class="p-3 border-b border-r">Martes</th>
+                                <th class="p-3 border-b">Miércoles</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="p-3 border-b border-r font-semibold whitespace-nowrap">B1<br><span class="text-xs text-slate-400">08:00 - 09:20</span></td>
+                                <td class="p-3 border-b border-r bg-blue-50">
+                                    <div class="font-bold text-blue-900">Ingeniería Software II</div>
+                                    <div class="text-sm text-slate-600">Grupo 4212</div>
+                                    <div class="text-xs mt-1 bg-white inline-block px-2 border rounded">Aula B3</div>
+                                </td>
+                                <td class="p-3 border-b border-r"></td>
+                                <td class="p-3 border-b bg-blue-50">
+                                    <div class="font-bold text-blue-900">Resguardo de Información</div>
+                                    <div class="text-sm text-slate-600">Grupo 4214</div>
+                                    <div class="text-xs mt-1 bg-white inline-block px-2 border rounded">Lab. Cómputo 1</div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 border-b border-r font-semibold whitespace-nowrap">B2<br><span class="text-xs text-slate-400">09:30 - 10:50</span></td>
+                                <td class="p-3 border-b border-r bg-blue-50">
+                                    <div class="font-bold text-blue-900">Ingeniería Software II</div>
+                                    <div class="text-sm text-slate-600">Grupo 4212</div>
+                                    <div class="text-xs mt-1 bg-white inline-block px-2 border rounded">Aula B3</div>
+                                </td>
+                                <td class="p-3 border-b border-r"></td>
+                                <td class="p-3 border-b"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // Función para cambiar entre pantallas (Simula el React Router)
+        function showView(viewId) {
+            // Ocultar todas las vistas
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            
+            // Mostrar la vista seleccionada
+            document.getElementById(viewId).classList.remove('hidden');
+
+            // Actualizar el título del Header
+            const titles = {
+                'admin-espacios': 'Gestión de Aulas e Infraestructura',
+                'admin-generador': 'Motor Generador de Horarios',
+                'jefe-oferta': 'Importación de Demanda Académica',
+                'jefe-restricciones': 'Matriz de Disponibilidad Docente',
+                'docente-horario': 'Panel de Consulta Académica'
+            };
+            document.getElementById('header-title').innerText = titles[viewId] || 'Módulo';
+        }
+
+        // Lógica: Mostrar/Ocultar campos de Aulas Divisibles (Simula el useState)
+        function toggleSubaulas() {
+            const isChecked = document.getElementById('check-divisible').checked;
+            const panel = document.getElementById('panel-subaulas');
+            if (isChecked) {
+                panel.classList.remove('hidden');
+            } else {
+                panel.classList.add('hidden');
+            }
+        }
+
+        // Lógica: Marcar disponibilidad del maestro en la grilla
+        function toggleBloque(btn) {
+            if (btn.classList.contains('bg-green-100')) {
+                // Cambiar a Ocupado (Rojo)
+                btn.classList.remove('bg-green-100', 'hover:bg-green-200', 'text-green-800');
+                btn.classList.add('bg-red-500', 'text-white', 'shadow-inner');
+                btn.innerHTML = btn.innerHTML.replace('Disponible', 'Ocupado');
+            } else {
+                // Cambiar a Disponible (Verde)
+                btn.classList.remove('bg-red-500', 'text-white', 'shadow-inner');
+                btn.classList.add('bg-green-100', 'hover:bg-green-200', 'text-green-800');
+                btn.innerHTML = btn.innerHTML.replace('Ocupado', 'Disponible');
+            }
+        }
+
+        // Lógica: Simular la carga del algoritmo (Solver)
+        function simularCarga() {
+            const btn = document.getElementById('btn-generar');
+            const loader = document.getElementById('loader');
+            
+            btn.classList.add('hidden');
+            loader.classList.remove('hidden');
+
+            setTimeout(() => {
+                loader.innerHTML = '<p class="text-green-600 font-bold text-xl">✅ ¡Horario generado exitosamente sin colisiones!</p>';
+                // Aquí en la app real redirigirías a la matriz generada
+            }, 3000);
+        }
+
+        // Inicializar la primera vista al cargar
+        showView('admin-espacios');
+    </script>
+</body>
+</html>

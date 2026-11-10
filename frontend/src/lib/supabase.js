@@ -1,7 +1,11 @@
 import { createClient } from '@supabase/supabase-js'
+import {authStorage} from './auth-storage'
 
 const url = import.meta.env.VITE_SUPABASE_URL
 const publicKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+// Capturar antes de que el SDK procese y retire los parámetros del enlace.
+export const authLinkError = new URLSearchParams(window.location.hash.slice(1)).has('error')
+  || new URLSearchParams(window.location.search).has('error')
 
 function isPublicConfiguration() {
   if (!url || !publicKey || url.includes('YOUR_PROJECT') || publicKey.includes('YOUR_PUBLIC')) return false
@@ -21,6 +25,7 @@ export const supabaseConfigured = isPublicConfiguration()
 export const supabase = supabaseConfigured ? createClient(url, publicKey, {
   auth: {
     persistSession: true,
+    storage: authStorage,
     autoRefreshToken: true,
     detectSessionInUrl: true,
     storageKey: 'acaplan-pwa-auth',

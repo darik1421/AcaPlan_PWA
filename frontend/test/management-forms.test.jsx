@@ -1,0 +1,188 @@
+import { act, cleanup, fireEvent, render, screen, within, waitFor } from '@testing-library/react'
+import { afterEach, expect, test, vi } from 'vitest'
+import PeriodsPage from '../src/features/management/PeriodsPage'
+import AccountsPage from '../src/features/management/AccountsPage'
+import { AuthContext } from '../src/features/auth/AuthContext'
+
+const mocks = vi.hoisted(() => ({ api:vi.fn() }))
+vi.mock('../src/services/management',()=>({api:mocks.api}))
+afterEach(() => { cleanup(); mocks.api.mockReset() })
+const period = {id_periodo:1,nombre:'Semestre de prueba',ano_lectivo:2026,fecha_inicio:'2026-01-01',fecha_fin:'2026-06-01',es_activo:true}
+const account = {id_usuario:1,nombre:'Cuenta de prueba',correo:'prueba@example.test',cedula:'TEST',rol:'administrador',estado:'activo',funciones:[],carreras:[]}
+const context = {canCreateAccounts:true,catalogoCarreras:[{id_carrera:1,nombre:'Carrera de prueba'}]}
+function accounts(overrides = {}) {
+  return render(<AuthContext.Provider value={{ profile:account,retry:vi.fn() }}><AccountsPage context={{...context,...overrides}} onChanged={vi.fn()}/></AuthContext.Provider>)
+}
+
+test('Los cinco roles institucionales se seleccionan sin funciones de planificación o aprobación independientes',async()=>{
+ mocks.api.mockImplementation(async path => path === '/departamentos' ? {departamentos:[{id:3,nombre:'Ciencias, Tecnología y Salud'}],carreras:[]} : path === '/departamentos/directores' ? [] : path === '/accounts' ? [{...account,id_usuario:2,nombre:'Otra persona',rol:'docente'}] : {guardado:true})
+ accounts({departmentScopeVersion:1,institutionalRolesVersion:1})
+ fireEvent.click(await screen.findByRole('button',{name:'Editar cuenta de Otra persona'}))
+ const form=screen.getByRole('button',{name:'Guardar cuenta'}).closest('form')
+ const role=within(form).getByLabelText('Rol')
+ expect([...role.options].map(option=>option.text)).toEqual(['Administrador','Director','Director de departamento','Coordinador de carrera','Docente'])
+ expect(within(form).queryByLabelText('Planificación')).toBeNull()
+ fireEvent.change(role,{target:{value:'jefe_departamento'}})
+ fireEvent.change(within(form).getByLabelText('Departamento del director'),{target:{value:'3'}})
+ fireEvent.submit(form)
+ await waitFor(()=>expect(mocks.api).toHaveBeenCalledWith('/accounts',expect.objectContaining({method:'PATCH',data:expect.objectContaining({rol:'docente',funciones:['jefe_departamento'],carreras:[]})})))
+})
+
+test('Directores de departamento se habilita al confirmar la migración y se conserva al guardar', async () => {
+  mocks.api.mockResolvedValue([account])
+  accounts({permissionVersion:2})
+  fireEvent.click(await screen.findByRole('button',{name:'Editar cuenta de Cuenta de prueba'}))
+  fireEvent.click(screen.getByLabelText('Directores de departamento'))
+  fireEvent.submit(screen.getByRole('button',{name:'Guardar cuenta'}).closest('form'))
+  await screen.findByText('Cuenta actualizada.')
+  expect(mocks.api).toHaveBeenCalledWith('/accounts',expect.objectContaining({method:'PATCH',data:expect.objectContaining({funciones:['jefe_departamento']})}))
+})
+
+test('No ofrece asignar la función nueva con una base anterior', async () => {
+  mocks.api.mockResolvedValue([account])
+  accounts({permissionVersion:1})
+  fireEvent.click(await screen.findByRole('button',{name:'Editar cuenta de Cuenta de prueba'}))
+  expect(screen.queryByLabelText('Directores de departamento')).toBeNull()
+})
+test('Un docente consulta semestres sin controles de modificación', async () => {
+  mocks.api.mockResolvedValue([period])
+  render(<PeriodsPage canManage={false} onChanged={vi.fn()}/>)
+  await screen.findByText('Semestre de prueba')
+  expect(screen.queryByRole('button',{name:'Nuevo semestre'})).toBeNull()
+  expect(screen.queryByRole('button',{name:/Editar/})).toBeNull()
+  expect(screen.queryByRole('button',{name:/Desactivar/})).toBeNull()
+})
+test('Fechas invertidas no salen del formulario hacia la API', async () => {
+  mocks.api.mockResolvedValue([])
+  render(<PeriodsPage canManage onChanged={vi.fn()}/>)
+  await screen.findByText('Aún no hay semestres académicos registrados.')
+  fireEvent.click(screen.getByRole('button',{name:'Nuevo semestre'}))
+  fireEvent.change(screen.getByLabelText('Fecha inicial'),{target:{value:'2026-06-01'}})
+  fireEvent.change(screen.getByLabelText('Fecha final'),{target:{value:'2026-01-01'}})
+  fireEvent.submit(screen.getByRole('button',{name:'Guardar semestre'}).closest('form'))
+  expect(screen.getByRole('alert').textContent).toContain('anterior a la final')
+  expect(mocks.api.mock.calls.filter(([,options])=>options?.method==='POST')).toHaveLength(0)
+})
+test('Cancelar un semestre no modifica registros', async () => {
+  mocks.api.mockResolvedValue([period])
+  render(<PeriodsPage canManage onChanged={vi.fn()}/>)
+  await screen.findByText('Semestre de prueba')
+  fireEvent.click(screen.getByRole('button',{name:'Editar Semestre de prueba'}))
+  fireEvent.click(screen.getByRole('button',{name:'Cancelar'}))
+  expect(screen.queryByRole('button',{name:'Guardar semestre'})).toBeNull()
+  expect(mocks.api.mock.calls.some(([,options])=>options?.method)).toBe(false)
+})
+test('Editar una cuenta conserva el correo compartido y muestra sus funciones', async () => {
+  mocks.api.mockResolvedValue([account])
+  accounts()
+  fireEvent.click(await screen.findByRole('button',{name:'Editar cuenta de Cuenta de prueba'}))
+  expect(screen.getByLabelText('Correo').readOnly).toBe(true)
+  expect(screen.queryByLabelText('Contraseña inicial')).toBeNull()
+  fireEvent.click(screen.getByLabelText('Coordinador de carrera'))
+  expect(screen.getByLabelText('Carrera de prueba')).toBeTruthy()
+})
+test('Error de duplicado conserva el formulario para corregirlo', async () => {
+  mocks.api.mockImplementation((path,options)=>options?.method==='POST'
+    ? Promise.reject(new Error('El correo o la cédula ya están registrados.'))
+    : Promise.resolve([account]))
+  accounts()
+  await screen.findByText('Cuenta de prueba')
+  fireEvent.click(screen.getByRole('button',{name:'Nueva cuenta'}))
+  fireEvent.change(screen.getByLabelText('Nombre completo'),{target:{value:'Persona de prueba'}})
+  fireEvent.submit(screen.getByRole('button',{name:'Guardar cuenta'}).closest('form'))
+  expect((await screen.findByRole('alert')).textContent).toContain('ya están registrados')
+  expect(screen.getByLabelText('Nombre completo').value).toBe('Persona de prueba')
+})
+
+test('Un fallo al cargar semestres no se presenta como una lista vacía y permite reintentar', async () => {
+  mocks.api.mockRejectedValueOnce(new Error('Sin conexión')).mockResolvedValue([period])
+  render(<PeriodsPage canManage onChanged={vi.fn()}/>)
+  await screen.findByRole('alert')
+  expect(screen.queryByText('Aún no hay semestres académicos registrados.')).toBeNull()
+  expect(screen.getByRole('button',{name:'Nuevo semestre'}).disabled).toBe(true)
+  fireEvent.click(screen.getByRole('button',{name:'Actualizar lista'}))
+  await screen.findByText('Semestre de prueba')
+  expect(screen.getByRole('button',{name:'Nuevo semestre'}).disabled).toBe(false)
+})
+
+test('Retirar el permiso descarta la edición del semestre aunque después se recupere', async () => {
+  mocks.api.mockResolvedValue([period])
+  const view=render(<PeriodsPage canManage onChanged={vi.fn()}/>)
+  fireEvent.click(await screen.findByRole('button',{name:'Editar Semestre de prueba'}))
+  fireEvent.change(screen.getByLabelText('Nombre'),{target:{value:'Cambio no guardado'}})
+  view.rerender(<PeriodsPage canManage={false} onChanged={vi.fn()}/>)
+  view.rerender(<PeriodsPage canManage onChanged={vi.fn()}/>)
+  expect(screen.queryByRole('button',{name:'Guardar semestre'})).toBeNull()
+  expect(mocks.api.mock.calls.some(([,options])=>options?.method)).toBe(false)
+})
+
+test('Si falla actualizar cuentas se retira la lista anterior y no ofrece editarla', async () => {
+  mocks.api.mockResolvedValueOnce([account]).mockRejectedValueOnce(new Error('Sin conexión'))
+  accounts()
+  await screen.findByText('Cuenta de prueba')
+  fireEvent.click(screen.getByRole('button',{name:'Actualizar lista'}))
+  await screen.findByRole('alert')
+  expect(screen.queryByText('Cuenta de prueba')).toBeNull()
+  expect(screen.queryByText('No hay cuentas que coincidan.')).toBeNull()
+  expect(screen.getByRole('button',{name:'Nueva cuenta'}).disabled).toBe(true)
+})
+
+test('No guarda un director de departamento sin departamento seleccionado',async()=>{
+ mocks.api.mockImplementation(async path=>path==='/departamentos'?{departamentos:[{id:3,nombre:'Tecnológicas y Salud'}],carreras:[]}:path==='/departamentos/directores'?[]:[{...account,id_usuario:2,nombre:'Otra persona',rol:'docente'}])
+ accounts({departmentScopeVersion:1})
+ fireEvent.click(await screen.findByRole('button',{name:'Editar cuenta de Otra persona'}))
+ fireEvent.change(within(screen.getByRole('button',{name:'Guardar cuenta'}).closest('form')).getByLabelText('Rol'),{target:{value:'jefe_departamento'}})
+ fireEvent.submit(screen.getByRole('button',{name:'Guardar cuenta'}).closest('form'))
+ await screen.findByText('Selecciona el departamento del director antes de guardar la cuenta.')
+ expect(mocks.api.mock.calls.some(([,options])=>options?.method==='PATCH')).toBe(false)
+})
+
+test('Un coordinador nuevo solo puede seleccionar carreras activas',async()=>{
+ mocks.api.mockResolvedValue([account])
+ accounts({catalogoCarreras:[{id_carrera:1,nombre:'Carrera activa',estado:'activo'},{id_carrera:2,nombre:'Carrera retirada',estado:'inactivo'}]})
+ fireEvent.click(await screen.findByRole('button',{name:'Editar cuenta de Cuenta de prueba'}))
+ fireEvent.click(screen.getByLabelText('Coordinador de carrera'))
+ expect(screen.getByLabelText('Carrera activa')).toBeTruthy()
+ expect(screen.queryByLabelText('Carrera retirada')).toBeNull()
+})
+
+test('La edición atómica del director envía el departamento y su revisión con la cuenta',async()=>{
+ const person={...account,id_usuario:2,nombre:'Director ficticio',rol:'docente',funciones:['jefe_departamento']}
+ mocks.api.mockImplementation(async(path,options)=>path==='/departamentos'?{departamentos:[{id:3,nombre:'Tecnológicas y Salud'}],carreras:[]}:path==='/departamentos/directores'?[{id_usuario:2,id_departamento:3,revision:4}]:options?.method?{id:2}:[person])
+ accounts({departmentScopeVersion:1,atomicDepartmentVersion:1})
+ fireEvent.click(await screen.findByRole('button',{name:'Editar cuenta de Director ficticio'}))
+ fireEvent.click(screen.getByRole('button',{name:'Guardar cuenta'}))
+ await screen.findByText('Cuenta actualizada.')
+ expect(mocks.api).toHaveBeenCalledWith('/accounts',expect.objectContaining({method:'PATCH',data:expect.objectContaining({id:2,id_departamento:3,revision_departamento:4})}))
+ expect(mocks.api.mock.calls.filter(([,options])=>options?.method)).toHaveLength(1)
+})
+
+test('Una respuesta de semestre anterior no confirma ni refresca tras retirar el permiso',async()=>{
+ let finish
+ const changed=vi.fn()
+ mocks.api.mockImplementation((_,options)=>options?.method?new Promise(resolve=>{finish=resolve}):Promise.resolve([period]))
+ const view=render(<PeriodsPage canManage onChanged={changed}/>)
+ fireEvent.click(await screen.findByRole('button',{name:'Editar Semestre de prueba'}))
+ fireEvent.click(screen.getByRole('button',{name:'Guardar semestre'}))
+ view.rerender(<PeriodsPage canManage={false} onChanged={changed}/>)
+ await act(async()=>{finish({guardado:true})})
+ expect(changed).not.toHaveBeenCalled()
+ expect(screen.queryByText('Semestre guardado.')).toBeNull()
+ expect(screen.queryByRole('button',{name:'Guardar semestre'})).toBeNull()
+})
+
+test('Retirar creación de cuentas durante un alta ignora su confirmación en la pantalla nueva',async()=>{
+ let finish
+ mocks.api.mockImplementation((_,options)=>options?.method?new Promise(resolve=>{finish=resolve}):Promise.resolve([account]))
+ const changed=vi.fn()
+ const page=create=><AuthContext.Provider value={{profile:account,retry:vi.fn()}}><AccountsPage context={{...context,canCreateAccounts:create}} onChanged={changed}/></AuthContext.Provider>
+ const view=render(page(true))
+ await screen.findByText('Cuenta de prueba')
+ fireEvent.click(screen.getByRole('button',{name:'Nueva cuenta'}))
+ fireEvent.submit(screen.getByRole('button',{name:'Guardar cuenta'}).closest('form'))
+ view.rerender(page(false))
+ await act(async()=>{finish({guardado:true})})
+ expect(changed).not.toHaveBeenCalled()
+ expect(screen.queryByText('Cuenta creada. Entrega la contraseña inicial por un canal privado.')).toBeNull()
+ expect(screen.queryByRole('button',{name:'Guardar cuenta'})).toBeNull()
+})

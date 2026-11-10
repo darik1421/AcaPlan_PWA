@@ -1,0 +1,113 @@
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { afterEach, expect, test, vi } from 'vitest'
+import ProgramacionPage from '../src/features/management/ProgramacionPage'
+import BloquesPage from '../src/features/management/BloquesPage'
+import AsignaturasPage from '../src/features/management/AsignaturasPage'
+import EspaciosPage from '../src/features/management/EspaciosPage'
+const mocks=vi.hoisted(()=>({api:vi.fn()}))
+vi.mock('../src/services/management',()=>({api:mocks.api}))
+afterEach(()=>{cleanup();mocks.api.mockReset()})
+const careers=[{id_carrera:1,nombre:'Ingeniería',estado:'activo'},{id_carrera:2,nombre:'Medicina',estado:'activo'}]
+const sections=[{id_seccion:1,id_carrera:1,id_periodo:1,codigo:'GRUPO-A',carrera_nombre:'Ingeniería',ano_estudio:1,cantidad_estudiantes:20,asignaturas:[1]},
+ {id_seccion:2,id_carrera:2,id_periodo:1,codigo:'GRUPO-B',carrera_nombre:'Medicina',ano_estudio:1,cantidad_estudiantes:20,asignaturas:[]},
+ {id_seccion:3,id_carrera:1,id_periodo:2,codigo:'OTRO-PERIODO',carrera_nombre:'Ingeniería',ano_estudio:1,cantidad_estudiantes:20,asignaturas:[]}]
+const subjects=[{id_asignatura:1,id_carrera:1,codigo:'MAT',nombre:'Matemática',carrera_nombre:'Ingeniería',ano_estudio:1,horas_teoricas:2,horas_practicas:1,estado:'activo'}]
+const base={isAdmin:false,funciones:['coordinador'],carreras:[1],canManageSecciones:true,canManageAsignaturas:true,activePeriod:{id_periodo:1,nombre:'2026'}}
+const mockData=()=>mocks.api.mockImplementation(async path=>({'/carreras':careers,'/secciones':sections,'/asignaturas':subjects,'/docentes':[{id_docente:4,nombres:'Docente',estado:'activo'}],'/programacion':[]}[path]||[]))
+
+test('Docente sin función no recibe controles de entrega académica',async()=>{
+ mockData();render(<ProgramacionPage context={{...base,funciones:[],carreras:[],canManageSecciones:false}}/> )
+ expect(screen.queryByLabelText('Seleccionar Excel de asignación académica')).toBeNull()
+ expect(screen.getByText(/La entrega académica está disponible/)).toBeTruthy()
+ expect(mocks.api).not.toHaveBeenCalled()
+})
+
+test('Bloques devueltos por PostgreSQL se muestran con el filtro Lunes',async()=>{
+ mocks.api.mockResolvedValue([{id_bloque:1,id_periodo:1,dia:'Lunes',hora_inicio:'08:00:00',hora_fin:'09:00:00',es_receso:false}])
+ render(<BloquesPage context={{...base,canManageBloques:true}} onChanged={vi.fn()}/> )
+ await screen.findByText('08:00')
+ expect(screen.getByText('09:00')).toBeTruthy()
+})
+
+test('Bloques anteriores son solo consulta incluso para administradores',async()=>{
+ mocks.api.mockResolvedValue([{id_bloque:1,id_periodo:1,dia:'Lunes',hora_inicio:'08:00:00',hora_fin:'09:00:00',es_receso:false}])
+ render(<BloquesPage context={{...base,isAdmin:true,canManageBloques:true}}/> )
+ await screen.findByText('08:00')
+ expect(screen.queryByRole('button',{name:'Editar'})).toBeNull()
+ expect(screen.queryByRole('button',{name:/Nuevo bloque/})).toBeNull()
+ fireEvent.click(screen.getByRole('button',{name:'Martes'}))
+ expect(screen.queryByText('08:00')).toBeNull()
+ expect(mocks.api.mock.calls.every(([,options])=>!options?.method)).toBe(true)
+})
+
+test('La consulta histórica respeta el semestre seleccionado',async()=>{
+ mocks.api.mockResolvedValue([{id_bloque:1,id_periodo:1,dia:'Lunes',hora_inicio:'08:00:00',hora_fin:'09:00:00',es_receso:false}])
+ const view=render(<BloquesPage context={base}/> )
+ await screen.findByText('08:00')
+ view.rerender(<BloquesPage context={{...base,activePeriod:{id_periodo:2,nombre:'Segundo'}}}/> )
+ expect(screen.queryByText('08:00')).toBeNull()
+})
+
+test('Asignaturas restringe opciones a carreras coordinadas',async()=>{
+ mockData();render(<AsignaturasPage context={base} canManage onChanged={vi.fn()}/> )
+ await screen.findByText('Matemática')
+ fireEvent.click(screen.getByText('Catálogo anterior'))
+ fireEvent.click(screen.getByRole('button',{name:'Editar Matemática'}))
+ expect(screen.getByLabelText('Carrera').options).toHaveLength(1)
+})
+
+test('Filtra asignaturas combinando carrera, año y búsqueda',async()=>{
+ mocks.api.mockImplementation(async path=>path==='/asignaturas/importadas'?[]:path==='/carreras'?careers:[...subjects,{...subjects[0],id_asignatura:2,id_carrera:2,ano_estudio:2,nombre:'Biología',codigo:'BIO',carrera_nombre:'Medicina'}])
+ render(<AsignaturasPage context={{...base,isAdmin:true}} canManage onChanged={vi.fn()}/> )
+ await screen.findByText('Biología')
+ fireEvent.click(screen.getByText('Catálogo anterior'))
+ fireEvent.change(screen.getByLabelText('Filtrar por carrera'),{target:{value:'2'}})
+ fireEvent.change(screen.getByLabelText('Filtrar por año'),{target:{value:'2'}})
+ expect(screen.queryByText('Matemática')).toBeNull()
+ expect(screen.getByText('Biología')).toBeTruthy()
+ fireEvent.change(screen.getByLabelText(/^Buscar (asignaturas|componentes)$/),{target:{value:'inexistente'}})
+ expect(screen.getByText(/No hay (asignaturas|componentes) que coincidan/)).toBeTruthy()
+})
+
+test('Consulta aulas completas por capacidad y tipo, sin equipamiento',async()=>{
+ mocks.api.mockImplementation(async path=>({'/pabellones':[{id_pabellon:1,nombre:'Norte'}],'/recursos':[{id_recurso:1,nombre:'Proyector'}],'/inventario':[
+  {id_aula:1,codigo:'LAB-40',tipo:'laboratorio',capacidad:40,recursos:[1],estado:'activo',pabellon_nombre:'Norte'},
+  {id_aula:2,codigo:'AULA-20',tipo:'aula',capacidad:20,recursos:[],estado:'activo',pabellon_nombre:'Norte'}
+ ]}[path]||[]))
+ render(<EspaciosPage canManage onChanged={vi.fn()}/> )
+ await screen.findByText('AULA-20')
+ fireEvent.change(screen.getByLabelText('Capacidad mínima'),{target:{value:'30'}})
+ fireEvent.change(screen.getByLabelText('Filtrar por tipo'),{target:{value:'laboratorio'}})
+ expect(screen.queryByLabelText('Filtrar por recurso')).toBeNull()
+ expect(screen.queryByRole('button',{name:'Catálogo de Recursos'})).toBeNull()
+ expect(mocks.api.mock.calls.some(([path])=>path==='/recursos')).toBe(false)
+ expect(screen.queryByText('AULA-20')).toBeNull()
+ expect(screen.getByText('LAB-40')).toBeTruthy()
+ fireEvent.change(screen.getByLabelText('Capacidad mínima'),{target:{value:'50'}})
+ expect(screen.getByText('No hay aulas que coincidan con los filtros.')).toBeTruthy()
+})
+
+test('Asignaturas corrige sin alta manual y descarta el formulario al perder su carrera',async()=>{
+ mockData();const view=render(<AsignaturasPage context={base} canManage onChanged={vi.fn()}/> )
+ fireEvent.click(screen.getByText('Catálogo anterior'))
+ fireEvent.click(await screen.findByRole('button',{name:'Editar Matemática'}))
+ expect(screen.queryByRole('button',{name:'Nueva asignatura'})).toBeNull()
+ fireEvent.change(screen.getByLabelText(/Nombre de(l componente curricular| la asignatura)/),{target:{value:'Matemática I'}})
+ fireEvent.submit(screen.getByRole('button',{name:/Guardar (asignatura|componente)/}).closest('form'))
+ await waitFor(()=>expect(mocks.api).toHaveBeenCalledWith('/asignaturas',expect.objectContaining({method:'PATCH',data:expect.objectContaining({id:1,nombre:'Matemática I',horas_teoricas:2,horas_practicas:1})})))
+ await screen.findByText(/(Asignatura|Componente curricular) actualizad[ao]/i)
+ fireEvent.click(screen.getByRole('button',{name:'Editar Matemática'}))
+ view.rerender(<AsignaturasPage context={{...base,carreras:[2]}} canManage onChanged={vi.fn()}/> )
+ expect(screen.queryByRole('button',{name:/Guardar (asignatura|componente)/})).toBeNull()
+ expect(mocks.api.mock.calls.some(([,options])=>options?.method==='POST')).toBe(false)
+})
+
+test('La corrección de aula se descarta al perder el permiso y no reaparece al recuperarlo',async()=>{
+ mocks.api.mockImplementation(async path=>({'/pabellones':[{id_pabellon:1,nombre:'B'}],'/recursos':[], '/inventario':[{id_aula:1,id_pabellon:1,codigo:'B4',pabellon_nombre:'B',tipo:'laboratorio',capacidad:30,recursos:[],estado:'activo'}]}[path]||[]))
+ const view=render(<EspaciosPage canManage onChanged={vi.fn()}/>)
+ fireEvent.click(await screen.findByRole('button',{name:'Editar'}))
+ view.rerender(<EspaciosPage canManage={false} onChanged={vi.fn()}/>)
+ view.rerender(<EspaciosPage canManage onChanged={vi.fn()}/>)
+ expect(screen.queryByRole('heading',{name:'Corregir aula'})).toBeNull()
+ expect(mocks.api.mock.calls.some(([,options])=>options?.method==='PATCH')).toBe(false)
+})

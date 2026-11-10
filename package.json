@@ -3,14 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": ">=20.17.0"
+    "node": "^24.0.0"
   },
   "scripts": {
     "dev:frontend": "npm --prefix frontend run dev",
     "dev:backend": "npm --prefix backend run dev",
     "build": "npm --prefix frontend run build",
     "lint": "npm --prefix frontend run lint",
-    "test": "npm --prefix backend test",
+    "test": "npm --prefix backend test && npm --prefix frontend test",
+    "test:smoke": "node scripts/smoke.mjs",
+    "test:sql": "npm --prefix database.local test",
     "install:all": "cd frontend && npm install && cd ../backend && npm install"
   }
 }

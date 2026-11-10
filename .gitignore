@@ -14,6 +14,7 @@ coverage/
 
 # Archivos temporales y revisión de documentos
 .document-work/
+tmp/
 ~$*
 *.tmp
 *.log
@@ -25,3 +26,7 @@ Thumbs.db
 .vscode/
 
 Supabase.sql
+
+# Migraciones SQL locales (no publicar)
+database.local/
+database.local.zip
