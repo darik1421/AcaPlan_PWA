@@ -28,6 +28,7 @@ export function generateProposal(context, options = {}) {
   if (snapshot.ocupaciones_externas.some(r => r.identidad_pendiente || !Array.isArray(r.docentes_ids))) throw new AccessError(409, 'Hay ocupaciones anteriores sin identificar. Deben conciliarse antes de generar.')
 
   const sections = [], subjects = [], needs = [], blocks = [], teachers = new Map(), parts = new Map(), groups = new Map()
+  const teacherLoads = new Map()
   for (const a of snapshot.asignaciones) {
     if (a.estado_carrera !== 'activo' || !a.componentes_vigentes || !a.necesidades?.definidas) throw new AccessError(409, `${a.codigo}: revisa la carrera, teoría/práctica y las necesidades de aula antes de generar.`)
     const groupKey = `${a.id_carrera}:${a.ano_estudio}`
@@ -48,8 +49,27 @@ export function generateProposal(context, options = {}) {
       parts.set(id, { a, p, group: groups.get(groupKey) })
       subjects.push({ id_asignatura: id, nombre: a.nombre, codigo: a.codigo })
       for (const d of a.docentes) teachers.set(d.id, { id_docente: d.id, nombre: d.nombre })
+      for (const docenteId of new Set(p.docentes)) {
+        const loadKey = `${a.turno}:${docenteId}`
+        const load = teacherLoads.get(loadKey) ?? {
+          nombre: teachers.get(docenteId).nombre,
+          turno: a.turno,
+          capacidad: sessions.capacidad_sesiones_sin_solapar,
+          sesiones: 0,
+        }
+        load.sesiones += p.sesiones
+        teacherLoads.set(loadKey, load)
+      }
       needs.push({ id_componente: id, id_seccion: groupKey, id_asignatura: id, id_docente: p.docentes[0], sesiones_semana: p.sesiones, duracion_minutos: sessions.minutos_sesion })
     }
+  }
+  const overloaded = [...teacherLoads.values()].filter(load => load.sesiones > load.capacidad)
+  if (overloaded.length) {
+    const details = overloaded.slice(0, 3).map(load =>
+      `${load.nombre} necesita ${load.sesiones} sesiones en ${load.turno} y solo hay ${load.capacidad} franjas disponibles`
+    )
+    const remaining = overloaded.length > 3 ? ` Hay ${overloaded.length - 3} docentes más con exceso de carga.` : ''
+    throw new AccessError(409, `La carga docente supera los tiempos del turno. ${details.join('. ')}.${remaining} Revisa los docentes asignados o la configuración de tiempos.`)
   }
   const lockedDays = options.lockedDays || []
   const protectedClasses = snapshot.clases.filter(c => c.fijada || lockedDays.includes(c.dia))

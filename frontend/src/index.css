@@ -120,16 +120,18 @@ a {
 }
 
 .sidebar-header {
-  padding: 24px 20px 16px;
+  padding: 20px 20px 16px;
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
 .sidebar-logo {
-  height: 48px;
-  width: auto;
+  width: 164px;
+  max-width: 100%;
+  height: 144px;
   object-fit: contain;
+  object-position: left center;
   align-self: flex-start;
 }
 

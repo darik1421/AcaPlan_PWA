@@ -8,6 +8,7 @@ const labels = {
   codigo_asignatura: 'Código de asignatura',
   nombre_asignatura: 'Asignatura',
   carrera: 'Carrera',
+  departamento: 'Departamento',
   horas_semestre: 'Horas del semestre',
   docente_estado: 'Docente: acción',
   asignatura_estado: 'Asignatura: acción',

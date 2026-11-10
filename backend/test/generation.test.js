@@ -58,11 +58,23 @@ test('El worker ejecuta el mismo motor sin bloquear el servidor',async()=>{
  const r=await runGeneration(fixture(),{});assert.equal(r.listo_para_guardar,true)
 })
 
+test('Detecta sobrecarga semanal incluso para el segundo docente de una asignatura', async () => {
+ const context = fixture()
+ const first = context.snapshot.asignaciones[0]
+ context.snapshot.asignaciones.push({ ...first, id: 2, codigo: 'RED', docentes: [first.docentes[1]] })
+ await assert.rejects(runGeneration(context, {}), {
+  status: 409,
+  message: /Luis necesita 4 sesiones en matutino y solo hay 3 franjas disponibles/,
+ })
+})
+
 test('Reserva también al docente compartido que no es principal en dos carreras',()=>{
  const c=fixture(),other=structuredClone(c.snapshot.asignaciones[0])
  Object.assign(other,{id:2,id_carrera:2,carrera:'Economía',codigo:'ECO',docentes:[{id:3,nombre:'Marta',activo:true},{id:2,nombre:'Luis',activo:true}]})
  c.snapshot.asignaciones.push(other);c.snapshot.anos.push({...c.snapshot.anos[0],id_carrera:2})
  c.snapshot.espacios.push({...c.snapshot.espacios[0],id_aula:2,codigo:'A2'})
+ c.snapshot.tiempos[0].bloques.push(...c.snapshot.tiempos[0].bloques.filter(b=>b.dia==='Lunes').map(b=>({...b,dia:'Viernes'})))
+ c.snapshot.restricciones.push({id_docente:2,dia:'Viernes',hora_inicio:'08:00',hora_fin:'09:30'})
  const r=generateProposal(c)
  assert.equal(r.listo_para_guardar,false)
  assert.equal(new Set(r.clases.map(c=>c.dia)).size,r.clases.length)

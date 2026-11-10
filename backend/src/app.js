@@ -96,14 +96,16 @@ export function createApp({ authenticateRequest = authenticate, management = cre
       try {
         const profile = await authenticateRequest(request)
         const data = request.method === 'GET' ? {} : await readBody(request, ['preparation.preview','preparation.confirm'].includes(route) ? 2900000 : route.startsWith('generation.') ? 512000 : 16384)
-        console.log('[DEBUG APP] route:', route, 'data:', data)
         const result = await management.execute(request, profile, route, data)
-        console.log('[DEBUG APP] result is undefined?', result === undefined, 'keys:', result ? Object.keys(result) : null)
         const json = JSON.stringify(result)
+        if (json === undefined) {
+          response.writeHead(503)
+          response.end(JSON.stringify({ error: 'El servidor no devolvió un resultado. Consulta el estado antes de reintentar.' }))
+          return
+        }
         response.writeHead(200)
         response.end(json)
       } catch (error) {
-        console.log('[DEBUG APP] caught error:', error.status, error.message)
         response.writeHead(error.status || 503)
         response.end(JSON.stringify({ error: error.status ? error.message : 'No se pudo completar la operación.' }))
       }

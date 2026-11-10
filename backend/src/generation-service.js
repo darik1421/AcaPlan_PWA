@@ -16,7 +16,15 @@ export function runGeneration(context, options) {
     }
     try {
       worker = new Worker(new URL('./generation-worker.js', import.meta.url), { workerData: {context,options}, resourceLimits: { maxOldGenerationSizeMb: 128 } })
-      worker.once('message', message => finish(message.error ? new AccessError(message.status, message.error) : null, message.result))
+      worker.on('message', message => {
+        // Node también envía avisos de importación por este canal bajo --watch.
+        if (message?.type !== 'acaplan:generation-result') return
+        if (!message?.result) {
+          finish(new AccessError(message?.status || 503, message?.error || 'El cálculo no devolvió un resultado.'))
+          return
+        }
+        finish(null, message.result)
+      })
       worker.once('error', () => finish(new AccessError(503, 'El cálculo no pudo completarse. La propuesta anterior no se modificó.')))
       worker.once('exit', () => { if (!finished) finish(new AccessError(503, 'El cálculo se interrumpió; no se guardó ninguna clase.')) })
       timer = setTimeout(() => finish(new AccessError(503, 'El cálculo superó el tiempo disponible; no se guardó ninguna clase.')), 12000)
@@ -25,11 +33,8 @@ export function runGeneration(context, options) {
 }
 
 export async function proposeGeneration({data, load, solve = runGeneration}) {
-  console.log('[DEBUG SERVICE 1] entered proposeGeneration');
   const options = generationInput(data), context = await load(options.id)
-  console.log('[DEBUG SERVICE 2] calling solve');
-  const result = await solve(context, options);
-  console.log('[DEBUG SERVICE 3] solve returned:', typeof result, result ? Object.keys(result) : null);
+  const result = await solve(context, options)
   const current = await load(options.id)
   if (generationVersion(current) !== generationVersion(context)) throw new AccessError(409, 'Los datos o las reservas cambiaron durante el cálculo. Consulta y genera nuevamente.')
   return result

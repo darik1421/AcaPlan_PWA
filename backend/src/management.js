@@ -12,7 +12,7 @@ import {componentsInput,draftWorkInput} from './academic-workflow-input.js'
 import {reviewDraft} from './draft-review.js'
 import {preparationVersion} from './preparation-version.js'
 import {proposeGeneration,saveGeneration} from './generation-service.js'
-import {assignmentTemplate,readAssignments} from './assignment-workbook.js'
+import {assignmentTemplate,readAssignments,validateAssignmentDepartments} from './assignment-workbook.js'
 import {preparationTemplate,previewPreparation} from './preparation-workbook.js'
 import { AccessError } from './auth.js'
 import { restrictionInput, unifiedRestrictionInput } from './restriction-input.js'
@@ -217,13 +217,8 @@ export function createManagement({
     async execute(request, profile, route, data) {
       if(route==='drafts.version')return rpc2(request,'create',{...draftVersionInput(data),version_reglas:PREPARATION_RULE_VERSION},'pwa_nueva_version_borrador')
       if(route==='generation.propose'||route==='generation.save'){
-        console.log('[DEBUG MGMT] inside generation route:', route)
         const load=id=>rpc2(request,'context',{id,version_reglas:PREPARATION_RULE_VERSION},'pwa_generador')
-        if(route==='generation.propose') {
-          const res = await proposeGeneration({data,load})
-          console.log('[DEBUG MGMT] proposeGeneration returned:', res ? 'object' : res)
-          return res
-        }
+        if(route==='generation.propose')return proposeGeneration({data,load})
         return saveGeneration({data,actor:profile.id_usuario,load,confirm:payload=>confirmCycle('save',payload,'pwa_generador_confirmar')})
       }
       if (route.startsWith('departments.')) {
@@ -461,17 +456,28 @@ export function createManagement({
         const [periodos,carreras,asignaturas,docentes]=await Promise.all([rpc(request,'periods.list'),...['carreras','asignaturas','docentes'].map(name=>rpc2(request,`${name}.list`))])
         const inScope=id=>admin||context.carreras?.includes(id)
         const catalog={carreras:carreras.filter(c=>inScope(c.id_carrera)),asignaturas:asignaturas.filter(a=>inScope(a.id_carrera)),docentes}
+        if (data.tipo === 'asignaciones') {
+          if (!serviceKey) throw new AccessError(503, 'Falta configurar el catálogo de departamentos en el backend.')
+          const response = await fetchImpl(`${url}/rest/v1/pwa_carrera_departamento?select=id_carrera,pwa_departamentos(nombre)`, {
+            headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` },
+            signal: AbortSignal.timeout(10000),
+          }).catch(() => null)
+          const links = response?.ok ? await response.json().catch(() => null) : null
+          if (!Array.isArray(links)) throw new AccessError(503, 'No se pudo consultar el catálogo de departamentos.')
+          const byCareer = new Map(links.map(link => [link.id_carrera, link.pwa_departamentos?.nombre]))
+          catalog.carreras = catalog.carreras.map(career => ({ ...career, departamento: byCareer.get(career.id_carrera) }))
+        }
         if(route==='preparation.template') {
           const file=data.tipo==='asignaciones'?await assignmentTemplate(catalog.carreras):await preparationTemplate(data.tipo,catalog)
           return {archivo:`PROVISIONAL_${data.tipo}.xlsx`,base64:file.toString('base64')}
         }
         if(typeof data.base64!=='string'||data.base64.length>2800000||!data.base64.length||data.base64.length%4!==0||!/^[A-Za-z0-9+/]*={0,2}$/.test(data.base64))throw new AccessError(400,'Archivo inválido o mayor de 2 MB.')
         if(data.tipo==='asignaciones'){
-          const parsed=await readAssignments(Buffer.from(data.base64,'base64'))
+          const parsed=validateAssignmentDepartments(await readAssignments(Buffer.from(data.base64,'base64')),catalog.carreras)
           const period=periodos.find(p=>p.es_activo)
           if(!period)throw new AccessError(409,'Activa un semestre antes de revisar la asignación.')
           if(data.id_periodo!==period.id_periodo)throw new AccessError(409,'El semestre activo cambió. Actualiza la página y revisa de nuevo.')
-          const columns=['cedula_docente','nombre_docente','codigo_asignatura','nombre_asignatura','carrera','ano_estudio','turno','horas_semestre','docente_estado','asignatura_estado']
+          const columns=['cedula_docente','nombre_docente','codigo_asignatura','nombre_asignatura','carrera','departamento','ano_estudio','turno','horas_semestre','docente_estado','asignatura_estado']
           if(parsed.errors.length){
             if(route==='preparation.confirm')throw new AccessError(400,'El archivo tiene errores; vuelve a revisarlo.')
             return{tipo:data.tipo,semestre:period.id_periodo,columnas:columns,filas:parsed.rows,errores:parsed.errors,avisos:[],valido:false,guardado:false}

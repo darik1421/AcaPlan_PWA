@@ -1,7 +1,7 @@
 import ExcelJS from 'exceljs'
 import {inspectZip} from './import-workbook.js'
 import {AccessError} from './auth.js'
-export const ASSIGNMENT_HEADERS=['Cédula del docente','Nombre del docente','Código de asignatura','Nombre de asignatura','Carrera','Año','Turno','Horas totales del semestre']
+export const ASSIGNMENT_HEADERS=['Cédula del docente','Nombre del docente','Código de asignatura','Nombre de asignatura','Carrera','Año','Turno','Horas totales del semestre','Departamento']
 const keys=['cedula_docente','nombre_docente','codigo_asignatura','nombre_asignatura','carrera','ano_estudio','turno','horas_semestre']
 export async function assignmentTemplate(carreras=[]){
  const book=new ExcelJS.Workbook(),sheet=book.addWorksheet('Asignaciones')
@@ -10,13 +10,14 @@ export async function assignmentTemplate(carreras=[]){
  for(const line of ['Plantilla de asignación académica. Una fila por docente y asignatura; repite la asignatura cuando tenga varios docentes.',
  'Cédula y código se escriben como texto para conservar ceros iniciales. No se necesitan IDs internos.',
  'Usa el nombre completo de la carrera y el año numérico. Turnos: Matutino, Vespertino, Nocturno, Por encuentros.',
+ 'Copia el departamento de la hoja Carreras. Debe coincidir con el departamento registrado para esa carrera.',
  'Horas totales del semestre conserva la carga completa (por ejemplo 42 o 56); no equivale a sesiones semanales.',
  'Una misma asignatura con varios docentes conserva un único total de horas, no se suman las filas.',
  'La vista previa distingue registros reconocidos y nuevos. Las diferencias deben corregirse antes de confirmar.',
  'Registrar un docente académico no crea una cuenta, contraseña ni permiso de acceso.',
  'El semestre se toma de la aplicación. Capacidad, sede, necesidades de espacio y frecuencia de encuentros se completan en sus etapas correspondientes.'])help.addRow([line])
  help.getColumn(1).width=110
- const ref=book.addWorksheet('Carreras');ref.addRow(['Carrera']);carreras.forEach(c=>ref.addRow([c.nombre]));ref.getColumn(1).width=60
+ const ref=book.addWorksheet('Carreras');ref.addRow(['Carrera','Departamento']);carreras.forEach(c=>ref.addRow([c.nombre,c.departamento]));ref.getColumn(1).width=60;ref.getColumn(2).width=50
  return Buffer.from(await book.xlsx.writeBuffer())
 }
 export async function readAssignments(buffer){
@@ -25,16 +26,17 @@ export async function readAssignments(buffer){
  const book=new ExcelJS.Workbook();try{await book.xlsx.load(buffer)}catch{throw new AccessError(400,'Archivo XLSX inválido.')}
  const rows=[],errors=[],tab=book.getWorksheet('Asignaciones'),issue=(fila,campo,motivo,hoja='Asignaciones')=>errors.push({hoja,fila,campo,motivo})
  if(!tab)return{rows,errors:[{hoja:'Asignaciones',fila:1,campo:'hoja',motivo:'Falta la hoja Asignaciones.'}]}
- if(tab.rowCount>501||tab.columnCount>8)throw new AccessError(400,'Se admiten 500 filas y las ocho columnas de la plantilla.')
+ if(tab.rowCount>501||tab.columnCount>ASSIGNMENT_HEADERS.length)throw new AccessError(400,'Se admiten 500 filas y las columnas de la plantilla.')
  if(tab.model.merges?.length)issue(1,'estructura','No combines celdas.')
- ASSIGNMENT_HEADERS.forEach((h,i)=>{if(tab.getRow(1).getCell(i+1).value!==h)issue(1,h,'Encabezado diferente de la plantilla acordada.')})
+ const rowKeys=tab.columnCount===keys.length?keys:[...keys,'departamento']
+ ASSIGNMENT_HEADERS.slice(0,rowKeys.length).forEach((h,i)=>{if(tab.getRow(1).getCell(i+1).value!==h)issue(1,h,'Encabezado diferente de la plantilla acordada.')})
  for(const sheet of book.worksheets)if(!['Asignaciones','Instrucciones','Carreras'].includes(sheet.name))issue(1,'hoja',`Hoja no reconocida: ${sheet.name}.`,sheet.name)
  const teachers=new Map(),subjects=new Map(),assignments=new Map(),seen=new Set(),yearTurns=new Map()
  for(let n=2;n<=tab.rowCount;n++){
-  const vals=keys.map((_,i)=>tab.getRow(n).getCell(i+1).value)
+  const vals=rowKeys.map((_,i)=>tab.getRow(n).getCell(i+1).value)
   if(vals.every(v=>v===null||v===''))continue
   const row={fila:n}
-  keys.forEach((key,i)=>{
+  rowKeys.forEach((key,i)=>{
    const value=vals[i]
    if(value!==null&&typeof value==='object'){issue(n,ASSIGNMENT_HEADERS[i],'No se admiten fórmulas ni vínculos.');row[key]='';return}
    row[key]=String(value??'').trim().replace(/\s+/g,' ')
@@ -66,4 +68,18 @@ export async function readAssignments(buffer){
  }
  if(!rows.length)issue(2,'archivo','No hay asignaciones para revisar.')
  return{rows,errors}
+}
+
+export function validateAssignmentDepartments(parsed, carreras) {
+ const normalize = value => value.trim().replace(/\s+/g, ' ').normalize('NFC').toLocaleLowerCase('es')
+ const catalog = new Map(carreras.map(c => [normalize(c.nombre), c]))
+ for (const row of parsed.rows) {
+  const career = catalog.get(normalize(row.carrera))
+  const issue = (campo, motivo) => parsed.errors.push({hoja:'Asignaciones', fila:row.fila, campo, motivo})
+  if (!career) issue('Carrera', 'La carrera no está registrada o no está en el alcance de tu cuenta.')
+  else if (!career.departamento) issue('Departamento', `Vincula ${career.nombre} con un departamento en el catálogo antes de importar.`)
+  else if (row.departamento !== undefined && normalize(row.departamento) !== normalize(career.departamento)) issue('Departamento', `El departamento registrado para ${career.nombre} es ${career.departamento}.`)
+  else row.departamento = career.departamento
+ }
+ return parsed
 }

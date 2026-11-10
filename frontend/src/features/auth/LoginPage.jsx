@@ -48,11 +48,11 @@ export default function LoginPage() {
 
       <div className="login-container">
         {/* Cabecera compacta con Logo AcaPlan alineado a la derecha */}
-        <header className="login-header">
+        <header className="login-header login-header--wordmark">
           <img
             src={acaplanLogo}
-            alt="AcaPlan - Gestión de horarios académicos UNAN Managua CUR Chontales"
-            className="login-logo-img"
+            alt="AcaPlan"
+            className="login-logo-img login-logo-img--wordmark"
           />
         </header>
 

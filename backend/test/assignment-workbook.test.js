@@ -1,9 +1,18 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import ExcelJS from 'exceljs'
-import {ASSIGNMENT_HEADERS,assignmentTemplate,readAssignments} from '../src/assignment-workbook.js'
-const row=['001-ABC','María López','WEB01','Programación Web','Sistemas',3,'Matutino',56]
+import {ASSIGNMENT_HEADERS,assignmentTemplate,readAssignments,validateAssignmentDepartments} from '../src/assignment-workbook.js'
+const row=['001-ABC','María López','WEB01','Programación Web','Sistemas',3,'Matutino',56,'Ciencias, Tecnología y Salud']
 async function book(rows){const b=new ExcelJS.Workbook(),s=b.addWorksheet('Asignaciones');s.addRow(ASSIGNMENT_HEADERS);rows.forEach(r=>s.addRow(r));return Buffer.from(await b.xlsx.writeBuffer())}
+
+test('Valida cada departamento contra la carrera y señala la fila que no coincide',async()=>{
+ const second=[...row];second[2]='EC01';second[3]='Contabilidad';second[4]='Economía'
+ const catalog=[{nombre:'Sistemas',departamento:row[8]},{nombre:'Economía',departamento:'Ciencias Económicas y Administrativas'}]
+ const result=validateAssignmentDepartments(await readAssignments(await book([row,second])),catalog)
+ assert.deepEqual(result.errors.map(({fila,campo})=>({fila,campo})),[{fila:3,campo:'Departamento'}])
+ second[8]=catalog[1].departamento
+ assert.deepEqual(validateAssignmentDepartments(await readAssignments(await book([row,second])),catalog).errors,[])
+})
 test('Plantilla acordada: cédula y código como texto, sin IDs internos',async()=>{
  const b=new ExcelJS.Workbook();await b.xlsx.load(await assignmentTemplate([{nombre:'Sistemas'}]));const s=b.getWorksheet('Asignaciones')
  assert.deepEqual(s.getRow(1).values.slice(1),ASSIGNMENT_HEADERS);assert.equal(s.getColumn(1).numFmt,'@');assert.equal(s.getColumn(3).numFmt,'@');assert.equal(s.rowCount,1)
