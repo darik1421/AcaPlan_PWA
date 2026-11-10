@@ -9,12 +9,12 @@ export default function AsignacionAcademicaPage({ context }) {
         <div>
           <span className="screen-kicker">Coordinadores de carrera</span>
           <h2 id="academic-title">Asignación académica</h2>
-          <p className="muted">Asignaturas y docentes recibidos para cada año de carrera.</p>
+          <p className="muted">Componentes curriculares y docentes recibidos para cada año de carrera.</p>
         </div>
       </div>
 
       <div className="banner-notice">
-        Sube un único Excel con docentes, asignaturas, años y turnos.
+        Sube un único Excel con docentes, componentes curriculares, años y turnos.
       </div>
 
       {context?.esDirectorDepartamento ? <ResumenDepartamento /> : <ProgramacionPage context={context} />}

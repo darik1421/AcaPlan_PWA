@@ -201,7 +201,7 @@ export default function AsignacionesImportadas({ periodId, revision, onDataChang
                 <thead>
                   <tr>
                     <th>Carrera y año</th>
-                    <th>Asignatura</th>
+                    <th>Componente</th>
                     <th>Docentes</th>
                     <th>Turno</th>
                     <th>Horas totales</th>
@@ -288,17 +288,17 @@ export default function AsignacionesImportadas({ periodId, revision, onDataChang
 
           {/* Columna Derecha: Tarjeta de Registro seleccionado (Figma asignaturas_docentes_233_2490) */}
           {semesterRows.length > 0 && <details className="side-panel-card delivery-detail">
-            <summary>Detalle de la asignatura seleccionada</summary>
+            <summary>Detalle del componente curricular seleccionado</summary>
             <p className="card-subtitle">
               {selectedRecord
-                ? 'Detalle y necesidades de la asignatura seleccionada'
+                ? 'Detalle y necesidades del componente curricular seleccionado'
                 : 'Selecciona una fila de la tabla'}
             </p>
 
             {selectedRecord ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div className="filter-card">
-                  <span>Asignatura</span>
+                  <span>Componente curricular</span>
                   <strong>{selectedRecord.nombre_asignatura}</strong>
                   <span className="cell-detail">Código institucional: {selectedRecord.codigo_asignatura}</span>
                 </div>
@@ -365,7 +365,7 @@ export default function AsignacionesImportadas({ periodId, revision, onDataChang
               </div>
             ) : (
               <p className="muted" style={{ fontSize: '13px' }}>
-                Haz clic sobre cualquier asignatura de la tabla para ver su información y gestionar necesidades.
+                Haz clic sobre cualquier componente curricular de la tabla para ver su información y gestionar necesidades.
               </p>
             )}
           </details>}

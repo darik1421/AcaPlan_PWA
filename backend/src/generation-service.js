@@ -25,8 +25,11 @@ export function runGeneration(context, options) {
 }
 
 export async function proposeGeneration({data, load, solve = runGeneration}) {
+  console.log('[DEBUG SERVICE 1] entered proposeGeneration');
   const options = generationInput(data), context = await load(options.id)
-  const result = await solve(context, options)
+  console.log('[DEBUG SERVICE 2] calling solve');
+  const result = await solve(context, options);
+  console.log('[DEBUG SERVICE 3] solve returned:', typeof result, result ? Object.keys(result) : null);
   const current = await load(options.id)
   if (generationVersion(current) !== generationVersion(context)) throw new AccessError(409, 'Los datos o las reservas cambiaron durante el cálculo. Consulta y genera nuevamente.')
   return result

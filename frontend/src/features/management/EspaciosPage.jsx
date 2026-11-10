@@ -1,7 +1,11 @@
 import PreparacionExcel from './PreparacionExcel'
 import { useEffect, useState } from 'react'
 import { api } from '../../services/management'
-import { Pencil, Building2, RefreshCw } from 'lucide-react'
+import { Pencil, RefreshCw, Trash2 } from 'lucide-react'
+import Modal from '../../components/Modal'
+import Pagination from '../../components/Pagination'
+
+const PAGE_SIZE = 10
 
 export default function EspaciosPage({ canManage, onChanged, periodId }) {
   const [tab, setTab] = useState('aulas')
@@ -9,7 +13,7 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
   const [aulas, setAulas] = useState([])
   const [capacityFilter, setCapacityFilter] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
-  const [selectedAulaId, setSelectedAulaId] = useState(null)
+  const [page, setPage] = useState(1)
 
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
@@ -19,6 +23,7 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
 
   // Formularios
   const [formAula, setFormAula] = useState(null)
+  const [formPabellon, setFormPabellon] = useState(null)
 
   async function load(signal) {
     setLoading(true)
@@ -31,11 +36,18 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
       ])
       if (!signal?.aborted) {
         setAulas(dataAulas)
-        setTypeFilter(current => dataAulas.some(a => a.tipo === current) ? current : '')
+        setTypeFilter(current => (dataAulas.some(a => a.tipo === current) ? current : ''))
         setPabellones(dataPabellones)
       }
     } catch (e) {
-      if (!signal?.aborted) { setError(e.message); setLoadFailed(true); setAulas([]); setPabellones([]); setFormAula(null); setSelectedAulaId(null) }
+      if (!signal?.aborted) {
+        setError(e.message)
+        setLoadFailed(true)
+        setAulas([])
+        setPabellones([])
+        setFormAula(null)
+        setFormPabellon(null)
+      }
     } finally {
       if (!signal?.aborted) setLoading(false)
     }
@@ -50,6 +62,7 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
   useEffect(() => {
     if (!canManage) {
       setFormAula(null)
+      setFormPabellon(null)
       setMessage('')
     }
   }, [canManage])
@@ -64,7 +77,52 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
       setMessage(successMsg)
       resetForm()
       await load()
-      onChanged()
+      onChanged?.()
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function handleDeleteAula(row) {
+    if (busy || loading || loadFailed || !canManage) return
+    if (!window.confirm(`¿Estás seguro de que deseas dar de baja el aula «${row.codigo}»?`)) return
+    saveEntity(
+      '/aulas',
+      {
+        id: row.id_aula,
+        codigo: row.codigo,
+        tipo: row.tipo,
+        capacidad: row.capacidad,
+        estado: 'inactivo',
+      },
+      () => {},
+      'Aula dada de baja'
+    )
+  }
+
+  async function handleDeletePabellon(p) {
+    if (busy || loading || loadFailed || !canManage) return
+    const aulasPabellon = aulas.filter(
+      a => a.id_pabellon === p.id_pabellon && a.estado !== 'inactivo'
+    )
+    if (aulasPabellon.length > 0) {
+      setError(
+        `No se puede eliminar el pabellón «${p.nombre}» porque tiene ${aulasPabellon.length} aula(s) asignada(s). Reasigna o da de baja las aulas primero.`
+      )
+      return
+    }
+    if (!window.confirm(`¿Estás seguro de que deseas eliminar el pabellón «${p.nombre}»?`)) return
+    setBusy(true)
+    setError('')
+    setMessage('')
+    try {
+      await api('/pabellones', { method: 'DELETE', data: { id: p.id_pabellon } })
+      setMessage('Pabellón eliminado.')
+      setFormPabellon(null)
+      await load()
+      onChanged?.()
     } catch (e) {
       setError(e.message)
     } finally {
@@ -78,10 +136,9 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
       (!typeFilter || a.tipo === typeFilter)
   )
 
-  const selectedAula =
-    filteredAulas.find(a => a.id_aula === selectedAulaId) ||
-    filteredAulas[0] ||
-    null
+  const totalPages = Math.ceil(filteredAulas.length / PAGE_SIZE) || 1
+  const validPage = Math.min(Math.max(1, page), totalPages)
+  const paginatedAulas = filteredAulas.slice((validPage - 1) * PAGE_SIZE, validPage * PAGE_SIZE)
 
   return (
     <section className="management-page" aria-labelledby="espacios-title">
@@ -94,7 +151,8 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
       </div>
 
       <p className="notice">
-        Importa el inventario desde Excel y confirma los datos revisados. La plantilla sigue siendo provisional. Las correcciones de aulas existentes se realizan desde su fila.
+        Importa el inventario desde Excel y confirma los datos revisados. La plantilla sigue siendo
+        provisional. Las correcciones de aulas y pabellones existentes se realizan desde su fila.
       </p>
 
       <nav className="workspace-nav" aria-label="Espacios">
@@ -118,6 +176,7 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
           periodId={periodId}
           onConfirmed={() => {
             setFormAula(null)
+            setFormPabellon(null)
             load()
             onChanged?.()
           }}
@@ -135,10 +194,171 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
         </p>
       )}
 
-      <button className="secondary" disabled={busy || loading || !!formAula} onClick={()=>load()}><RefreshCw size={14} aria-hidden="true"/> Actualizar inventario</button>
-      {loadFailed && <p className="notice">No se pudo consultar el inventario. Usa «Actualizar inventario» antes de corregir sus datos.</p>}
+      <button
+        className="secondary"
+        disabled={busy || loading || !!formAula || !!formPabellon}
+        onClick={() => load()}
+      >
+        <RefreshCw size={14} aria-hidden="true" /> Actualizar inventario
+      </button>
+      {loadFailed && (
+        <p className="notice">
+          No se pudo consultar el inventario. Usa «Actualizar inventario» antes de corregir sus
+          datos.
+        </p>
+      )}
 
-      {/* TABS */}
+      {/* MODAL EDICIÓN AULA */}
+      <Modal
+        isOpen={Boolean(formAula && canManage)}
+        onClose={() => setFormAula(null)}
+        title="Editar aula"
+        maxWidth={580}
+      >
+        {formAula && canManage && (
+          <form
+            className="management-form"
+            onSubmit={e => {
+              e.preventDefault()
+              saveEntity('/aulas', formAula, () => setFormAula(null), 'Aula actualizada')
+            }}
+          >
+            <fieldset disabled={busy} style={{ border: 'none', padding: 0, margin: 0 }}>
+              <div className="form-grid">
+                <label>
+                  Pabellón
+                  <select
+                    required
+                    disabled={!!formAula.id}
+                    value={formAula.id_pabellon}
+                    onChange={e =>
+                      setFormAula(c => ({ ...c, id_pabellon: Number(e.target.value) }))
+                    }
+                  >
+                    {formAula.id &&
+                      !pabellones.find(p => p.id_pabellon === formAula.id_pabellon) && (
+                        <option value={formAula.id_pabellon}>
+                          {aulas.find(a => a.id_aula === formAula.id)?.pabellon_nombre}
+                        </option>
+                      )}
+                    {pabellones.map(p => (
+                      <option key={p.id_pabellon} value={p.id_pabellon}>
+                        {p.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Código del espacio
+                  <input
+                    required
+                    maxLength={20}
+                    value={formAula.codigo}
+                    onChange={e => setFormAula(c => ({ ...c, codigo: e.target.value }))}
+                  />
+                </label>
+                <label>
+                  Tipo (Ej. 'Laboratorio de Cómputo', 'Auditorio')
+                  <input
+                    required
+                    maxLength={50}
+                    value={formAula.tipo}
+                    onChange={e => setFormAula(c => ({ ...c, tipo: e.target.value }))}
+                  />
+                </label>
+                <label>
+                  Capacidad (personas)
+                  <input
+                    required
+                    type="number"
+                    min="1"
+                    value={formAula.capacidad}
+                    onChange={e =>
+                      setFormAula(c => ({ ...c, capacidad: Number(e.target.value) }))
+                    }
+                  />
+                </label>
+                {formAula.id && (
+                  <label>
+                    Estado
+                    <select
+                      value={formAula.estado}
+                      onChange={e => setFormAula(c => ({ ...c, estado: e.target.value }))}
+                    >
+                      <option value="activo">Activo</option>
+                      <option value="inactivo">Inactivo</option>
+                    </select>
+                  </label>
+                )}
+              </div>
+              <div className="form-actions" style={{ marginTop: '20px' }}>
+                <button className="primary" type="submit">
+                  {busy ? 'Guardando…' : 'Guardar aula'}
+                </button>
+                <button
+                  className="secondary"
+                  type="button"
+                  onClick={() => setFormAula(null)}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </fieldset>
+          </form>
+        )}
+      </Modal>
+
+      {/* MODAL EDICIÓN PABELLÓN */}
+      <Modal
+        isOpen={Boolean(formPabellon && canManage)}
+        onClose={() => setFormPabellon(null)}
+        title="Editar pabellón"
+        maxWidth={480}
+      >
+        {formPabellon && canManage && (
+          <form
+            className="management-form"
+            onSubmit={e => {
+              e.preventDefault()
+              saveEntity(
+                '/pabellones',
+                formPabellon,
+                () => setFormPabellon(null),
+                'Pabellón actualizado'
+              )
+            }}
+          >
+            <fieldset disabled={busy} style={{ border: 'none', padding: 0, margin: 0 }}>
+              <div className="form-grid">
+                <label>
+                  Nombre del pabellón
+                  <input
+                    required
+                    maxLength={50}
+                    value={formPabellon.nombre}
+                    onChange={e => setFormPabellon(c => ({ ...c, nombre: e.target.value }))}
+                    placeholder="Ej. Pabellón Central"
+                  />
+                </label>
+              </div>
+              <div className="form-actions" style={{ marginTop: '20px' }}>
+                <button className="primary" type="submit">
+                  {busy ? 'Guardando…' : 'Guardar pabellón'}
+                </button>
+                <button
+                  className="secondary"
+                  type="button"
+                  onClick={() => setFormPabellon(null)}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </fieldset>
+          </form>
+        )}
+      </Modal>
+
+      {/* TAB AULAS */}
       {tab === 'aulas' && !loadFailed && (
         <div>
           <div className="filter-grid">
@@ -148,7 +368,10 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
                 type="number"
                 min="1"
                 value={capacityFilter}
-                onChange={e => setCapacityFilter(e.target.value)}
+                onChange={e => {
+                  setCapacityFilter(e.target.value)
+                  setPage(1)
+                }}
                 placeholder="Ej. 30"
               />
             </label>
@@ -156,7 +379,10 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
               <span>Filtrar por tipo</span>
               <select
                 value={typeFilter}
-                onChange={e => setTypeFilter(e.target.value)}
+                onChange={e => {
+                  setTypeFilter(e.target.value)
+                  setPage(1)
+                }}
               >
                 <option value="">Todos los tipos</option>
                 {[...new Set(aulas.map(a => a.tipo))].sort().map(tipo => (
@@ -166,14 +392,13 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
                 ))}
               </select>
             </label>
-
           </div>
 
-          <div className="two-column-layout">
-            <div>
-              {loading ? (
-                <p role="status">Cargando aulas…</p>
-              ) : (
+          <div style={{ marginTop: '16px' }}>
+            {loading ? (
+              <p role="status">Cargando aulas…</p>
+            ) : (
+              <>
                 <div className="table-scroll">
                   <table>
                     <caption>Espacios registrados · {filteredAulas.length} aulas</caption>
@@ -189,41 +414,36 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredAulas.map(row => {
-                        const isSelected = selectedAula?.id_aula === row.id_aula
-                        return (
-                          <tr
-                            key={row.id_aula}
-                            className={isSelected ? 'selected-row' : ''}
-                            onClick={() => setSelectedAulaId(row.id_aula)}
-                            style={{ cursor: 'pointer' }}
-                          >
-                            <td>{row.sede || 'Pendiente'}</td>
-                            <td>{row.pabellon_nombre}</td>
-                            <td><strong>{row.codigo}</strong></td>
-                            <td>{row.tipo}</td>
-                            <td>{row.capacidad} personas</td>
-
-                            <td>
-                              <span
-                                className={
-                                  row.estado === 'activo'
-                                    ? 'status-pill active'
-                                    : 'status-pill inactive'
-                                }
-                              >
-                                <span className="status-dot" aria-hidden="true">●</span>
-                                <span>{row.estado}</span>
+                      {paginatedAulas.map(row => (
+                        <tr key={row.id_aula}>
+                          <td>{row.sede || 'Pendiente'}</td>
+                          <td>{row.pabellon_nombre}</td>
+                          <td>
+                            <strong>{row.codigo}</strong>
+                          </td>
+                          <td>{row.tipo}</td>
+                          <td>{row.capacidad} personas</td>
+                          <td>
+                            <span
+                              className={
+                                row.estado === 'activo'
+                                  ? 'status-pill active'
+                                  : 'status-pill inactive'
+                              }
+                            >
+                              <span className="status-dot" aria-hidden="true">
+                                ●
                               </span>
-                            </td>
-                            {canManage && (
-                              <td>
+                              <span>{row.estado}</span>
+                            </span>
+                          </td>
+                          {canManage && (
+                            <td>
+                              <div className="row-actions">
                                 <button
                                   className="secondary"
                                   disabled={busy || loading || loadFailed}
-                                  onClick={e => {
-                                    e.stopPropagation()
-                                    setSelectedAulaId(row.id_aula)
+                                  onClick={() => {
                                     setFormAula({ ...row, id: row.id_aula })
                                     setMessage('')
                                   }}
@@ -231,11 +451,20 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
                                   <Pencil size={13} aria-hidden="true" />
                                   <span>Editar</span>
                                 </button>
-                              </td>
-                            )}
-                          </tr>
-                        )
-                      })}
+                                <button
+                                  className="secondary danger-btn"
+                                  disabled={busy || loading || loadFailed}
+                                  aria-label={`Eliminar aula ${row.codigo}`}
+                                  onClick={() => handleDeleteAula(row)}
+                                >
+                                  <Trash2 size={13} aria-hidden="true" />
+                                  <span>Eliminar</span>
+                                </button>
+                              </div>
+                            </td>
+                          )}
+                        </tr>
+                      ))}
                       {!filteredAulas.length && (
                         <tr>
                           <td colSpan={canManage ? 7 : 6}>
@@ -246,191 +475,93 @@ export default function EspaciosPage({ canManage, onChanged, periodId }) {
                     </tbody>
                   </table>
                 </div>
-              )}
-            </div>
 
-            {/* Right Column: Espacio seleccionado or Formulario de corrección */}
-            <div>
-              {formAula && canManage ? (
-                <form
-                  className="side-panel-card"
-                  onSubmit={e => {
-                    e.preventDefault()
-                    saveEntity('/aulas', formAula, () => setFormAula(null), 'Aula actualizada')
-                  }}
-                >
-                  <h3 className="card-title">Corregir aula</h3>
-                  <p className="card-subtitle">Actualizar los datos del aula completa</p>
-                  <fieldset disabled={busy} style={{ border: 'none', padding: 0, margin: 0 }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                      <label>
-                        Pabellón
-                        <select
-                          required
-                          disabled={!!formAula.id}
-                          value={formAula.id_pabellon}
-                          onChange={e =>
-                            setFormAula(c => ({ ...c, id_pabellon: Number(e.target.value) }))
-                          }
-                        >
-                          {formAula.id &&
-                            !pabellones.find(p => p.id_pabellon === formAula.id_pabellon) && (
-                              <option value={formAula.id_pabellon}>
-                                {aulas.find(a => a.id_aula === formAula.id)?.pabellon_nombre}
-                              </option>
-                            )}
-                          {pabellones.map(p => (
-                            <option key={p.id_pabellon} value={p.id_pabellon}>
-                              {p.nombre}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      <label>
-                        Código del espacio
-                        <input
-                          required
-                          maxLength={20}
-                          value={formAula.codigo}
-                          onChange={e => setFormAula(c => ({ ...c, codigo: e.target.value }))}
-                        />
-                      </label>
-                      <label>
-                        Tipo (Ej. 'Laboratorio de Cómputo', 'Auditorio')
-                        <input
-                          required
-                          maxLength={50}
-                          value={formAula.tipo}
-                          onChange={e => setFormAula(c => ({ ...c, tipo: e.target.value }))}
-                        />
-                      </label>
-                      <label>
-                        Capacidad (personas)
-                        <input
-                          required
-                          type="number"
-                          min="1"
-                          value={formAula.capacidad}
-                          onChange={e =>
-                            setFormAula(c => ({ ...c, capacidad: Number(e.target.value) }))
-                          }
-                        />
-                      </label>
-                      {formAula.id && (
-                        <label>
-                          Estado
-                          <select
-                            value={formAula.estado}
-                            onChange={e => setFormAula(c => ({ ...c, estado: e.target.value }))}
-                          >
-                            <option value="activo">Activo</option>
-                            <option value="inactivo">Inactivo</option>
-                          </select>
-                        </label>
-                      )}
-                    </div>
-                    <div className="form-actions" style={{ marginTop: '20px' }}>
-                      <button className="primary" type="submit">
-                        {busy ? 'Guardando…' : 'Guardar aula'}
-                      </button>
-                      <button
-                        className="secondary"
-                        type="button"
-                        onClick={() => setFormAula(null)}
-                      >
-                        Cancelar
-                      </button>
-                    </div>
-                  </fieldset>
-                </form>
-              ) : selectedAula ? (
-                <div className="side-panel-card">
-                  <h3 className="card-title">Espacio seleccionado</h3>
-                  <p className="card-subtitle">Detalle del aula completa</p>
-                  <div className="side-panel-detail-grid">
-                    <div className="side-panel-item">
-                      <span className="detail-label">Código del espacio</span>
-                      <span className="detail-value">
-                        <span className="badge-code">Aula: {selectedAula.codigo}</span>
-                      </span>
-                    </div>
-                    <div className="side-panel-item">
-                      <span className="detail-label">Tipo</span>
-                      <span className="detail-value">{selectedAula.tipo}</span>
-                    </div>
-                    <div className="side-panel-item">
-                      <span className="detail-label">Pabellón</span>
-                      <span className="detail-value">{selectedAula.pabellon_nombre}</span>
-                    </div>
-                    <div className="side-panel-item">
-                      <span className="detail-label">Capacidad</span>
-                      <span className="detail-value">{selectedAula.capacidad} personas</span>
-                    </div>
-
-                    <div className="side-panel-item">
-                      <span className="detail-label">Estado</span>
-                      <div>
-                        <span
-                          className={
-                            selectedAula.estado === 'activo'
-                              ? 'status-pill active'
-                              : 'status-pill inactive'
-                          }
-                        >
-                          <span className="status-dot" aria-hidden="true">●</span>
-                          <span>{selectedAula.estado}</span>
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  {canManage && (
-                    <button
-                      type="button"
-                      className="secondary"
-                      style={{ width: '100%', marginTop: '6px' }}
-                      onClick={() => {
-                        setFormAula({ ...selectedAula, id: selectedAula.id_aula })
-                        setMessage('')
-                      }}
-                    >
-                      <Pencil size={14} aria-hidden="true" />
-                      <span>Corregir este espacio</span>
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <div className="side-panel-card" style={{ textAlign: 'center', padding: '36px 16px' }}>
-                  <Building2 size={36} color="#94a3b8" style={{ margin: '0 auto 12px auto' }} />
-                  <h3 className="card-title" style={{ fontSize: '15px' }}>Ningún espacio seleccionado</h3>
-                  <p className="muted" style={{ fontSize: '13px', margin: 0 }}>
-                    Selecciona un aula de la tabla para ver su información.
-                  </p>
-                </div>
-              )}
-            </div>
+                <Pagination
+                  currentPage={validPage}
+                  totalPages={totalPages}
+                  totalItems={filteredAulas.length}
+                  pageSize={PAGE_SIZE}
+                  onPageChange={setPage}
+                  itemLabel="aulas"
+                />
+              </>
+            )}
           </div>
         </div>
       )}
 
+      {/* TAB PABELLONES */}
       {tab === 'pabellones' && !loadFailed && (
-        <div className="surface-card">
-          <h3 className="card-title">Pabellones registrados</h3>
-          <p className="card-subtitle">Infraestructura del recinto universitario</p>
+        <div style={{ marginTop: '16px' }}>
           {loading ? (
             <p role="status">Cargando pabellones…</p>
           ) : (
-            <ul style={{ paddingLeft: '20px', lineHeight: '2' }}>
-              {pabellones.map(p => (
-                <li key={p.id_pabellon}>
-                  <strong>{p.nombre}</strong>
-                </li>
-              ))}
-              {!pabellones.length && <li>Vacío.</li>}
-            </ul>
+            <div className="table-scroll">
+              <table>
+                <caption>Pabellones registrados · {pabellones.length} pabellones</caption>
+                <thead>
+                  <tr>
+                    <th>Nombre del pabellón</th>
+                    <th>Aulas asignadas</th>
+                    {canManage && <th>Acciones</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {pabellones.map(p => {
+                    const countAulas = aulas.filter(
+                      a => a.id_pabellon === p.id_pabellon && a.estado !== 'inactivo'
+                    ).length
+                    return (
+                      <tr key={p.id_pabellon}>
+                        <td>
+                          <strong>{p.nombre}</strong>
+                        </td>
+                        <td>
+                          <span className="status-pill active" style={{ fontWeight: 500 }}>
+                            {countAulas} {countAulas === 1 ? 'aula' : 'aulas'}
+                          </span>
+                        </td>
+                        {canManage && (
+                          <td>
+                            <div className="row-actions">
+                              <button
+                                className="secondary"
+                                disabled={busy || loading || loadFailed}
+                                aria-label={`Editar pabellón ${p.nombre}`}
+                                onClick={() => {
+                                  setFormPabellon({ id: p.id_pabellon, nombre: p.nombre })
+                                  setMessage('')
+                                }}
+                              >
+                                <Pencil size={13} aria-hidden="true" />
+                                <span>Editar</span>
+                              </button>
+                              <button
+                                className="secondary danger-btn"
+                                disabled={busy || loading || loadFailed}
+                                aria-label={`Eliminar pabellón ${p.nombre}`}
+                                onClick={() => handleDeletePabellon(p)}
+                              >
+                                <Trash2 size={13} aria-hidden="true" />
+                                <span>Eliminar</span>
+                              </button>
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    )
+                  })}
+                  {!pabellones.length && (
+                    <tr>
+                      <td colSpan={canManage ? 3 : 2}>No hay pabellones registrados.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}
-
     </section>
   )
 }

@@ -91,7 +91,20 @@ export function asignaturaInput(data, create = false) {
   }
   return result
 }
-export function pabellonInput(data) { return { nombre: text(data.nombre, 'Nombre del pabellón', 50) } }
+export function departamentoInput(data, create = false) {
+  const result = { nombre: text(data.nombre, 'Nombre del departamento', 150) }
+  if (!create) {
+    result.id = positiveId(data.id ?? data.id_departamento)
+  }
+  return result
+}
+export function pabellonInput(data, create = false) {
+  const result = { nombre: text(data.nombre, 'Nombre del pabellón', 50) }
+  if (!create) {
+    result.id = positiveId(data.id ?? data.id_pabellon)
+  }
+  return result
+}
 export function recursoInput(data) { return { nombre: text(data.nombre, 'Nombre del recurso', 50) } }
 export function aulaInput(data, create = false) {
   const result = {

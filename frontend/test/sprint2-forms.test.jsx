@@ -65,8 +65,8 @@ test('Filtra asignaturas combinando carrera, año y búsqueda',async()=>{
  fireEvent.change(screen.getByLabelText('Filtrar por año'),{target:{value:'2'}})
  expect(screen.queryByText('Matemática')).toBeNull()
  expect(screen.getByText('Biología')).toBeTruthy()
- fireEvent.change(screen.getByLabelText('Buscar asignaturas'),{target:{value:'inexistente'}})
- expect(screen.getByText('No hay asignaturas que coincidan.')).toBeTruthy()
+ fireEvent.change(screen.getByLabelText(/^Buscar (asignaturas|componentes)$/),{target:{value:'inexistente'}})
+ expect(screen.getByText(/No hay (asignaturas|componentes) que coincidan/)).toBeTruthy()
 })
 
 test('Consulta aulas completas por capacidad y tipo, sin equipamiento',async()=>{
@@ -92,13 +92,13 @@ test('Asignaturas corrige sin alta manual y descarta el formulario al perder su 
  fireEvent.click(screen.getByText('Catálogo anterior'))
  fireEvent.click(await screen.findByRole('button',{name:'Editar Matemática'}))
  expect(screen.queryByRole('button',{name:'Nueva asignatura'})).toBeNull()
- fireEvent.change(screen.getByLabelText('Nombre de la asignatura'),{target:{value:'Matemática I'}})
- fireEvent.submit(screen.getByRole('button',{name:'Guardar asignatura'}).closest('form'))
+ fireEvent.change(screen.getByLabelText(/Nombre de(l componente curricular| la asignatura)/),{target:{value:'Matemática I'}})
+ fireEvent.submit(screen.getByRole('button',{name:/Guardar (asignatura|componente)/}).closest('form'))
  await waitFor(()=>expect(mocks.api).toHaveBeenCalledWith('/asignaturas',expect.objectContaining({method:'PATCH',data:expect.objectContaining({id:1,nombre:'Matemática I',horas_teoricas:2,horas_practicas:1})})))
- await screen.findByText('Asignatura actualizada.')
+ await screen.findByText(/(Asignatura|Componente curricular) actualizad[ao]/i)
  fireEvent.click(screen.getByRole('button',{name:'Editar Matemática'}))
  view.rerender(<AsignaturasPage context={{...base,carreras:[2]}} canManage onChanged={vi.fn()}/> )
- expect(screen.queryByRole('button',{name:'Guardar asignatura'})).toBeNull()
+ expect(screen.queryByRole('button',{name:/Guardar (asignatura|componente)/})).toBeNull()
  expect(mocks.api.mock.calls.some(([,options])=>options?.method==='POST')).toBe(false)
 })
 

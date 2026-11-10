@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { api } from '../../services/management'
-import { Plus, Pencil, RotateCw } from 'lucide-react'
+import { Plus, Pencil, RotateCw, Trash2 } from 'lucide-react'
+import Modal from '../../components/Modal'
 
 
 const empty = () => ({ nombre: '' })
@@ -75,6 +76,29 @@ export default function CarrerasPage({ canManage, onChanged, manageDepartments =
     }
   }
 
+  async function handleDelete(row) {
+    if (busy || loading || loadFailed || !canManage) return
+    if (!window.confirm(`¿Estás seguro de que deseas dar de baja la carrera «${row.nombre}»?`)) return
+    const current = generation.current
+    setBusy(true)
+    setError('')
+    setMessage('')
+    try {
+      await api('/carreras', {
+        method: 'PATCH',
+        data: { id: row.id_carrera, nombre: row.nombre, estado: 'inactivo' },
+      })
+      if (current !== generation.current) return
+      setMessage('Carrera dada de baja.')
+      await load()
+      if (current === generation.current) onChanged?.()
+    } catch (e) {
+      if (current === generation.current) setError(e.message)
+    } finally {
+      if (current === generation.current) setBusy(false)
+    }
+  }
+
   const filtered = rows.filter(r =>
     r.nombre.toLowerCase().includes(query.toLowerCase())
   )
@@ -113,12 +137,13 @@ export default function CarrerasPage({ canManage, onChanged, manageDepartments =
         </p>
       )}
 
+      <Modal isOpen={Boolean(form && canManage)} onClose={() => setForm(null)} title={form?.id ? 'Editar carrera' : 'Nueva carrera'} maxWidth={540}>
       {form && (
-        <form className="management-form" onSubmit={save} style={{ marginBottom: '24px' }}>
+        <form className="management-form" onSubmit={save}>
           <h3>{form.id ? 'Editar carrera' : 'Nueva carrera'}</h3>
           <fieldset disabled={busy}>
             <div className="form-grid">
-              <label>
+              <label className="col-span-full">
                 Nombre de la carrera
                 <input
                   required
@@ -157,6 +182,7 @@ export default function CarrerasPage({ canManage, onChanged, manageDepartments =
           </fieldset>
         </form>
       )}
+      </Modal>
 
       <div
         style={{
@@ -225,8 +251,9 @@ export default function CarrerasPage({ canManage, onChanged, manageDepartments =
                   </td>
                   {manageDepartments && <td>{departments?.departamentos.find(d => d.id === departments.carreras.find(c => c.id_carrera === row.id_carrera)?.id_departamento)?.nombre || 'Pendiente de asignar'}</td>}
                   {canManage && (
-                    <td>
-                      <button
+                    <td className="row-actions-cell" style={{ whiteSpace: 'nowrap', width: '1%' }}>
+                      <div className="row-actions" style={{ display: 'inline-flex', flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'center', gap: '8px' }}>
+<button
                         className="secondary"
                         disabled={busy}
                         aria-label={`Editar ${row.nombre}`}
@@ -239,6 +266,16 @@ export default function CarrerasPage({ canManage, onChanged, manageDepartments =
                         <Pencil size={13} aria-hidden="true" />
                         <span>Editar</span>
                       </button>
+                      <button
+                        className="secondary danger-btn"
+                        disabled={busy}
+                        aria-label={`Eliminar ${row.nombre}`}
+                        onClick={() => handleDelete(row)}
+                      >
+                        <Trash2 size={13} aria-hidden="true" />
+                        <span>Eliminar</span>
+                      </button>
+                      </div>
                     </td>
                   )}
                 </tr>

@@ -9,6 +9,7 @@ import {
   LogOut,
   ClipboardList,
   Sparkles,
+  Landmark,
 } from 'lucide-react'
 import { useAuth } from '../features/auth/AuthContext'
 import { api } from '../services/management'
@@ -27,6 +28,7 @@ import EspaciosPage from '../features/management/EspaciosPage'
 import AsignacionAcademicaPage from '../features/management/AsignacionAcademicaPage'
 import CuadriculasPage from '../features/management/CuadriculasPage'
 import DisponibilidadPage from '../features/management/DisponibilidadPage'
+import DepartamentosPage from '../features/management/DepartamentosPage'
 import '../features/management/management.css'
 
 const PAGE_TITLES = {
@@ -34,8 +36,9 @@ const PAGE_TITLES = {
   generador: 'Generador de Horarios con IA',
   publicados: 'Horario semanal',
   periods: 'Semestres académicos',
+  departamentos: 'Departamentos académicos',
   carreras: 'Carreras coordinadas',
-  asignaturas: 'Catálogo de asignaturas',
+  asignaturas: 'Componentes curriculares',
   espacios: 'Pabellones y aulas',
   programacion: 'Asignación académica',
   disponibilidad: 'Restricciones',
@@ -119,7 +122,7 @@ export default function DashboardPage() {
             {[
               ['Planificación', [['programacion','Asignación académica',ClipboardList],['disponibilidad','Restricciones',Clock],['generador','Generador de horarios',Sparkles],['borradores','Borradores',Calendar]]],
               ['Horarios', [['personal','Mi horario',Calendar],['publicados','Horarios publicados',Calendar]]],
-              ['Configuración', [['periods','Semestres',Calendar],['carreras','Carreras',Layers],['espacios','Pabellones y aulas',Building2],['asignaturas','Asignaturas',BookOpen],['accounts','Gestión de Cuentas',User]]],
+              ['Configuración', [['periods','Semestres',Calendar],['departamentos','Departamentos',Landmark],['carreras','Carreras',Layers],['espacios','Pabellones y aulas',Building2],['asignaturas','Componentes',BookOpen],['accounts','Gestión de Cuentas',User]]],
             ].map(([group,items]) => {
               const visible = items.filter(([id]) => availablePages.has(id))
               return visible.length > 0 && <div className="sidebar-section" role="group" aria-label={group} key={group}>
@@ -204,6 +207,9 @@ export default function DashboardPage() {
               ) :
               page === 'accounts' && context.canManageAccounts ? (
                 <AccountsPage context={context} onChanged={refresh} />
+              ) :
+              page === 'departamentos' && context.isAdmin ? (
+                <DepartamentosPage canManage={context.isAdmin} onChanged={refresh} />
               ) :
               page === 'carreras' ? (
                 <CarrerasPage canManage={context.canManageCarreras} onChanged={refresh} manageDepartments={context.isAdmin} />

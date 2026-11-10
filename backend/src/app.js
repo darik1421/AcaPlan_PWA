@@ -12,8 +12,12 @@ export function createApp({ authenticateRequest = authenticate, management = cre
     const routes = {
       'GET /api/workspace': 'context',
       'GET /api/departamentos': 'departments.context',
+      'POST /api/departamentos': 'departments.create',
+      'PATCH /api/departamentos': 'departments.update',
+      'DELETE /api/departamentos': 'departments.delete',
       'PATCH /api/departamentos/carrera': 'departments.assign',
       'GET /api/departamentos/directores': 'departments.directors',
+      'GET /api/departamentos/docentes': 'departments.docentes',
       'PATCH /api/departamentos/director': 'departments.directorSave',
       'GET /api/departamento/asignaciones': 'departmentAcademic.list',
       'POST /api/borradores/estado': 'lifecycle.context',
@@ -55,6 +59,8 @@ export function createApp({ authenticateRequest = authenticate, management = cre
 
       'PATCH /api/asignaturas': 'asignaturas.update',
       'GET /api/pabellones': 'pabellones.list',
+      'PATCH /api/pabellones': 'pabellones.update',
+      'DELETE /api/pabellones': 'pabellones.delete',
       'GET /api/recursos': 'recursos.list',
       'GET /api/aulas': 'aulas.list',
       'PATCH /api/aulas': 'aulas.update',
@@ -90,10 +96,14 @@ export function createApp({ authenticateRequest = authenticate, management = cre
       try {
         const profile = await authenticateRequest(request)
         const data = request.method === 'GET' ? {} : await readBody(request, ['preparation.preview','preparation.confirm'].includes(route) ? 2900000 : route.startsWith('generation.') ? 512000 : 16384)
+        console.log('[DEBUG APP] route:', route, 'data:', data)
         const result = await management.execute(request, profile, route, data)
+        console.log('[DEBUG APP] result is undefined?', result === undefined, 'keys:', result ? Object.keys(result) : null)
+        const json = JSON.stringify(result)
         response.writeHead(200)
-        response.end(JSON.stringify(result))
+        response.end(json)
       } catch (error) {
+        console.log('[DEBUG APP] caught error:', error.status, error.message)
         response.writeHead(error.status || 503)
         response.end(JSON.stringify({ error: error.status ? error.message : 'No se pudo completar la operación.' }))
       }

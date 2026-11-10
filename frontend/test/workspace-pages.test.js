@@ -20,6 +20,7 @@ test('El director departamental sin vínculo no abre consultas departamentales',
 test('La gestión global usa capacidades comprobadas y la falta de contexto no habilita páginas',()=>{
  expect(workspacePages(null).size).toBe(0)
  const global={...base,isAdmin:true,canManageBloques:true,canReadDrafts:true,canManageAccounts:true}
+ expect(workspacePages(global).has('personal')).toBe(false)
  for(const page of ['accounts','generador','programacion','borradores','carreras']) expect(workspacePages(global).has(page)).toBe(true)
 })
 

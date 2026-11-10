@@ -27,8 +27,8 @@ test('Asignaturas permite corregir nombres únicamente dentro de la carrera auto
  mocks.api.mockResolvedValue([subject,{...subject,id:3,id_carrera:2,codigo:'BIO'}])
  render(<AsignaturasImportadas context={{carreras:[1]}} canManage/>);
  fireEvent.click(await screen.findByRole('button',{name:'Corregir nombre de WEB'}));expect(screen.queryByRole('button',{name:'Corregir nombre de BIO'})).toBeNull()
- fireEvent.change(screen.getByLabelText('Nombre de asignatura importada'),{target:{value:'Desarrollo web'}});fireEvent.click(screen.getByRole('button',{name:'Guardar nombre'}))
- await screen.findByText('Nombre de asignatura corregido.')
+ fireEvent.change(screen.getByLabelText(/Nombre de(l componente curricular| asignatura) importad[ao]/),{target:{value:'Desarrollo web'}});fireEvent.click(screen.getByRole('button',{name:'Guardar nombre'}))
+ await screen.findByText(/Nombre del? (componente curricular|asignatura) corregido/i)
  expect(mocks.api).toHaveBeenCalledWith('/asignaturas/importadas',{method:'PATCH',data:{id:2,nombre:'Desarrollo web',huella:subject.huella}})
 })
 test('Inventario exige confirmación expresa y recarga el catálogo después de guardar',async()=>{
@@ -47,7 +47,7 @@ test('Una consulta fallida no se presenta como ausencia de años o asignaturas',
  const view=render(<DatosAnos periodId={1}/>);await screen.findByRole('alert')
  expect(screen.queryByText('Los años aparecerán al confirmar la entrega académica.')).toBeNull()
  view.unmount();render(<AsignaturasImportadas context={{isAdmin:true}} canManage/>);await screen.findByRole('alert')
- expect(screen.queryByText('No hay asignaturas importadas.')).toBeNull()
+ expect(screen.queryByText(/No hay (asignaturas|componentes) importad[ao]s/)).toBeNull()
 })
 
 test('Guardar datos del año avisa al diagnóstico solo después de la confirmación del servidor',async()=>{

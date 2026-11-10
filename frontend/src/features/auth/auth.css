@@ -329,7 +329,10 @@
 }
 
 /* Botón principal */
-button.primary {
+.auth-card button.primary,
+.login-container button.primary,
+.recovery-wrap button.primary,
+.auth-form button.primary {
   display: flex;
   width: 100%;
   border: 0;
@@ -346,12 +349,18 @@ button.primary {
   transition: background-color 0.2s, box-shadow 0.2s;
 }
 
-button.primary:hover:not(:disabled) {
+.auth-card button.primary:hover:not(:disabled),
+.login-container button.primary:hover:not(:disabled),
+.recovery-wrap button.primary:hover:not(:disabled),
+.auth-form button.primary:hover:not(:disabled) {
   background-color: var(--acaplan-indigo-hover);
   box-shadow: 0 3px 10px rgba(48, 44, 145, 0.25);
 }
 
-button.primary:disabled {
+.auth-card button.primary:disabled,
+.login-container button.primary:disabled,
+.recovery-wrap button.primary:disabled,
+.auth-form button.primary:disabled {
   opacity: 0.65;
   cursor: not-allowed;
 }
@@ -360,7 +369,10 @@ button.primary:disabled {
   transition: transform 0.2s;
 }
 
-button.primary:hover:not(:disabled) .btn-arrow-icon {
+.auth-card button.primary:hover:not(:disabled) .btn-arrow-icon,
+.login-container button.primary:hover:not(:disabled) .btn-arrow-icon,
+.recovery-wrap button.primary:hover:not(:disabled) .btn-arrow-icon,
+.auth-form button.primary:hover:not(:disabled) .btn-arrow-icon {
   transform: translateX(3px);
 }
 

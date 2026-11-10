@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../../services/management'
-import { Plus, RefreshCw, Pencil, Power } from 'lucide-react'
+import { Plus, RefreshCw, Pencil, Power, Trash2 } from 'lucide-react'
+import Modal from '../../components/Modal'
 
 const empty = () => ({
   nombre: '',
@@ -118,6 +119,31 @@ export default function PeriodsPage({ canManage, onChanged }) {
     }
   }
 
+  async function handleDelete(row) {
+    if (busy || loading || loadFailed || !canManage) return
+    if (!window.confirm(`¿Estás seguro de que deseas dar de baja (desactivar) el semestre «${row.nombre}»?`)) return
+    const current = generation.current
+    setBusy(true)
+    setError('')
+    setMessage('')
+    try {
+      if (row.es_activo) {
+        await api('/periods/active', {
+          method: 'POST',
+          data: { id: row.id_periodo, active: false },
+        })
+      }
+      if (current !== generation.current) return
+      setMessage('Semestre dado de baja.')
+      await load()
+      if (current === generation.current) onChanged?.()
+    } catch (e) {
+      if (current === generation.current) setError(e.message)
+    } finally {
+      if (current === generation.current) setBusy(false)
+    }
+  }
+
   const activePeriod = rows.find(r => r.es_activo)
 
   return (
@@ -155,6 +181,7 @@ export default function PeriodsPage({ canManage, onChanged }) {
         </p>
       )}
 
+      <Modal isOpen={Boolean(form && canManage)} onClose={() => setForm(null)} title={form?.id ? 'Editar semestre' : 'Nuevo semestre'} maxWidth={560}>
       {form && canManage && (
         <form className="management-form" onSubmit={save}>
           <h3>{form.id ? 'Editar semestre' : 'Nuevo semestre'}</h3>
@@ -213,6 +240,7 @@ export default function PeriodsPage({ canManage, onChanged }) {
           </fieldset>
         </form>
       )}
+      </Modal>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
         <p className="muted" style={{ margin: 0, fontSize: '13.5px' }}>
@@ -267,8 +295,8 @@ export default function PeriodsPage({ canManage, onChanged }) {
                         </span>
                       </td>
                       {canManage && (
-                        <td>
-                          <div className="row-actions">
+                              <td className="row-actions-cell" style={{ whiteSpace: 'nowrap', width: '1%' }}>
+                                <div className="row-actions" style={{ display: 'inline-flex', flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'center', gap: '8px' }}>
                             <button
                               className="secondary"
                               disabled={busy || loading || loadFailed}
@@ -280,6 +308,15 @@ export default function PeriodsPage({ canManage, onChanged }) {
                             >
                               <Pencil size={13} aria-hidden="true" />
                               <span>Editar</span>
+                            </button>
+                            <button
+                              className="secondary danger-btn"
+                              disabled={busy || loading || loadFailed}
+                              aria-label={`Eliminar ${row.nombre}`}
+                              onClick={() => handleDelete(row)}
+                            >
+                              <Trash2 size={13} aria-hidden="true" />
+                              <span>Eliminar</span>
                             </button>
                             <button
                               className="secondary"

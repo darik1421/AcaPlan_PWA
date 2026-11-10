@@ -62,7 +62,7 @@ test('Sin coincidencias de filtros no muestra detalles ni permite corregir una f
  expect(screen.queryByRole('button',{name:'Corregir datos de asignación'})).toBeNull()
  expect(screen.queryByText('Código institucional: P1')).toBeNull()
  fireEvent.click(screen.getByRole('button',{name:'Limpiar filtros'}))
- fireEvent.click(screen.getByText('Detalle de la asignatura seleccionada'))
+ fireEvent.click(screen.getByText(/Detalle del componente|Detalle de la asignatura/))
  expect(screen.getByRole('button',{name:'Corregir datos de asignación'})).toBeTruthy()
 })
 

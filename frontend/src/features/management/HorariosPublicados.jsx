@@ -179,7 +179,7 @@ export default function HorariosPublicados({ personal = false }) {
                   <caption>Horario vigente</caption>
                   <thead>
                     <tr>
-                      {['Carrera / año', 'Asignatura', 'Docentes', 'Día', 'Hora', 'Aula / sede'].map(
+                      {['Carrera / año', 'Componente', 'Docentes', 'Día', 'Hora', 'Aula / sede'].map(
                         h => (
                           <th key={h}>{h}</th>
                         )

@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { api } from '../../services/management'
 import { useAuth } from '../auth/AuthContext'
 import { FUNCTION_LABELS, roleLabel } from '../../lib/role-labels'
-import { Plus, RefreshCw, Pencil } from 'lucide-react'
+import { Plus, RefreshCw, Pencil, Trash2 } from 'lucide-react'
+import Modal from '../../components/Modal'
 
 const empty = () => ({
   nombre: '',
@@ -76,6 +77,41 @@ export default function AccountsPage({ context, onChanged }) {
   useEffect(() => {
     if (!context.canCreateAccounts) setForm(current => (current?.id ? current : null))
   }, [context.canCreateAccounts])
+
+  async function handleDelete(row) {
+    if (busy || loading || loadFailed) return
+    if (row.id_usuario === profile.id_usuario) {
+      setError('No puedes dar de baja tu propia cuenta.')
+      return
+    }
+    if (!window.confirm(`¿Estás seguro de que deseas dar de baja la cuenta de «${row.nombre}»?`)) return
+    const current = generation.current
+    setBusy(true)
+    setError('')
+    setMessage('')
+    try {
+      await api('/accounts', {
+        method: 'PATCH',
+        data: {
+          id: row.id_usuario,
+          nombre: row.nombre,
+          cedula: row.cedula,
+          rol: row.rol,
+          estado: 'inactivo',
+          funciones: row.funciones,
+          carreras: row.carreras,
+        },
+      })
+      if (current !== generation.current) return
+      setMessage('Cuenta dada de baja.')
+      await load()
+      if (current === generation.current) onChanged?.()
+    } catch (e) {
+      if (current === generation.current) setError(e.message)
+    } finally {
+      if (current === generation.current) setBusy(false)
+    }
+  }
 
   const field = (name, value) => setForm(current => ({ ...current, [name]: value }))
   const selectableCareers = context.catalogoCarreras.filter(c => c.estado !== 'inactivo' || form?.carreras.includes(c.id_carrera))
@@ -179,6 +215,7 @@ export default function AccountsPage({ context, onChanged }) {
         </p>
       )}
 
+      <Modal isOpen={Boolean(form)} onClose={() => setForm(null)} title={form?.id ? 'Editar cuenta' : 'Nueva cuenta'} maxWidth={680}>
       {form && (
         <form className="management-form" onSubmit={save}>
           <h3>{form.id ? 'Editar cuenta' : 'Nueva cuenta'}</h3>
@@ -302,16 +339,18 @@ export default function AccountsPage({ context, onChanged }) {
                     No hay carreras activas disponibles. Primero deben incorporarse o activarse en el catálogo.
                   </p>
                 )}
-                {selectableCareers.map(c => (
-                  <label className="check-label" key={c.id_carrera}>
-                    <input
-                      type="checkbox"
-                      checked={form.carreras.includes(c.id_carrera)}
-                      onChange={() => toggle('carreras', c.id_carrera)}
-                    />
-                    {c.nombre}{c.estado === 'inactivo' ? ' (inactiva; asignación anterior)' : ''}
-                  </label>
-                ))}
+                <div className="check-list">
+                  {selectableCareers.map(c => (
+                    <label className="check-label" key={c.id_carrera}>
+                      <input
+                        type="checkbox"
+                        checked={form.carreras.includes(c.id_carrera)}
+                        onChange={() => toggle('carreras', c.id_carrera)}
+                      />
+                      <span>{c.nombre}{c.estado === 'inactivo' ? ' (inactiva; asignación anterior)' : ''}</span>
+                    </label>
+                  ))}
+                </div>
               </fieldset>
             )}
 
@@ -326,6 +365,7 @@ export default function AccountsPage({ context, onChanged }) {
           </fieldset>
         </form>
       )}
+      </Modal>
 
       {/* Toolbar con filtros de Figma y botón de actualización */}
       <div className="filter-grid">
@@ -421,20 +461,31 @@ export default function AccountsPage({ context, onChanged }) {
                     </span>
                   </td>
                   <td>
-                    <button
-                      className="secondary"
-                      disabled={busy || loading || loadFailed}
-                      aria-label={`Editar cuenta de ${row.nombre}`}
-                      onClick={() => {
-                        const role = institutionalRole(row)
-                        const relation = organization?.directors.find(d => d.id_usuario === row.id_usuario)
-                        setForm({ ...row, id: row.id_usuario, password: '', departamento: relation?.id_departamento || '', revisionDepartamento: relation?.revision || 0, ...(institutional ? {funciones:['coordinador','jefe_departamento'].includes(role)?[role]:[],carreras:role==='coordinador'?row.carreras:[]} : {}) })
-                        setMessage('')
-                      }}
-                    >
-                      <Pencil size={13} aria-hidden="true" />
-                      <span>Editar</span>
-                    </button>
+                    <div className="row-actions">
+                      <button
+                        className="secondary"
+                        disabled={busy || loading || loadFailed}
+                        aria-label={`Editar cuenta de ${row.nombre}`}
+                        onClick={() => {
+                          const role = institutionalRole(row)
+                          const relation = organization?.directors.find(d => d.id_usuario === row.id_usuario)
+                          setForm({ ...row, id: row.id_usuario, password: '', departamento: relation?.id_departamento || '', revisionDepartamento: relation?.revision || 0, ...(institutional ? {funciones:['coordinador','jefe_departamento'].includes(role)?[role]:[],carreras:role==='coordinador'?row.carreras:[]} : {}) })
+                          setMessage('')
+                        }}
+                      >
+                        <Pencil size={13} aria-hidden="true" />
+                        <span>Editar</span>
+                      </button>
+                      <button
+                        className="secondary danger-btn"
+                        disabled={busy || loading || loadFailed}
+                        aria-label={`Eliminar cuenta de ${row.nombre}`}
+                        onClick={() => handleDelete(row)}
+                      >
+                        <Trash2 size={13} aria-hidden="true" />
+                        <span>Eliminar</span>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

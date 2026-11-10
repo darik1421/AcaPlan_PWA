@@ -7,8 +7,8 @@ const context={activePeriod:{id_periodo:1},canManageDisponibilidad:true}
 const subject={id:1,id_carrera:1,ano_estudio:3,turno:'matutino',codigo:'WEB',nombre:'Web',carrera:'Sistemas',estado_carrera:'activo'}
 const data={asignaturas:[subject,{...subject,id:2,codigo:'BD',nombre:'Bases'},{...subject,id:3,id_carrera:2,carrera:'Otra'}],reglas:[],huella:'a'.repeat(32)}
 test('Ofrece asignaturas del mismo año y exige autorización antes del guardado',async()=>{
- mocks.api.mockResolvedValue(data);render(<ConsecutivasPanel context={context}/>);fireEvent.click(await screen.findByRole('button',{name:'Registrar clases consecutivas'}));fireEvent.change(screen.getByLabelText('Primera asignatura'),{target:{value:'1'}})
- const second=screen.getByLabelText('Segunda asignatura');expect([...second.options].map(o=>o.value)).toEqual(['','1','2']);fireEvent.change(second,{target:{value:'1'}})
+ mocks.api.mockResolvedValue(data);render(<ConsecutivasPanel context={context}/>);fireEvent.click(await screen.findByRole('button',{name:'Registrar clases consecutivas'}));fireEvent.change(screen.getByLabelText(/Primer.*(componente|asignatura)/i),{target:{value:'1'}})
+ const second=screen.getByLabelText(/Segund.*(componente|asignatura)/i);expect([...second.options].map(o=>o.value)).toEqual(['','1','2']);fireEvent.change(second,{target:{value:'1'}})
  fireEvent.change(screen.getByLabelText('Motivo de la solicitud autorizada'),{target:{value:'Prácticas'}});expect(screen.getByRole('button',{name:'Guardar regla consecutiva'}).disabled).toBe(true)
  fireEvent.click(screen.getByRole('checkbox'));fireEvent.click(screen.getByRole('button',{name:'Guardar regla consecutiva'}));await screen.findByText(/Regla guardada/)
  expect(mocks.api).toHaveBeenCalledWith('/restricciones/consecutivas',{method:'POST',data:{id_periodo:1,asignacion_a:1,asignacion_b:1,activa:true,motivo:'Prácticas',huella:data.huella}})

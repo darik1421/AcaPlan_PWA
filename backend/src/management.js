@@ -19,7 +19,7 @@ import { restrictionInput, unifiedRestrictionInput } from './restriction-input.j
 import { gridInput } from './grid-input.js'
 import { programacionReport } from './programacion-report.js'
 import { importTemplate } from './import-workbook.js'
-import { accountInput, carreraInput, asignaturaInput, aulaInput, periodInput, positiveId } from './validation.js'
+import { accountInput, carreraInput, asignaturaInput, aulaInput, pabellonInput, departamentoInput, periodInput, positiveId } from './validation.js'
 
 const businessErrors = {
  CARRERA_INACTIVA:[409,'Solo puedes asignar carreras activas al coordinador.'],
@@ -217,18 +217,206 @@ export function createManagement({
     async execute(request, profile, route, data) {
       if(route==='drafts.version')return rpc2(request,'create',{...draftVersionInput(data),version_reglas:PREPARATION_RULE_VERSION},'pwa_nueva_version_borrador')
       if(route==='generation.propose'||route==='generation.save'){
+        console.log('[DEBUG MGMT] inside generation route:', route)
         const load=id=>rpc2(request,'context',{id,version_reglas:PREPARATION_RULE_VERSION},'pwa_generador')
-        if(route==='generation.propose')return proposeGeneration({data,load})
+        if(route==='generation.propose') {
+          const res = await proposeGeneration({data,load})
+          console.log('[DEBUG MGMT] proposeGeneration returned:', res ? 'object' : res)
+          return res
+        }
         return saveGeneration({data,actor:profile.id_usuario,load,confirm:payload=>confirmCycle('save',payload,'pwa_generador_confirmar')})
       }
       if (route.startsWith('departments.')) {
         if (!hasGlobalAccess(profile)) throw new AccessError(403, 'Solo administración puede organizar los departamentos en esta etapa.')
         if (route === 'departments.directors') return rpc2(request,'context',{},'pwa_vincular_director')
+        if (route === 'departments.docentes') {
+          if (!hasGlobalAccess(profile)) throw new AccessError(403, 'Solo administración puede consultar docentes para asignación de directores.')
+          if (!serviceKey) throw new AccessError(503, 'Falta la clave de servicio en el backend.')
+
+          const adminHeaders = { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` }
+          const [usersRes, dirsRes, deptsRes] = await Promise.all([
+            fetchImpl(`${url}/rest/v1/usuarios?select=id_usuario,nombre,cedula,rol,estado&rol=in.(docente,director)&estado=eq.activo&order=nombre.asc`, { headers: adminHeaders }),
+            fetchImpl(`${url}/rest/v1/pwa_directores_departamento?select=id_usuario,id_departamento,revision`, { headers: adminHeaders }),
+            fetchImpl(`${url}/rest/v1/pwa_departamentos?select=id,nombre`, { headers: adminHeaders }),
+          ])
+
+          const users = await usersRes.json().catch(() => [])
+          const dirs = await dirsRes.json().catch(() => [])
+          const depts = await deptsRes.json().catch(() => [])
+
+          const deptMap = new Map((Array.isArray(depts) ? depts : []).map(d => [d.id, d.nombre]))
+          const dirMap = new Map((Array.isArray(dirs) ? dirs : []).map(d => [d.id_usuario, d.id_departamento]))
+
+          const docentes = (Array.isArray(users) ? users : []).map(u => ({
+            id_usuario: u.id_usuario,
+            nombre: u.nombre,
+            cedula: u.cedula || 'Sin cédula',
+            id_departamento: dirMap.get(u.id_usuario) || null,
+            departamento_nombre: dirMap.get(u.id_usuario) ? deptMap.get(dirMap.get(u.id_usuario)) : null,
+          }))
+
+          return { docentes }
+        }
         if (route === 'departments.directorSave') {
-          if (!(data.id_departamento===null || (Number.isInteger(data.id_departamento)&&data.id_departamento>=1&&data.id_departamento<=3))||!Number.isSafeInteger(data.revision)||data.revision<0||data.revision>999999999) throw new AccessError(400,'Selecciona el departamento y consulta la versión actual del director.')
-          return rpc2(request,'save',{id_usuario:positiveId(data.id_usuario),id_departamento:data.id_departamento,revision:data.revision},'pwa_vincular_director')
+          const idUsuario = positiveId(data.id_usuario)
+          const isUnlinking = data.id_departamento === null || data.id_departamento === undefined || data.id_departamento === ''
+          const idDept = isUnlinking ? null : positiveId(data.id_departamento)
+
+          if (serviceKey) {
+            const adminHeaders = { apikey: serviceKey, Authorization: `Bearer ${serviceKey}`, 'Content-Type': 'application/json', Prefer: 'return=representation' }
+
+            if (idDept !== null) {
+              // 1. Asegurar permiso 'jefe_departamento' en pwa_permisos_usuario
+              try {
+                const permRes = await fetchImpl(`${url}/rest/v1/pwa_permisos_usuario?id_usuario=eq.${encodeURIComponent(idUsuario)}`, { headers: adminHeaders })
+                const permRows = await permRes.json().catch(() => [])
+                const currentFunciones = permRows?.[0]?.funciones || []
+                if (!currentFunciones.includes('jefe_departamento')) {
+                  const nextFunciones = [...currentFunciones, 'jefe_departamento']
+                  await fetchImpl(`${url}/rest/v1/pwa_permisos_usuario`, {
+                    method: 'POST',
+                    headers: { ...adminHeaders, Prefer: 'resolution=merge-duplicates' },
+                    body: JSON.stringify({
+                      id_usuario: idUsuario,
+                      funciones: nextFunciones,
+                      carreras: permRows?.[0]?.carreras || [],
+                    }),
+                  })
+                }
+              } catch {}
+
+              // 2. Desvincular cualquier director anterior de este departamento
+              try {
+                const prevRes = await fetchImpl(`${url}/rest/v1/pwa_directores_departamento?id_departamento=eq.${encodeURIComponent(idDept)}`, { headers: adminHeaders })
+                const prevRows = await prevRes.json().catch(() => [])
+                for (const prev of prevRows) {
+                  if (prev.id_usuario !== idUsuario) {
+                    await fetchImpl(`${url}/rest/v1/pwa_directores_departamento?id_usuario=eq.${encodeURIComponent(prev.id_usuario)}`, {
+                      method: 'PATCH',
+                      headers: adminHeaders,
+                      body: JSON.stringify({ id_departamento: null, revision: (prev.revision || 0) + 1 }),
+                    })
+                  }
+                }
+              } catch {}
+
+              // 3. Vincular nuevo director en pwa_directores_departamento
+              try {
+                const curRes = await fetchImpl(`${url}/rest/v1/pwa_directores_departamento?id_usuario=eq.${encodeURIComponent(idUsuario)}`, { headers: adminHeaders })
+                const curRows = await curRes.json().catch(() => [])
+                if (curRows && curRows.length > 0) {
+                  await fetchImpl(`${url}/rest/v1/pwa_directores_departamento?id_usuario=eq.${encodeURIComponent(idUsuario)}`, {
+                    method: 'PATCH',
+                    headers: adminHeaders,
+                    body: JSON.stringify({ id_departamento: idDept, revision: (curRows[0].revision || 0) + 1 }),
+                  })
+                } else {
+                  await fetchImpl(`${url}/rest/v1/pwa_directores_departamento`, {
+                    method: 'POST',
+                    headers: adminHeaders,
+                    body: JSON.stringify({ id_usuario: idUsuario, id_departamento: idDept, revision: 1 }),
+                  })
+                }
+              } catch {
+                throw new AccessError(503, 'No se pudo vincular el director al departamento.')
+              }
+            } else {
+              // Desvincular usuario de cualquier departamento
+              try {
+                const curRes = await fetchImpl(`${url}/rest/v1/pwa_directores_departamento?id_usuario=eq.${encodeURIComponent(idUsuario)}`, { headers: adminHeaders })
+                const curRows = await curRes.json().catch(() => [])
+                if (curRows && curRows.length > 0) {
+                  await fetchImpl(`${url}/rest/v1/pwa_directores_departamento?id_usuario=eq.${encodeURIComponent(idUsuario)}`, {
+                    method: 'PATCH',
+                    headers: adminHeaders,
+                    body: JSON.stringify({ id_departamento: null, revision: (curRows[0].revision || 0) + 1 }),
+                  })
+                }
+              } catch {
+                throw new AccessError(503, 'No se pudo desvincular el director.')
+              }
+            }
+            return { guardado: true }
+          }
+
+          if (!(idDept===null || (Number.isInteger(idDept)&&idDept>=1))||!Number.isSafeInteger(data.revision)||data.revision<0||data.revision>999999999) throw new AccessError(400,'Selecciona el departamento y consulta la versión actual del director.')
+          return rpc2(request,'save',{id_usuario:idUsuario,id_departamento:idDept,revision:data.revision},'pwa_vincular_director')
         }
         if (route === 'departments.context') return rpc2(request,'context',{},'pwa_departamentos_api')
+        if (route === 'departments.update') {
+          const input = departamentoInput(data)
+          const adminHeaders = { apikey: serviceKey, Authorization: `Bearer ${serviceKey}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' }
+          let response
+          try {
+            response = await fetchImpl(`${url}/rest/v1/pwa_departamentos?id=eq.${encodeURIComponent(input.id)}`, {
+              method: 'PATCH',
+              headers: adminHeaders,
+              body: JSON.stringify({ nombre: input.nombre }),
+              signal: AbortSignal.timeout(15000),
+            })
+          } catch {
+            const error = new AccessError(503, 'No se pudo confirmar la operación con la base de datos.')
+            error.uncertain = true
+            throw error
+          }
+          const body = await response.json().catch(() => null)
+          if (!response.ok) {
+            if (body?.code === '23505') throw new AccessError(409, 'Ya existe un departamento con ese nombre.')
+            throw new AccessError(response.status || 500, body?.message || 'No se pudo actualizar el departamento.')
+          }
+          return { ok: true, departamento: body?.[0] }
+        }
+        if (route === 'departments.delete') {
+          const id = positiveId(data.id ?? data.id_departamento)
+          const adminHeaders = { apikey: serviceKey, Authorization: `Bearer ${serviceKey}`, 'Content-Type': 'application/json' }
+          let response
+          try {
+            response = await fetchImpl(`${url}/rest/v1/pwa_departamentos?id=eq.${encodeURIComponent(id)}`, {
+              method: 'DELETE',
+              headers: adminHeaders,
+              signal: AbortSignal.timeout(15000),
+            })
+          } catch {
+            const error = new AccessError(503, 'No se pudo confirmar la operación con la base de datos.')
+            error.uncertain = true
+            throw error
+          }
+          if (!response.ok) {
+            const body = await response.json().catch(() => null)
+            if (body?.code === '23503') throw new AccessError(409, 'No se puede eliminar el departamento porque tiene carreras o datos vinculados. Reasigna o elimina las carreras primero.')
+            throw new AccessError(response.status || 500, body?.message || 'No se pudo eliminar el departamento.')
+          }
+          return { ok: true }
+        }
+        if (route === 'departments.create') {
+          const input = departamentoInput(data, true)
+          const adminHeaders = { apikey: serviceKey, Authorization: `Bearer ${serviceKey}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' }
+          let response
+          try {
+            let nextId = data.id
+            if (!nextId) {
+              const existing = await fetchImpl(`${url}/rest/v1/pwa_departamentos?select=id&order=id.desc&limit=1`, { headers: adminHeaders })
+              const existingRows = await existing.json().catch(() => [])
+              nextId = (existingRows?.[0]?.id || 0) + 1
+            }
+            response = await fetchImpl(`${url}/rest/v1/pwa_departamentos`, {
+              method: 'POST',
+              headers: adminHeaders,
+              body: JSON.stringify({ id: nextId, nombre: input.nombre }),
+              signal: AbortSignal.timeout(15000),
+            })
+          } catch {
+            const error = new AccessError(503, 'No se pudo confirmar la operación con la base de datos.')
+            error.uncertain = true
+            throw error
+          }
+          const body = await response.json().catch(() => null)
+          if (!response.ok) {
+            if (body?.code === '23505') throw new AccessError(409, 'Ya existe un departamento con ese nombre o identificador.')
+            throw new AccessError(response.status || 500, body?.message || 'No se pudo registrar el departamento.')
+          }
+          return { ok: true, departamento: body?.[0] }
+        }
         if (route !== 'departments.assign' || !Number.isInteger(data.id_departamento) || data.id_departamento < 1 || data.id_departamento > 3 || !Number.isSafeInteger(data.revision) || data.revision < 0 || data.revision > 999999999) throw new AccessError(400,'Selecciona una carrera y un departamento, y consulta su versión actual.')
         return rpc2(request,'assign',{id_carrera:positiveId(data.id_carrera),id_departamento:data.id_departamento,revision:data.revision},'pwa_departamentos_api')
       }
@@ -378,6 +566,63 @@ export function createManagement({
       // ── Sprint 2: H08 Aulas y Recursos ──
       if (['pabellones.list', 'recursos.list', 'aulas.list'].includes(route)) return rpc2(request, route)
       if (route === 'aulas.update') return rpc2(request, 'update', aulaInput(data), 'pwa_inventario')
+      if (route === 'pabellones.update' || route === 'pabellones.delete') {
+        const admin = hasGlobalAccess(profile)
+        if (!admin) {
+          const context = await rpc(request, 'context')
+          const institutional = context.departmentScopeVersion >= 1
+          const canManageEspacios = !institutional && Boolean(context.funciones?.includes('planificador'))
+          if (!canManageEspacios) throw new AccessError(403, 'No tienes permiso para gestionar espacios.')
+        }
+        if (!serviceKey) throw new AccessError(503, 'Falta la clave de servicio en el backend.')
+
+        if (route === 'pabellones.update') {
+          const input = pabellonInput(data)
+          const adminHeaders = { apikey: serviceKey, Authorization: `Bearer ${serviceKey}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' }
+          let response
+          try {
+            response = await fetchImpl(`${url}/rest/v1/pabellones?id_pabellon=eq.${encodeURIComponent(input.id)}`, {
+              method: 'PATCH',
+              headers: adminHeaders,
+              body: JSON.stringify({ nombre: input.nombre }),
+              signal: AbortSignal.timeout(15000),
+            })
+          } catch {
+            const error = new AccessError(503, 'No se pudo confirmar la operación con la base de datos.')
+            error.uncertain = true
+            throw error
+          }
+          const body = await response.json().catch(() => null)
+          if (!response.ok) {
+            if (body?.code === '23505') throw new AccessError(409, 'Ya existe un pabellón con ese nombre.')
+            throw new AccessError(response.status || 500, body?.message || 'No se pudo actualizar el pabellón.')
+          }
+          return { ok: true, pabellon: body?.[0] }
+        }
+
+        if (route === 'pabellones.delete') {
+          const id = positiveId(data.id ?? data.id_pabellon)
+          const adminHeaders = { apikey: serviceKey, Authorization: `Bearer ${serviceKey}`, 'Content-Type': 'application/json' }
+          let response
+          try {
+            response = await fetchImpl(`${url}/rest/v1/pabellones?id_pabellon=eq.${encodeURIComponent(id)}`, {
+              method: 'DELETE',
+              headers: adminHeaders,
+              signal: AbortSignal.timeout(15000),
+            })
+          } catch {
+            const error = new AccessError(503, 'No se pudo confirmar la operación con la base de datos.')
+            error.uncertain = true
+            throw error
+          }
+          if (!response.ok) {
+            const body = await response.json().catch(() => null)
+            if (body?.code === '23503') throw new AccessError(409, 'No se puede eliminar el pabellón porque tiene aulas registradas. Reasigna o elimina las aulas primero.')
+            throw new AccessError(response.status || 500, body?.message || 'No se pudo eliminar el pabellón.')
+          }
+          return { ok: true }
+        }
+      }
       // ── Sprint 2: H09 Secciones ──
       if (route === 'secciones.list') return rpc2(request, route)
       // ── Sprint 2: H10 Bloques ──

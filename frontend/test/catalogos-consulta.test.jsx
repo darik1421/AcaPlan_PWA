@@ -50,8 +50,8 @@ test('Una actualización fallida del catálogo anterior retira la edición sin a
  failed=true;fireEvent.click(screen.getByRole('button',{name:'Actualizar lista'}))
  await screen.findByRole('alert')
  await waitFor(()=>expect(screen.queryByRole('button',{name:'Editar Asignatura QA'})).toBeNull())
- expect(screen.queryByText('No hay asignaturas que coincidan.')).toBeNull()
- expect(screen.getByText('No hay asignaturas importadas.')).toBeTruthy()
+ expect(screen.queryByText(/No hay (asignaturas|componentes) que coincidan/)).toBeNull()
+ expect(screen.getByText(/No hay (asignaturas|componentes) importad[ao]s/)).toBeTruthy()
 })
 
 test('Actualizar el inventario retira un filtro de tipo que ya no existe',async()=>{

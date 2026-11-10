@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { api } from '../../services/management'
 import AsignaturasImportadas from './AsignaturasImportadas'
 import { Archive, Pencil, RotateCw } from 'lucide-react'
+import Pagination from '../../components/Pagination'
 
 export default function AsignaturasPage({ context, canManage, onChanged }) {
   const [rows, setRows] = useState([])
@@ -11,11 +12,14 @@ export default function AsignaturasPage({ context, canManage, onChanged }) {
   const [query, setQuery] = useState('')
   const [careerFilter, setCareerFilter] = useState('')
   const [yearFilter, setYearFilter] = useState('')
+  const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [loadFailed, setLoadFailed] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+
+  const PAGE_SIZE = 10
 
   async function load(signal) {
     setLoading(true)
@@ -60,10 +64,10 @@ export default function AsignaturasPage({ context, canManage, onChanged }) {
     setMessage('')
     try {
       await api('/asignaturas', { method: 'PATCH', data: form })
-      setMessage('Asignatura actualizada.')
+      setMessage('Componente curricular actualizado.')
       setForm(null)
       await load()
-      onChanged()
+      onChanged?.()
     } catch (e) {
       setError(e.message)
     } finally {
@@ -81,6 +85,10 @@ export default function AsignaturasPage({ context, canManage, onChanged }) {
         r.carrera_nombre.toLowerCase().includes(query.toLowerCase()))
   )
 
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1
+  const validPage = Math.min(Math.max(1, page), totalPages)
+  const paginated = filtered.slice((validPage - 1) * PAGE_SIZE, validPage * PAGE_SIZE)
+
   const canEdit = id =>
     canManage && (context?.isAdmin || context?.carreras?.includes(id))
   const activeCarreras = carreras.filter(
@@ -92,9 +100,9 @@ export default function AsignaturasPage({ context, canManage, onChanged }) {
       <div className="section-heading">
         <div>
           <span className="screen-kicker">Catálogo institucional</span>
-          <h2 id="asignaturas-title">Gestión de asignaturas</h2>
+          <h2 id="asignaturas-title">Gestión de componentes curriculares</h2>
           <p className="muted">
-            Consulta de asignaturas y corrección de los datos recibidos.
+            Consulta de componentes curriculares y corrección de los datos recibidos.
           </p>
         </div>
       </div>
@@ -103,6 +111,9 @@ export default function AsignaturasPage({ context, canManage, onChanged }) {
         context={context}
         canManage={canManage}
         onLinked={setLinked}
+        catalogRows={rows}
+        carreras={carreras}
+        onChanged={load}
       />
 
       <details className="collapsible-card">
@@ -111,7 +122,7 @@ export default function AsignaturasPage({ context, canManage, onChanged }) {
           <span>Catálogo anterior</span>
         </summary>
         <p className="muted" style={{ margin: '8px 0 6px 0', fontSize: '13.5px' }}>
-          Registros del modelo anterior. La entrega nueva se consulta arriba; no es necesario registrar las asignaturas de nuevo aquí.
+          Registros del modelo anterior. La entrega nueva se consulta arriba; no es necesario registrar los componentes de nuevo aquí.
         </p>
         <p className="muted" style={{ margin: '0 0 16px 0', fontSize: '13px' }}>
           Las horas teóricas y prácticas son datos del catálogo; no determinan automáticamente la duración de las clases. La regla general de matutino y vespertino es de dos sesiones de 90 minutos por semana.
@@ -130,7 +141,7 @@ export default function AsignaturasPage({ context, canManage, onChanged }) {
 
         {form && canEdit(form.id_carrera) && (
           <form className="management-form" onSubmit={save} style={{ marginBottom: '20px' }}>
-            <h3>Corregir asignatura</h3>
+            <h3>Corregir componente curricular</h3>
             <fieldset disabled={busy || loading || loadFailed}>
               <div className="form-grid">
                 <label>
@@ -164,7 +175,7 @@ export default function AsignaturasPage({ context, canManage, onChanged }) {
                   />
                 </label>
                 <label>
-                  Nombre de la asignatura
+                  Nombre del componente curricular
                   <input
                     required
                     maxLength={100}
@@ -218,7 +229,7 @@ export default function AsignaturasPage({ context, canManage, onChanged }) {
               </div>
               <div className="form-actions">
                 <button className="primary" type="submit">
-                  {busy ? 'Guardando…' : 'Guardar asignatura'}
+                  {busy ? 'Guardando…' : 'Guardar componente'}
                 </button>
                 <button
                   className="secondary"
@@ -232,46 +243,57 @@ export default function AsignaturasPage({ context, canManage, onChanged }) {
           </form>
         )}
 
-        <div className="filter-grid" style={{ marginBottom: '16px' }}>
-          <label className="filter-card">
-            <span>Buscar asignaturas</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+          <label className="filter-card" style={{ width: '100%', boxSizing: 'border-box' }}>
+            <span>Buscar componentes</span>
             <input
               type="search"
               value={query}
-              onChange={e => setQuery(e.target.value)}
+              onChange={e => {
+                setQuery(e.target.value)
+                setPage(1)
+              }}
               placeholder="Código, nombre o carrera"
             />
           </label>
-          <label className="filter-card">
-            <span>Filtrar por carrera</span>
-            <select
-              value={careerFilter}
-              onChange={e => setCareerFilter(e.target.value)}
-            >
-              <option value="">Todas las carreras</option>
-              {carreras.map(c => (
-                <option key={c.id_carrera} value={c.id_carrera}>
-                  {c.nombre}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="filter-card">
-            <span>Filtrar por año</span>
-            <select
-              value={yearFilter}
-              onChange={e => setYearFilter(e.target.value)}
-            >
-              <option value="">Todos los años</option>
-              {[...new Set(rows.map(r => r.ano_estudio))]
-                .sort((a, b) => a - b)
-                .map(year => (
-                  <option key={year} value={year}>
-                    Año {year}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+            <label className="filter-card">
+              <span>Filtrar por carrera</span>
+              <select
+                value={careerFilter}
+                onChange={e => {
+                  setCareerFilter(e.target.value)
+                  setPage(1)
+                }}
+              >
+                <option value="">Todas las carreras</option>
+                {carreras.map(c => (
+                  <option key={c.id_carrera} value={c.id_carrera}>
+                    {c.nombre}
                   </option>
                 ))}
-            </select>
-          </label>
+              </select>
+            </label>
+            <label className="filter-card">
+              <span>Filtrar por año</span>
+              <select
+                value={yearFilter}
+                onChange={e => {
+                  setYearFilter(e.target.value)
+                  setPage(1)
+                }}
+              >
+                <option value="">Todos los años</option>
+                {[...new Set(rows.map(r => r.ano_estudio))]
+                  .sort((a, b) => a - b)
+                  .map(year => (
+                    <option key={year} value={year}>
+                      Año {year}
+                    </option>
+                  ))}
+              </select>
+            </label>
+          </div>
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
@@ -286,17 +308,17 @@ export default function AsignaturasPage({ context, canManage, onChanged }) {
         </div>
 
         {loading ? (
-          <p role="status">Cargando asignaturas…</p>
+          <p role="status">Cargando componentes curriculares…</p>
         ) : loadFailed ? (
           <p className="notice">No se pudo consultar el catálogo anterior. Usa «Actualizar lista» para reintentar.</p>
         ) : (
           <div className="table-scroll">
             <table>
-              <caption>{filtered.length} asignaturas</caption>
+              <caption>{filtered.length} componentes curriculares</caption>
               <thead>
                 <tr>
                   <th>Código</th>
-                  <th>Asignatura</th>
+                  <th>Componente</th>
                   <th>Carrera</th>
                   <th>Año</th>
                   <th>Horas teóricas</th>
@@ -306,7 +328,7 @@ export default function AsignaturasPage({ context, canManage, onChanged }) {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map(row => (
+                {paginated.map(row => (
                   <tr key={row.id_asignatura}>
                     <td>
                       <span className="badge-code">{row.codigo}</span>
@@ -353,7 +375,7 @@ export default function AsignaturasPage({ context, canManage, onChanged }) {
                 {!filtered.length && (
                   <tr>
                     <td colSpan={canManage ? 8 : 7}>
-                      No hay asignaturas que coincidan.
+                      No hay componentes que coincidan.
                     </td>
                   </tr>
                 )}
@@ -361,6 +383,15 @@ export default function AsignaturasPage({ context, canManage, onChanged }) {
             </table>
           </div>
         )}
+
+        <Pagination
+          currentPage={validPage}
+          totalPages={totalPages}
+          totalItems={filtered.length}
+          pageSize={PAGE_SIZE}
+          onPageChange={setPage}
+          itemLabel="componentes"
+        />
       </details>
     </section>
   )

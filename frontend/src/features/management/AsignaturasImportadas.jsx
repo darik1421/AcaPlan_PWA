@@ -1,8 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../../services/management'
-import { RotateCw, Pencil, BookOpen } from 'lucide-react'
+import { RotateCw, Pencil, BookOpen, Trash2 } from 'lucide-react'
+import Modal from '../../components/Modal'
+import Pagination from '../../components/Pagination'
 
-export default function AsignaturasImportadas({ context, canManage, onLinked }) {
+export default function AsignaturasImportadas({
+  context,
+  canManage,
+  onLinked,
+  catalogRows,
+  carreras = [],
+  onChanged,
+}) {
   const [rows, setRows] = useState([])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
@@ -10,7 +19,12 @@ export default function AsignaturasImportadas({ context, canManage, onLinked }) 
   const [form, setForm] = useState(null)
   const [attempt, setAttempt] = useState(0)
   const [query, setQuery] = useState('')
+  const [careerFilter, setCareerFilter] = useState('')
+  const [yearFilter, setYearFilter] = useState('')
+  const [page, setPage] = useState(1)
   const [message, setMessage] = useState('')
+
+  const PAGE_SIZE = 10
 
   const generation = useRef(0)
   const scope = JSON.stringify([canManage, context?.isAdmin, context?.carreras])
@@ -46,6 +60,41 @@ export default function AsignaturasImportadas({ context, canManage, onLinked }) 
     }
   }, [attempt, scope, onLinked])
 
+  async function handleDelete(r) {
+    if (busy || loading || !mayEdit(r)) return
+    if (!window.confirm(`¿Estás seguro de que deseas dar de baja el componente «${r.nombre}»?`)) return
+    const current = generation.current
+    setBusy(true)
+    setError('')
+    setMessage('')
+    try {
+      const targetId = r.id_asignatura || (catalogRows?.find(c => c.codigo === r.codigo)?.id_asignatura)
+      if (targetId) {
+        await api('/asignaturas', {
+          method: 'PATCH',
+          data: {
+            id: targetId,
+            nombre: r.nombre,
+            codigo: r.codigo,
+            ano_estudio: r.ano_estudio,
+            horas_teoricas: 0,
+            horas_practicas: 0,
+            estado: 'inactivo',
+          },
+        })
+      }
+      setRows(rows => rows.filter(item => item.id !== r.id))
+      setMessage('Componente curricular dado de baja.')
+      onChanged?.()
+    } catch (err) {
+      if (current === generation.current) {
+        setError(err.message)
+      }
+    } finally {
+      if (current === generation.current) setBusy(false)
+    }
+  }
+
   const mayEdit = r =>
     canManage && (context?.isAdmin || context?.carreras?.includes(r.id_carrera))
 
@@ -61,9 +110,32 @@ export default function AsignaturasImportadas({ context, canManage, onLinked }) 
         method: 'PATCH',
         data: { id: form.id, nombre: form.nombre, huella: form.huella },
       })
+
+      const targetId = form.id_asignatura || (catalogRows?.find(c => c.codigo === form.codigo)?.id_asignatura)
+      if (targetId) {
+        try {
+          await api('/asignaturas', {
+            method: 'PATCH',
+            data: {
+              id: targetId,
+              nombre: form.nombre,
+              codigo: form.codigo,
+              ano_estudio: Number(form.ano_estudio),
+              horas_teoricas: Number(form.horas_teoricas ?? 0),
+              horas_practicas: Number(form.horas_practicas ?? 0),
+              estado: form.estado || 'activo',
+            },
+          })
+        } catch {
+          // Si el catálogo general no admite la modificación adicional, se conserva la actualización importada
+        }
+      }
+
       if (current === generation.current) {
-        setMessage('Nombre de asignatura corregido.')
+        setMessage('Nombre del componente curricular corregido.')
+        setForm(null)
         setAttempt(n => n + 1)
+        onChanged?.()
       }
     } catch (err) {
       if (current === generation.current) {
@@ -75,23 +147,50 @@ export default function AsignaturasImportadas({ context, canManage, onLinked }) 
     }
   }
 
-  const filtered = rows.filter(r =>
-    [r.codigo, r.nombre, r.carrera]
-      .join(' ')
-      .toLocaleLowerCase()
-      .includes(query.toLocaleLowerCase())
-  )
+  const uniqueCareers = Array.from(
+    new Map([
+      ...carreras.filter(c => c?.nombre).map(c => [c.nombre, { id: c.id_carrera, nombre: c.nombre }]),
+      ...rows.filter(r => r?.carrera).map(r => [r.carrera, { id: r.id_carrera, nombre: r.carrera }]),
+    ]).values()
+  ).sort((a, b) => a.nombre.localeCompare(b.nombre))
+
+  const uniqueYears = Array.from(
+    new Set(rows.map(r => r.ano_estudio).filter(Boolean))
+  ).sort((a, b) => a - b)
+
+  const filtered = rows.filter(r => {
+    const matchesQuery =
+      !query ||
+      [r.codigo, r.nombre, r.carrera]
+        .join(' ')
+        .toLocaleLowerCase()
+        .includes(query.toLocaleLowerCase())
+
+    const matchesCareer =
+      !careerFilter ||
+      String(r.carrera) === String(careerFilter) ||
+      String(r.id_carrera) === String(careerFilter)
+
+    const matchesYear =
+      !yearFilter || Number(r.ano_estudio) === Number(yearFilter)
+
+    return matchesQuery && matchesCareer && matchesYear
+  })
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1
+  const validPage = Math.min(Math.max(1, page), totalPages)
+  const paginated = filtered.slice((validPage - 1) * PAGE_SIZE, validPage * PAGE_SIZE)
 
   return (
     <section className="surface-card" style={{ marginBottom: '24px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
         <BookOpen size={20} color="#302C91" />
         <h3 className="card-title" style={{ margin: 0 }}>
-          Asignaturas recibidas por Excel
+          Componentes curriculares recibidos por Excel
         </h3>
       </div>
       <p className="muted" style={{ margin: '4px 0 16px 0', fontSize: '13.5px' }}>
-        Este catálogo se completa con la entrega académica. Puedes corregir el nombre; el código y la carrera identifican la asignatura y se conservan. El año no se cambia desde esta corrección.
+        Componentes curriculares registrados e importados para el semestre activo. Edita el nombre, código, año y estado directamente desde cada fila.
       </p>
 
       {error && (
@@ -105,87 +204,181 @@ export default function AsignaturasImportadas({ context, canManage, onLinked }) 
         </p>
       )}
 
-      <div
-        style={{
-          display: 'flex',
-          gap: '12px',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          marginBottom: '16px',
-        }}
-      >
-        <div style={{ flex: '1', minWidth: '240px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+        <label className="filter-card" style={{ width: '100%', boxSizing: 'border-box' }}>
+          <span>Buscar componentes importados</span>
+          <input
+            type="search"
+            value={query}
+            onChange={e => {
+              setQuery(e.target.value)
+              setPage(1)
+            }}
+            placeholder="Código, nombre o carrera…"
+          />
+        </label>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
           <label className="filter-card">
-            <span>Buscar asignaturas importadas</span>
-            <input
-              type="search"
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              placeholder="Código, nombre o carrera…"
-            />
+            <span>Filtrar carrera</span>
+            <select
+              value={careerFilter}
+              onChange={e => {
+                setCareerFilter(e.target.value)
+                setPage(1)
+              }}
+            >
+              <option value="">Todas las carreras</option>
+              {uniqueCareers.map(c => (
+                <option key={c.id || c.nombre} value={c.nombre}>
+                  {c.nombre}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="filter-card">
+            <span>Filtrar año</span>
+            <select
+              value={yearFilter}
+              onChange={e => {
+                setYearFilter(e.target.value)
+                setPage(1)
+              }}
+            >
+              <option value="">Todos los años</option>
+              {uniqueYears.map(yr => (
+                <option key={yr} value={yr}>
+                  Año {yr}
+                </option>
+              ))}
+            </select>
           </label>
         </div>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
         <button
           className="secondary"
           disabled={busy || loading}
-          onClick={() => setAttempt(n => n + 1)}
-          style={{ height: '48px', marginTop: 'auto' }}
+          onClick={() => {
+            setAttempt(n => n + 1)
+            setPage(1)
+          }}
         >
-          <RotateCw size={15} aria-hidden="true" />
-          <span>Actualizar asignaturas importadas</span>
+          <RotateCw size={14} className={loading ? 'spin' : ''} aria-hidden="true" />
+          <span>Actualizar componentes importados</span>
         </button>
       </div>
 
-      {form && (
-        <form className="management-form" onSubmit={save} style={{ marginBottom: '20px' }}>
-          <h4>
-            Corregir {form.codigo} · {form.carrera}
-          </h4>
-          <fieldset disabled={busy}>
-            <div className="form-grid">
-              <label>
-                Nombre de asignatura importada
-                <input
-                  required
-                  maxLength={form.id_asignatura ? 100 : 150}
-                  value={form.nombre}
-                  onChange={e => setForm({ ...form, nombre: e.target.value })}
-                />
-              </label>
-            </div>
-            <div className="form-actions">
-              <button className="primary" type="submit">
-                Guardar nombre
-              </button>
-              <button
-                type="button"
-                className="secondary"
-                onClick={() => setForm(null)}
-              >
-                Cancelar
-              </button>
-            </div>
-          </fieldset>
-        </form>
-      )}
+      <Modal
+        isOpen={Boolean(form)}
+        onClose={() => setForm(null)}
+        title={form ? `Editar componente · ${form.codigo}` : 'Editar componente'} maxWidth={620}
+      >
+        {form && (
+          <form className="management-form" onSubmit={save} style={{ marginBottom: '20px' }}>
+            <fieldset disabled={busy} style={{ border: 'none', padding: 0, margin: 0 }}>
+              <div className="form-grid">
+                <label>
+                  Código
+                  <input
+                    required
+                    maxLength={20}
+                    value={form.codigo || ''}
+                    onChange={e => setForm(c => ({ ...c, codigo: e.target.value.toUpperCase() }))}
+                  />
+                </label>
+                <label className="col-span-full">
+                  Nombre del componente curricular importado
+                  <input
+                    required
+                    maxLength={form.id_asignatura ? 100 : 150}
+                    value={form.nombre || ''}
+                    onChange={e => setForm(c => ({ ...c, nombre: e.target.value }))}
+                  />
+                </label>
+                <label>
+                  Carrera
+                  <input
+                    disabled
+                    value={form.carrera || ''}
+                  />
+                </label>
+                <label>
+                  Año de estudio
+                  <input
+                    type="number"
+                    min="1"
+                    max="10"
+                    required
+                    value={form.ano_estudio || ''}
+                    onChange={e => setForm(c => ({ ...c, ano_estudio: Number(e.target.value) }))}
+                  />
+                </label>
+                <label>
+                  Horas teóricas
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.horas_teoricas ?? 0}
+                    onChange={e => setForm(c => ({ ...c, horas_teoricas: Number(e.target.value) }))}
+                  />
+                </label>
+                <label>
+                  Horas prácticas
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.horas_practicas ?? 0}
+                    onChange={e => setForm(c => ({ ...c, horas_practicas: Number(e.target.value) }))}
+                  />
+                </label>
+                <label>
+                  Estado
+                  <select
+                    value={form.estado || 'activo'}
+                    onChange={e => setForm(c => ({ ...c, estado: e.target.value }))}
+                  >
+                    <option value="activo">Activo</option>
+                    <option value="inactivo">Inactivo</option>
+                  </select>
+                </label>
+              </div>
+              <div className="form-actions" style={{ marginTop: '20px' }}>
+                <button className="primary" type="submit" aria-label="Guardar nombre">
+                  Guardar cambios
+                </button>
+                <button
+                  type="button"
+                  className="secondary"
+                  onClick={() => setForm(null)}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </fieldset>
+          </form>
+        )}
+      </Modal>
 
       {loading ? (
-        <p role="status">Consultando asignaturas importadas…</p>
+        <p role="status">Consultando componentes importados…</p>
       ) : error && rows.length === 0 ? null : (
-        <div className="table-scroll">
+        <>
+          <div className="table-scroll">
           <table>
             <caption>Catálogo recibido por Excel</caption>
             <thead>
               <tr>
                 <th>Código</th>
-                <th>Asignatura</th>
+                <th>Componente</th>
                 <th>Carrera</th>
                 <th>Año</th>
-                <th>Correcciones</th>
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map(r => (
+              {paginated.map(r => (
                 <tr key={r.id}>
                   <td>
                     <span className="badge-code">{r.codigo}</span>
@@ -195,31 +388,64 @@ export default function AsignaturasImportadas({ context, canManage, onLinked }) 
                   </td>
                   <td>{r.carrera}</td>
                   <td>Año {r.ano_estudio}</td>
-                  <td>
+                  <td className="row-actions-cell" style={{ whiteSpace: 'nowrap', width: '1%' }}>
                     {mayEdit(r) && (
-                      <button
-                        className="secondary"
-                        disabled={busy}
-                        onClick={() => {
-                          setForm(r)
-                          setMessage('')
-                        }}
-                      >
-                        <Pencil size={13} aria-hidden="true" />
-                        <span>Corregir nombre de {r.codigo}</span>
-                      </button>
+                      <div className="row-actions" style={{ display: 'inline-flex', flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'center', gap: '8px' }}>
+                        <button
+                          className="secondary"
+                          disabled={busy}
+                          aria-label={`Corregir nombre de ${r.codigo}`}
+                          onClick={() => {
+                            const existingCatalog = catalogRows?.find(c => c.codigo === r.codigo)
+                            setForm({
+                              ...r,
+                              horas_teoricas: r.horas_teoricas ?? existingCatalog?.horas_teoricas ?? 0,
+                              horas_practicas: r.horas_practicas ?? existingCatalog?.horas_practicas ?? 0,
+                              estado: r.estado || existingCatalog?.estado || 'activo',
+                            })
+                            setMessage('')
+                          }}
+                        >
+                          <Pencil size={13} aria-hidden="true" />
+                          <span>Editar</span>
+                        </button>
+                        <button
+                          className="secondary danger-btn"
+                          disabled={busy}
+                          aria-label={`Eliminar ${r.nombre}`}
+                          onClick={() => handleDelete(r)}
+                        >
+                          <Trash2 size={13} aria-hidden="true" />
+                          <span>Eliminar</span>
+                        </button>
+                      </div>
                     )}
                   </td>
                 </tr>
               ))}
-              {!rows.length && (
+              {!rows.length ? (
                 <tr>
-                  <td colSpan={5}>No hay asignaturas importadas.</td>
+                  <td colSpan={5}>No hay componentes importados.</td>
                 </tr>
-              )}
+              ) : !filtered.length ? (
+                <tr>
+                  <td colSpan={5} style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>
+                    No hay componentes importados que coincidan con los filtros.
+                  </td>
+                </tr>
+              ) : null}
             </tbody>
           </table>
         </div>
+        <Pagination
+          currentPage={validPage}
+          totalPages={totalPages}
+          totalItems={filtered.length}
+          pageSize={PAGE_SIZE}
+          onPageChange={setPage}
+          itemLabel="componentes"
+        />
+        </>
       )}
     </section>
   )

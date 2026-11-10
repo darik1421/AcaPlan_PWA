@@ -82,7 +82,7 @@ En otra terminal, también desde la raíz:
 npm run dev:frontend
 ```
 
-Abrir http://127.0.0.1:5173 e ingresar con una cuenta autorizada existente. Reiniciar ambos servicios después de cambiar variables de entorno.
+Abrir http://127.0.0.1:5173 e ingresar con una cuenta autorizada existente. Para consultar el catálogo completo de cuentas activas (administrador, directores de departamento, coordinadores y docentes) con sus credenciales y cédulas, revisa [README_USUARIOS.md](README_USUARIOS.md). Reiniciar ambos servicios después de cambiar variables de entorno.
 El frontend verifica el perfil mediante /api/me a través del proxy de Vite hacia el puerto 3001.
 Si cambias PORT, modifica también el proxy en frontend/vite.config.js.
 
