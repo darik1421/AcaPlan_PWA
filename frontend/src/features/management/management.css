@@ -892,14 +892,147 @@ details[open] summary,
 .table-scroll tbody tr:nth-child(even) td { background-color: #fafbfe; }
 .table-scroll tbody tr:hover td { background-color: var(--primary-light); }
 .table-scroll th { border-top: 1px solid #edf0f6; }
-.academic-delivery-layout { display: grid; gap: 16px; min-width: 0; }
-.academic-delivery-table table { min-width: 960px; }
-.academic-delivery-table td { vertical-align: top; padding: 18px 16px; }
-.academic-delivery-table th { padding: 14px 16px; white-space: normal; }
-.academic-delivery-table td:nth-child(2) { min-width: 190px; }
-.academic-delivery-table td:last-child { width: 240px; }
-.academic-delivery-table .row-actions { gap: 6px; }
-.academic-delivery-table .row-actions button { font-size: 12px; padding: 7px 10px; }
+.academic-delivery-layout { 
+  display: flex; 
+  flex-direction: column;
+  gap: 24px; 
+  width: 100%;
+  min-width: 0; 
+}
+
+.status-pill.purple {
+  background: #f5f3ff;
+  color: #6d28d9;
+}
+.status-pill.teal {
+  background: #f0fdfa;
+  color: #0f766e;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.stat-card {
+  background: #ffffff;
+  border: 1px solid var(--border-card);
+  border-radius: 14px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(48, 44, 145, 0.06);
+}
+
+.stat-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+}
+
+.stat-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--primary-indigo);
+  line-height: 1.2;
+}
+
+.stat-caption {
+  font-size: 12px;
+  color: #64748b;
+}
+.academic-delivery-table {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 12px;
+}
+.academic-delivery-table table { 
+  width: 100%;
+  min-width: 860px; 
+  border-collapse: collapse;
+}
+.academic-delivery-table th,
+.academic-delivery-table td { 
+  padding: 16px 18px; 
+  vertical-align: middle; 
+  text-align: left;
+}
+.academic-delivery-table th { 
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #475569;
+  background-color: #F8FAFC;
+  border-bottom: 2px solid #E2E8F0;
+}
+/* Columna 1: Carrera y año */
+.academic-delivery-table th:nth-child(1),
+.academic-delivery-table td:nth-child(1) { 
+  min-width: 220px; 
+  width: 28%;
+  white-space: normal;
+  word-break: normal;
+  hyphens: none;
+}
+/* Columna 2: Componente curricular */
+.academic-delivery-table th:nth-child(2),
+.academic-delivery-table td:nth-child(2) { 
+  min-width: 240px; 
+  width: 30%;
+  white-space: normal;
+  word-break: normal;
+}
+/* Columna 3: Docentes */
+.academic-delivery-table th:nth-child(3),
+.academic-delivery-table td:nth-child(3) { 
+  min-width: 200px; 
+  width: 24%;
+  white-space: normal;
+  word-break: normal;
+}
+/* Columna 4: Turno */
+.academic-delivery-table th:nth-child(4),
+.academic-delivery-table td:nth-child(4) { 
+  min-width: 130px; 
+  width: 10%;
+  white-space: nowrap;
+}
+/* Columna 5: Horas totales */
+.academic-delivery-table th:nth-child(5),
+.academic-delivery-table td:nth-child(5) { 
+  min-width: 90px; 
+  width: 8%;
+  white-space: nowrap;
+  text-align: center;
+}
+.academic-delivery-table .row-actions { 
+  gap: 6px; 
+  display: flex;
+  flex-direction: column;
+}
+.academic-delivery-table .row-actions button { 
+  font-size: 12px; 
+  padding: 6px 12px;
+  white-space: nowrap;
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
 .delivery-subline { display: block; margin-top: 5px; }
 .delivery-detail > summary { cursor: pointer; color: var(--primary-indigo); font-weight: 600; }
 .delivery-detail[open] > summary { margin-bottom: 18px; }

@@ -7,7 +7,7 @@ test('Vista semanal filtra por año, distingue teoría/práctica y conserva amba
  const edit=vi.fn();render(<VistaSemanalBorrador detail={d} onEdit={edit} disabled={false}/>);
  expect(screen.getAllByRole('article')).toHaveLength(2)
  expect(within(screen.getAllByRole('article')[0]).getByText('Ana')).toBeTruthy();expect(within(screen.getAllByRole('article')[0]).queryByText('Luis')).toBeNull()
- fireEvent.click(screen.getByRole('button',{name:'Editar sesión 1'}));expect(edit).toHaveBeenCalledWith(d.clases[0],'clase')
+ expect(screen.queryByRole('button',{name:'Editar sesión 1'})).toBeNull()
  fireEvent.change(screen.getByLabelText('Carrera y año de la vista'),{target:{value:'1:4'}})
  expect(screen.queryByRole('table')).toBeNull();expect(screen.getByText('Este año todavía no tiene clases en el borrador.')).toBeTruthy()
 })

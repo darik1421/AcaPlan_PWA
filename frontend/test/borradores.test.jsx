@@ -30,7 +30,7 @@ test('Aprobación revisa la propuesta sin controles para crear ni modificar clas
  expect(screen.queryByRole('group',{name:'Añadir una clase al borrador'})).toBeNull()
  expect(screen.queryByRole('button',{name:'Editar clase 5'})).toBeNull()
  expect(screen.queryByRole('button',{name:'Retirar clase 5'})).toBeNull()
- expect(screen.getByRole('button',{name:'Editar sesión 5'}).disabled).toBe(true)
+ expect(screen.queryByRole('button',{name:'Editar sesión 5'})).toBeNull()
  expect(await screen.findByRole('button',{name:'Aprobar borrador'})).toBeTruthy()
 })
 test('Una clase fijada necesita motivo y autorización ligada al cambio',async()=>{
@@ -49,7 +49,7 @@ test('Consultar o editar invalida el resultado anterior y no publica',async()=>{
  mocks.api.mockImplementation(async path=>path==='/borradores/estado'?{estado:'borrador',version:0,historial:[]}:path==='/borradores/consultar'?list:path==='/borradores/revisar'?{completo:true,aviso:'No publica ni aprueba',conflictos:[],pendientes:[]}:detail)
  render(<BorradoresPage canPlan periodId={1}/>);fireEvent.change(await screen.findByLabelText('Borrador'),{target:{value:'1'}})
  fireEvent.click(await screen.findByRole('button',{name:'Revisar borrador'}));await screen.findByText('Sin conflictos ni pendientes detectados')
- fireEvent.click(screen.getByRole('button',{name:'Editar clase 5'}));expect(screen.queryByLabelText('Resultado de revisión')).toBeNull()
+ fireEvent.click(await screen.findByRole('button',{name:'Editar clase 5'}));expect(screen.queryByLabelText('Resultado de revisión')).toBeNull()
  expect(mocks.api.mock.calls.some(([path])=>path.includes('publicar'))).toBe(false)
 })
 test('Distribuye docentes existentes entre dos sesiones sin crear identidades',async()=>{
@@ -67,10 +67,13 @@ test('Después de fijar una clase vuelve a edición nueva sin conservar la opera
  fireEvent.click(await screen.findByRole('button',{name:'Desfijar clase 5'}))
  fireEvent.change(screen.getByLabelText('Motivo de la autorización'),{target:{value:'Corrección autorizada'}})
  fireEvent.click(screen.getByLabelText('Autorizo este cambio de la clase fijada.'));fireEvent.click(screen.getByRole('button',{name:'Confirmar estado'}))
- await screen.findByRole('group',{name:'Añadir una clase al borrador'})
+ await waitFor(()=>expect(mocks.api).toHaveBeenCalledWith('/borradores/fijar',expect.objectContaining({data:expect.objectContaining({id:1,id_clase:5,revision:4,fijada:false,autorizar:true})})))
+ await waitFor(async () => {
+   fireEvent.click(await screen.findByRole('button',{name:'Añadir clase al borrador'}))
+   await screen.findByRole('group',{name:'Añadir una clase al borrador'})
+ })
  expect(screen.getByLabelText('Asignatura de la propuesta').value).toBe('')
  expect(screen.queryByLabelText('Motivo de la autorización')).toBeNull()
- expect(mocks.api).toHaveBeenCalledWith('/borradores/fijar',expect.objectContaining({data:expect.objectContaining({id:1,id_clase:5,revision:4,fijada:false,autorizar:true})}))
 })
 test('El conflicto identifica la clase y abre corrección conservando su protección',async()=>{
  mocks.api.mockImplementation(async path=>path==='/borradores/estado'?{estado:'borrador',version:0,historial:[]}:path==='/borradores/consultar'?list:path==='/borradores/revisar'?{revision:4,completo:false,aviso:'Sin aprobar',conflictos:[{codigo:'CRUCE_DOCENTE',motivo:'Docente ocupado',clases:[5]}],pendientes:[]}:detail)
@@ -95,7 +98,10 @@ test('Al retirar planificación se descartan la edición y la autorización de u
  await screen.findByRole('button',{name:'Revisar borrador'})
  expect(screen.queryByRole('button',{name:'Confirmar clase'})).toBeNull()
  view.rerender(<BorradoresPage canPlan periodId={1}/>)
- await screen.findByRole('group',{name:'Añadir una clase al borrador'})
+ await waitFor(async () => {
+   fireEvent.click(await screen.findByRole('button',{name:'Añadir clase al borrador'}))
+   await screen.findByRole('group',{name:'Añadir una clase al borrador'})
+ })
  expect(screen.queryByLabelText('Motivo de la autorización')).toBeNull()
  expect(mocks.api.mock.calls.some(([path])=>path==='/borradores/clase')).toBe(false)
 })

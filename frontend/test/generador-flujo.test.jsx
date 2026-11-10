@@ -84,10 +84,29 @@ test('El primer horario se genera por departamento sin crear manualmente un borr
  render(<GeneradorPage context={{canManageBloques:true}} periodId={1}/>)
  fireEvent.change(await screen.findByLabelText('Departamento para generar'),{target:{value:'3'}})
  fireEvent.click(screen.getByRole('button',{name:'Generar Horario con IA'}))
- expect(await screen.findByText(/Primer borrador generado y guardado/)).toBeTruthy()
+ expect(await screen.findByText(/Propuesta generada para «Ciencias, Tecnología y Salud»/)).toBeTruthy()
  expect(mocks.api.mock.calls.find(c=>c[0]==='/borradores')[1].data).toEqual({id_periodo:1,id_departamento:3,carreras:[1],nombre:'Borrador · Ciencias, Tecnología y Salud'})
- expect(mocks.api.mock.calls.map(c=>c[0])).toEqual(['/borradores/consultar','/borradores','/generador/proponer','/generador/guardar'])
- expect(screen.getByRole('button',{name:'Revisar borrador generado'})).toBeTruthy()
+ expect(mocks.api.mock.calls.map(c=>c[0])).toEqual(['/borradores/consultar','/borradores','/generador/proponer'])
+ expect(screen.getByText('Web')).toBeTruthy()
+ fireEvent.click(await screen.findByRole('button',{name:'Guardar propuesta en el borrador'}))
+ fireEvent.click(screen.getByRole('button',{name:'Confirmar guardado'}))
+ await waitFor(()=>expect(mocks.api.mock.calls.some(c=>c[0]==='/generador/guardar')).toBe(true))
+})
+
+test('Permite bloquear un bloque académico específico en la previsualización y enviarlo al volver a generar',async()=>{
+ mocks.api.mockImplementation(async path=>path==='/borradores/consultar'?list:result)
+ render(<GeneradorPage context={{canManageBloques:true}} periodId={1}/>);await select()
+ fireEvent.click(screen.getByRole('button',{name:'Generar Horario con IA'}))
+ expect(await screen.findByText('Web')).toBeTruthy()
+ const lockButton = screen.getByRole('button',{name:/Bloquear clase Web/})
+ expect(lockButton.getAttribute('aria-pressed')).toBe('false')
+ fireEvent.click(lockButton)
+ expect(lockButton.getAttribute('aria-pressed')).toBe('true')
+ fireEvent.click(screen.getByRole('button',{name:'Volver a generar'}))
+ await waitFor(()=>expect(mocks.api.mock.calls.filter(c=>c[0]==='/generador/proponer').length).toBe(2))
+ expect(mocks.api.mock.calls.at(-1)[1].data.lockedClasses).toEqual([
+  {id_asignacion:1,componente:'general',numero_sesion:1,dia:'Domingo',hora_inicio:'08:00',hora_fin:'09:30',id_aula:1}
+ ])
 })
 
 test('Una primera generación incompleta no se guarda como horario completo',async()=>{
@@ -98,9 +117,8 @@ test('Una primera generación incompleta no se guarda como horario completo',asy
  fireEvent.click(screen.getByRole('button',{name:'Generar Horario con IA'}))
  await screen.findByText('Comprobación de la propuesta')
  expect(mocks.api.mock.calls.some(c=>c[0]==='/generador/guardar')).toBe(false)
- expect(screen.queryByText(/Primer borrador generado y guardado/)).toBeNull()
+ expect(screen.queryByText(/Propuesta generada para «Salud»/)).toBeNull()
 })
-
 
 test('Un nuevo horario no reutiliza el nombre de un borrador anterior',async()=>{
  const current={...list,borradores:[{id:8,nombre:'Borrador · Salud',id_departamento:3}],departamentos:[{id:3,nombre:'Salud'}],carreras:[{id_carrera:1,id_departamento:3}]}
@@ -108,7 +126,7 @@ test('Un nuevo horario no reutiliza el nombre de un borrador anterior',async()=>
  render(<GeneradorPage context={{canManageBloques:true}} periodId={1}/>)
  fireEvent.change(await screen.findByLabelText('Departamento para generar'),{target:{value:'3'}})
  fireEvent.click(screen.getByRole('button',{name:'Generar Horario con IA'}))
- await screen.findByText(/Primer borrador generado y guardado/)
+ await screen.findByText(/Propuesta generada para «Salud»/)
  expect(mocks.api.mock.calls.find(c=>c[0]==='/borradores')[1].data.nombre).toBe('Borrador · Salud (2)')
 })
 

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../../services/management'
 import TurnoAno from './TurnoAno'
-import { RefreshCw } from 'lucide-react'
+import Modal from '../../components/Modal'
+import { RefreshCw, Users, MapPin, Clock, Edit2 } from 'lucide-react'
 
 export default function DatosAnos({ periodId, revision, onChanged, onDataChanged }) {
   const [turnRow, setTurnRow] = useState(null)
@@ -118,61 +119,75 @@ export default function DatosAnos({ periodId, revision, onChanged, onDataChanged
       {error && <p role="alert" className="error">{error}</p>}
       {message && <p role="status" className="success">{message}</p>}
 
-      {turnRow && (
-        <TurnoAno
-          periodId={periodId}
-          row={turnRow}
-          onCancel={() => setTurnRow(null)}
-          onSaved={() => {
-            setTurnRow(null)
-            setMessage('Turno del año corregido para todas sus asignaturas.')
-            setAttempt(n => n + 1)
-            onChanged?.()
-          }}
-        />
-      )}
+      <Modal
+        isOpen={Boolean(turnRow)}
+        onClose={() => setTurnRow(null)}
+        title={turnRow ? `Corregir turno de ${turnRow.carrera} · Año ${turnRow.ano_estudio}` : 'Corregir turno'}
+        maxWidth={620}
+      >
+        {turnRow && (
+          <TurnoAno
+            periodId={periodId}
+            row={turnRow}
+            onCancel={() => setTurnRow(null)}
+            onSaved={() => {
+              setTurnRow(null)
+              setMessage('Turno del año corregido para todas sus asignaturas.')
+              setAttempt(n => n + 1)
+              onChanged?.()
+            }}
+          />
+        )}
+      </Modal>
 
-      {form && (
-        <form className="management-form" onSubmit={save}>
-          <h4>
-            {form.carrera} · Año {form.ano_estudio}
-          </h4>
-          <fieldset disabled={busy}>
-            <div className="form-grid">
-              <label>
-                Cantidad de estudiantes
-                <input
-                  type="number"
-                  min="1"
-                  max="999999"
-                  value={form.cantidad_estudiantes}
-                  onChange={e =>
-                    setForm({ ...form, cantidad_estudiantes: e.target.value })
-                  }
-                />
-              </label>
-              <label>
-                Sede
-                <input
-                  maxLength={100}
-                  value={form.sede}
-                  onChange={e => setForm({ ...form, sede: e.target.value })}
-                />
-              </label>
-            </div>
-            <div className="form-actions">
-              <button className="primary">Guardar datos del año</button>
-              <button
-                type="button"
-                className="secondary"
-                onClick={() => setForm(null)}
-              >
-                Cancelar
-              </button>
-            </div>
-          </fieldset>
-        </form>
-      )}
+      <Modal
+        isOpen={Boolean(form)}
+        onClose={() => setForm(null)}
+        title={form ? `Completar datos: ${form.carrera} · Año ${form.ano_estudio}` : 'Completar datos del año'}
+        maxWidth={580}
+      >
+        {form && (
+          <form className="management-form" onSubmit={save}>
+            <h4>
+              {form.carrera} · Año {form.ano_estudio}
+            </h4>
+            <fieldset disabled={busy}>
+              <div className="form-grid">
+                <label>
+                  Cantidad de estudiantes
+                  <input
+                    type="number"
+                    min="1"
+                    max="999999"
+                    value={form.cantidad_estudiantes}
+                    onChange={e =>
+                      setForm({ ...form, cantidad_estudiantes: e.target.value })
+                    }
+                  />
+                </label>
+                <label>
+                  Sede
+                  <input
+                    maxLength={100}
+                    value={form.sede}
+                    onChange={e => setForm({ ...form, sede: e.target.value })}
+                  />
+                </label>
+              </div>
+              <div className="form-actions">
+                <button className="primary">Guardar datos del año</button>
+                <button
+                  type="button"
+                  className="secondary"
+                  onClick={() => setForm(null)}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </fieldset>
+          </form>
+        )}
+      </Modal>
 
       {loading ? (
         <p role="status">Consultando años de carrera…</p>

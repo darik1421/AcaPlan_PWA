@@ -2,7 +2,7 @@ import { useState } from 'react'
 import {setRememberSession} from '../../lib/auth-storage'
 import { User, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
 import { supabase, supabaseConfigured } from '../../lib/supabase'
-import acaplanLogo from '../../assets/acaplan-logo.png'
+import acaplanEmblem from '../../assets/acaplan-emblem.png'
 import loginHeroImg from '../../assets/login-hero.png'
 
 export default function LoginPage() {
@@ -47,15 +47,6 @@ export default function LoginPage() {
       </div>
 
       <div className="login-container">
-        {/* Cabecera compacta con Logo AcaPlan alineado a la derecha */}
-        <header className="login-header login-header--wordmark">
-          <img
-            src={acaplanLogo}
-            alt="AcaPlan"
-            className="login-logo-img login-logo-img--wordmark"
-          />
-        </header>
-
         {/* Retícula de acceso compacta: Presentación (Hero) + Formulario */}
         <main className="login-main-grid">
           {/* Columna Izquierda: Presentación institucional */}
@@ -85,6 +76,11 @@ export default function LoginPage() {
 
           {/* Columna Derecha: Tarjeta de Acceso Institucional */}
           <section className="login-form-card" aria-labelledby="login-form-title">
+            <img
+              src={acaplanEmblem}
+              alt="AcaPlan"
+              className="login-card-emblem"
+            />
             <h2 id="login-form-title">Iniciar sesión</h2>
             <p className="login-form-subtitle">Accede a tu cuenta para continuar</p>
 

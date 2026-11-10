@@ -216,6 +216,7 @@
 
 /* Tarjeta derecha: Formulario de inicio de sesión */
 .login-form-card {
+  position: relative;
   background: var(--acaplan-surface);
   border: 1px solid var(--acaplan-line);
   border-radius: 20px;
@@ -226,12 +227,24 @@
   justify-content: center;
 }
 
+.login-card-emblem {
+  position: absolute;
+  top: 24px;
+  right: 28px;
+  width: 68px;
+  height: 68px;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
 .login-form-card h2 {
   font-size: 24px;
   font-weight: 700;
   color: var(--acaplan-ink);
   margin: 0 0 4px;
   letter-spacing: -0.3px;
+  padding-right: 76px;
 }
 
 .login-form-subtitle {
@@ -239,6 +252,7 @@
   color: var(--acaplan-muted);
   margin: 0 0 20px;
   line-height: 1.45;
+  padding-right: 76px;
 }
 
 /* Campos de entrada */
@@ -548,5 +562,17 @@
 
   .login-form-card {
     padding: 24px 18px;
+  }
+
+  .login-card-emblem {
+    top: 18px;
+    right: 16px;
+    width: 48px;
+    height: 48px;
+  }
+
+  .login-form-card h2,
+  .login-form-subtitle {
+    padding-right: 54px;
   }
 }

@@ -12,7 +12,23 @@ export function generationInput(data) {
   if (data.lockedDays !== undefined && (!Array.isArray(data.lockedDays) || data.lockedDays.length > 7 || data.lockedDays.some(d => !days.includes(d)) || new Set(data.lockedDays).size !== data.lockedDays.length)) throw new AccessError(400, 'Revisa los días protegidos.')
   if (data.modoProfundo !== undefined && typeof data.modoProfundo !== 'boolean') throw new AccessError(400, 'Revisa el modo de búsqueda.')
   if (data.previas !== undefined && (!Array.isArray(data.previas) || data.previas.length > 2000 || data.previas.some(c => !c || !Number.isSafeInteger(c.id_asignacion) || c.id_asignacion < 1 || !['general','teoria','practica'].includes(c.componente) || !Number.isInteger(c.numero_sesion) || c.numero_sesion < 1 || c.numero_sesion > 2 || !days.includes(c.dia) || ![c.hora_inicio,c.hora_fin].every(t => typeof t === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(t))))) throw new AccessError(400, 'La referencia de la propuesta anterior no es válida.')
-  return { id: data.id, lockedDays: data.lockedDays || [], modoProfundo: data.modoProfundo ?? true, ...(data.previas !== undefined ? {previas:data.previas}: {}) }
+  if (data.lockedClasses !== undefined && (!Array.isArray(data.lockedClasses) || data.lockedClasses.length > 2000 || data.lockedClasses.some(c => !c || !Number.isSafeInteger(c.id_asignacion) || c.id_asignacion < 1 || !['general','teoria','practica'].includes(c.componente) || !days.includes(c.dia) || ![c.hora_inicio,c.hora_fin].every(t => typeof t === 'string' && /^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/.test(t))))) {
+    throw new AccessError(400, 'Las clases bloqueadas no son válidas.')
+  }
+  return {
+    id: data.id,
+    lockedDays: data.lockedDays || [],
+    lockedClasses: (data.lockedClasses || []).map(c => ({
+      id_asignacion: c.id_asignacion,
+      componente: c.componente,
+      dia: c.dia,
+      hora_inicio: c.hora_inicio.slice(0, 5),
+      hora_fin: c.hora_fin.slice(0, 5),
+      id_aula: c.id_aula || null,
+    })),
+    modoProfundo: data.modoProfundo ?? true,
+    ...(data.previas !== undefined ? {previas:data.previas}: {})
+  }
 }
 
 export function generationVersion(context) {
@@ -72,7 +88,13 @@ export function generateProposal(context, options = {}) {
     throw new AccessError(409, `La carga docente supera los tiempos del turno. ${details.join('. ')}.${remaining} Revisa los docentes asignados o la configuración de tiempos.`)
   }
   const lockedDays = options.lockedDays || []
+  const clientLocked = options.lockedClasses || []
   const protectedClasses = snapshot.clases.filter(c => c.fijada || lockedDays.includes(c.dia))
+  for (const lc of clientLocked) {
+    if (!protectedClasses.some(c => c.id_asignacion === lc.id_asignacion && c.componente === lc.componente && c.dia === lc.dia && c.hora_inicio.slice(0, 5) === lc.hora_inicio.slice(0, 5))) {
+      protectedClasses.push({ ...lc, fijada: true, es_fijada: true })
+    }
+  }
   const fixedClasses = protectedClasses.map(c => {
     const part = parts.get(key(c.id_asignacion, c.componente))
     if (!part) throw new AccessError(409, 'Una clase protegida ya no corresponde a la entrega académica. Revísala en Borradores.')
@@ -114,7 +136,8 @@ export function generateProposal(context, options = {}) {
   })
   const clases = result.clases.map((c,i) => {
     const part = parts.get(c.id_asignatura), candidate = { block: c, room: snapshot.espacios.find(r => r.id_aula === c.id_aula) }
-    return { ...c, ...toClass({subject:{id_asignatura:c.id_asignatura}},candidate,i), docente_nombre: part.a.docentes.filter(d => part.p.docentes.includes(d.id)).map(d => d.nombre).join(', ') }
+    const placedClass = toClass({subject:{id_asignatura:c.id_asignatura}},candidate,i)
+    return { ...c, ...placedClass, es_fijada: Boolean(c.es_fijada || placedClass.fijada), docente_nombre: part.a.docentes.filter(d => part.p.docentes.includes(d.id)).map(d => d.nombre).join(', ') }
   })
   const revision = reviewDraft({ ...snapshot, clases })
   return { ...result, clases, revision, listo_para_guardar: revision.completo, huella: generationVersion(context), mensaje: revision.completo ? 'Propuesta completa comprobada. Aún no está guardada, aprobada ni publicada.' : 'La búsqueda no obtuvo una propuesta completa y válida. Revisa los conflictos y pendientes; no se guardará como completa.' }
