@@ -1,7 +1,11 @@
 import { supabase } from '../lib/supabase'
 import { endSession } from './endSession'
 
-const base = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '')
+let rawBase = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '')
+if (rawBase.startsWith('http') && !rawBase.endsWith('/api')) {
+  rawBase += '/api'
+}
+const base = rawBase
 export async function getProfile(token, signal) {
   const response = await fetch(base + '/me', {
     headers: { Authorization: `Bearer ${token}` },
