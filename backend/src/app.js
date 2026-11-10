@@ -8,6 +8,15 @@ export function createApp({ authenticateRequest = authenticate, management = cre
     response.setHeader('Content-Type', 'application/json; charset=utf-8')
     response.setHeader('Cache-Control', 'no-store')
     response.setHeader('X-Content-Type-Options', 'nosniff')
+    response.setHeader('Access-Control-Allow-Origin', '*')
+    response.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS, HEAD')
+    response.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type, apikey')
+
+    if (request.method === 'OPTIONS') {
+      response.writeHead(204)
+      response.end()
+      return
+    }
     const path = new URL(request.url, 'http://localhost').pathname
     const routes = {
       'GET /api/workspace': 'context',

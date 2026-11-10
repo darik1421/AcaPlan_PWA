@@ -1,5 +1,9 @@
 import { supabase } from '../lib/supabase'
-const base = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '')
+let rawBase = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '')
+if (rawBase.startsWith('http') && !rawBase.endsWith('/api')) {
+  rawBase += '/api'
+}
+const base = rawBase
 export async function api(path, { method = 'GET', data, signal } = {}) {
   const { data: { session }, error } = await supabase.auth.getSession()
   if (error || !session) throw Object.assign(new Error('Inicia sesión para continuar.'),{status:error ? (error.status === 401 || error.status === 403 ? error.status : 503) : 401})
