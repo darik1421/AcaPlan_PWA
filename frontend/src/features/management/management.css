@@ -1161,37 +1161,169 @@ details[open] summary,
   color: var(--text-ink);
 }
 
-/* Day Pills in Restriction Modal */
-.day-pills-selector {
+/* Day Pills & Controls in Restriction Modal */
+.day-selector-container {
   display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.day-pills-selector {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
   gap: 6px;
-  flex-wrap: wrap;
   margin-top: 6px;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .day-pill-btn {
-  padding: 6px 12px;
+  padding: 8px 4px;
   border-radius: 8px;
-  border: 1px solid var(--border-subtle);
-  background: #ffffff;
-  color: var(--text-ink);
-  font-size: 13px;
+  border: 1.5px solid #E2E8F0;
+  background: #FFFFFF;
+  color: #475569;
+  font-size: 12.5px;
   font-weight: 600;
+  text-align: center;
   cursor: pointer;
   transition: all 0.15s ease;
+  user-select: none;
 }
 
 .day-pill-btn:hover {
-  border-color: var(--primary-indigo);
-  color: var(--primary-indigo);
-  background: var(--primary-light);
+  border-color: #302C91;
+  color: #302C91;
+  background: #F8FAFC;
 }
 
 .day-pill-btn.selected {
-  background: var(--primary-indigo);
-  color: #ffffff;
-  border-color: var(--primary-indigo);
+  background: #302C91;
+  color: #FFFFFF;
+  border-color: #302C91;
+  box-shadow: 0 2px 4px rgba(48, 44, 145, 0.22);
+}
+
+.time-range-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Quick Time Presets in Restriction Modal */
+.restriction-presets-container {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.presets-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.time-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.time-preset-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid #CBD5E1;
+  background: #FFFFFF;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.time-preset-chip:hover {
+  border-color: #302C91;
+  color: #302C91;
+  background: rgba(48, 44, 145, 0.04);
+}
+
+.time-preset-chip.selected {
+  border-color: #302C91;
+  background: rgba(48, 44, 145, 0.08);
+  color: #302C91;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(48, 44, 145, 0.12);
+}
+
+.time-preset-chip .preset-time {
+  font-weight: 700;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.time-preset-chip .preset-tag {
+  font-size: 11px;
+  color: #64748B;
+  background: #F1F5F9;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.time-preset-chip.selected .preset-tag {
+  background: rgba(48, 44, 145, 0.12);
+  color: #302C91;
+}
+
+/* Restriction dynamic preview card */
+.restriction-preview-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-top: 4px;
+}
+
+.restriction-preview-card.warning {
+  background: #FFFBEB;
+  border-color: #FDE68A;
+}
+
+.restriction-preview-card .notice {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #1E3A8A;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.restriction-preview-card.warning .notice {
+  color: #92400E;
+}
+
+@media (max-width: 540px) {
+  .day-pills-selector {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .time-range-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Consecutive rules pairing visualizer */

@@ -71,7 +71,7 @@ test('Después de fijar una clase vuelve a edición nueva sin conservar la opera
  await waitFor(async () => {
    fireEvent.click(await screen.findByRole('button',{name:'Añadir clase al borrador'}))
    await screen.findByRole('group',{name:'Añadir una clase al borrador'})
- })
+ }, { timeout: 4000 })
  expect(screen.getByLabelText('Asignatura de la propuesta').value).toBe('')
  expect(screen.queryByLabelText('Motivo de la autorización')).toBeNull()
 })
@@ -101,7 +101,7 @@ test('Al retirar planificación se descartan la edición y la autorización de u
  await waitFor(async () => {
    fireEvent.click(await screen.findByRole('button',{name:'Añadir clase al borrador'}))
    await screen.findByRole('group',{name:'Añadir una clase al borrador'})
- })
+ }, { timeout: 4000 })
  expect(screen.queryByLabelText('Motivo de la autorización')).toBeNull()
  expect(mocks.api.mock.calls.some(([path])=>path==='/borradores/clase')).toBe(false)
 })

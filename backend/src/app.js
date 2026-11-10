@@ -87,6 +87,7 @@ export function createApp({ authenticateRequest = authenticate, management = cre
       'PATCH /api/asignacion-academica/necesidades': 'academicNeeds.save',
       'PATCH /api/asignacion-academica/correccion': 'academicAssignments.save',
       'GET /api/asignacion-academica': 'academicAssignments.list',
+      'POST /api/asignacion-academica/manual': 'academicAssignments.manual',
       'POST /api/preparacion/revisar': 'preparation.preview',
       'GET /api/importacion/plantilla': 'import.template',
       'GET /api/importacion/historial': 'import.history',
