@@ -500,6 +500,118 @@ export function createManagement({
       }
       if (route === 'academicAssignments.context' || route === 'academicAssignments.save') return rpc2(request,route==='academicAssignments.save'?'save':'context',assignmentCorrection(data,route==='academicAssignments.save'),'pwa_corregir_asignacion')
       if (route === 'academicAssignments.list') return rpc2(request,'list',{},'pwa_importar_asignacion')
+      if (route === 'academicAssignments.manual') {
+        const context = await rpc(request, 'context')
+        const admin = hasGlobalAccess(profile)
+        const allowed = admin || context.funciones?.includes('coordinador')
+        if (!allowed) throw new AccessError(403, 'No tienes permiso para registrar asignaciones académicas.')
+        const periodos = await rpc(request, 'periods.list')
+        const period = periodos.find(p => p.es_activo)
+        if (!period) throw new AccessError(409, 'Activa un semestre antes de registrar la asignación.')
+        if (data.id_periodo && data.id_periodo !== period.id_periodo) {
+          throw new AccessError(409, 'El semestre activo cambió. Actualiza la página y revisa de nuevo.')
+        }
+
+        const {
+          carrera,
+          ano_estudio,
+          turno,
+          codigo_asignatura,
+          nombre_asignatura,
+          cedula_docente,
+          nombre_docente,
+          horas_semestre,
+        } = data
+
+        if (
+          !carrera ||
+          !ano_estudio ||
+          !turno ||
+          !codigo_asignatura ||
+          !nombre_asignatura ||
+          !cedula_docente ||
+          !nombre_docente ||
+          !horas_semestre
+        ) {
+          throw new AccessError(
+            400,
+            'Todos los campos son obligatorios: carrera, año, turno, asignatura, docente y horas.'
+          )
+        }
+
+        const [carreras] = await Promise.all([rpc2(request, 'carreras.list')])
+        const inScope = id => admin || context.carreras?.includes(id)
+        let careers = carreras.filter(c => inScope(c.id_carrera))
+        if (!serviceKey) throw new AccessError(503, 'Falta configurar el catálogo de departamentos en el backend.')
+        const response = await fetchImpl(
+          `${url}/rest/v1/pwa_carrera_departamento?select=id_carrera,pwa_departamentos(nombre)`,
+          {
+            headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` },
+            signal: AbortSignal.timeout(10000),
+          }
+        ).catch(() => null)
+        const links = response?.ok ? await response.json().catch(() => null) : null
+        if (!Array.isArray(links)) throw new AccessError(503, 'No se pudo consultar el catálogo de departamentos.')
+        const byCareer = new Map(links.map(link => [link.id_carrera, link.pwa_departamentos?.nombre]))
+        careers = careers.map(c => ({ ...c, departamento: byCareer.get(c.id_carrera) }))
+
+        const row = {
+          fila: 2,
+          carrera: String(carrera).trim(),
+          ano_estudio: Number(ano_estudio),
+          turno:
+            {
+              matutino: 'matutino',
+              vespertino: 'vespertino',
+              nocturno: 'nocturno',
+              'por encuentros': 'encuentros',
+              encuentros: 'encuentros',
+            }[String(turno).trim().toLowerCase()] || '',
+          codigo_asignatura: String(codigo_asignatura).trim().toUpperCase(),
+          nombre_asignatura: String(nombre_asignatura).trim(),
+          cedula_docente: String(cedula_docente).replace(/[\s-]/g, '').toUpperCase(),
+          nombre_docente: String(nombre_docente).trim(),
+          horas_semestre: Number(horas_semestre),
+        }
+
+        if (!row.turno)
+          throw new AccessError(400, 'Turno inválido. Usa Matutino, Vespertino, Nocturno o Por encuentros.')
+        if (!/^[A-Z0-9]{1,40}$/.test(row.cedula_docente))
+          throw new AccessError(400, 'Cédula de docente inválida. Debe contener letras y números.')
+        if (Number.isNaN(row.ano_estudio) || row.ano_estudio < 1 || row.ano_estudio > 10)
+          throw new AccessError(400, 'Año inválido. Debe ser un número entre 1 y 10.')
+        if (Number.isNaN(row.horas_semestre) || row.horas_semestre < 1 || row.horas_semestre > 10000)
+          throw new AccessError(400, 'Horas semestrales inválidas.')
+
+        const parsed = validateAssignmentDepartments({ rows: [row], errors: [] }, careers)
+        if (parsed.errors.length) {
+          throw new AccessError(400, parsed.errors[0].motivo)
+        }
+
+        const previewResult = await rpc2(
+          request,
+          'preview',
+          { rows: parsed.rows, id_periodo: period.id_periodo },
+          'pwa_importar_asignacion'
+        )
+
+        if (!previewResult?.valido || !previewResult?.huella) {
+          const errMsg =
+            previewResult?.errores?.[0]?.motivo ||
+            previewResult?.errores?.[0]?.mensaje ||
+            'La asignación no pudo validarse en la base de datos.'
+          throw new AccessError(400, errMsg)
+        }
+
+        const confirmResult = await rpc2(
+          request,
+          'confirm',
+          { rows: parsed.rows, id_periodo: period.id_periodo, huella: previewResult.huella },
+          'pwa_importar_asignacion'
+        )
+
+        return { guardado: true, ...confirmResult, mensaje: 'Asignación académica registrada exitosamente.' }
+      }
       if (route === 'restrictions.context') {
         try { return await rpc2(request,'context',{},'pwa_restricciones_unificadas') }
         catch(error) {

@@ -612,6 +612,13 @@ input:focus, select:focus {
   letter-spacing: -0.1px;
 }
 
+.modal-body label.check-label,
+.modal-body label.teacher-select-card {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+}
+
 .modal-body input:not([type="checkbox"]):not([type="radio"]),
 .modal-body select {
   height: 44px;

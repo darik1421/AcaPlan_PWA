@@ -1,6 +1,7 @@
 import ComponentesAsignacion from './ComponentesAsignacion'
 import CorreccionAsignacion from './CorreccionAsignacion'
 import NecesidadesAsignacion from './NecesidadesAsignacion'
+import NuevaAsignacionModal from './NuevaAsignacionModal'
 import Modal from '../../components/Modal'
 import { useEffect, useState, useMemo } from 'react'
 import { api } from '../../services/management'
@@ -16,7 +17,9 @@ import {
   Sliders, 
   Layers,
   ChevronRight,
-  Info
+  ChevronLeft,
+  Info,
+  Plus
 } from 'lucide-react'
 
 export default function AsignacionesImportadas({ periodId, revision, onDataChanged }) {
@@ -25,6 +28,7 @@ export default function AsignacionesImportadas({ periodId, revision, onDataChang
   const [needs, setNeeds] = useState(null)
   const [components, setComponents] = useState(null)
   const [selectedId, setSelectedId] = useState(null)
+  const [showCreateModal, setShowCreateModal] = useState(false)
 
   useEffect(() => {
     setEditing(null)
@@ -32,6 +36,7 @@ export default function AsignacionesImportadas({ periodId, revision, onDataChang
     setComponents(null)
     setMessage('')
     setSelectedId(null)
+    setShowCreateModal(false)
   }, [periodId, revision])
 
   const [rows, setRows] = useState([])
@@ -61,8 +66,20 @@ export default function AsignacionesImportadas({ periodId, revision, onDataChang
   const [year, setYear] = useState('')
   const [turn, setTurn] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
 
-  useEffect(() => { setCareer(''); setYear(''); setTurn(''); setSearchTerm('') }, [periodId])
+  useEffect(() => { 
+    setCareer('')
+    setYear('')
+    setTurn('')
+    setSearchTerm('')
+    setCurrentPage(1)
+  }, [periodId])
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [career, year, turn, searchTerm])
+
   useEffect(() => {
     if (loading) return
     const current = rows.filter(r => r.id_periodo === periodId)
@@ -116,6 +133,14 @@ export default function AsignacionesImportadas({ periodId, revision, onDataChang
       (r.docentes?.some(d => d.toLowerCase().includes(searchTerm.toLowerCase())))
     return matchCareer && matchYear && matchTurn && matchSearch
   })
+
+  const pageSize = 10
+  const totalPages = Math.max(1, Math.ceil(visible.length / pageSize))
+  const safePage = Math.min(Math.max(1, currentPage), totalPages)
+  const paginatedRows = useMemo(() => {
+    const start = (safePage - 1) * pageSize
+    return visible.slice(start, start + pageSize)
+  }, [visible, safePage, pageSize])
 
   const selectedRecord =
     visible.find(r => r.id === selectedId) || visible[0] || null
@@ -197,6 +222,17 @@ export default function AsignacionesImportadas({ periodId, revision, onDataChang
         )}
       </Modal>
 
+      <NuevaAsignacionModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        periodId={periodId}
+        onSaved={() => {
+          setMessage('Asignación académica registrada exitosamente.')
+          setAttempt(n => n + 1)
+          onDataChanged?.()
+        }}
+      />
+
       {/* Indicadores clave (KPIs) de la entrega */}
       {!loading && !error && semesterRows.length > 0 && (
         <div className="stat-grid" style={{ marginBottom: '20px' }}>
@@ -226,14 +262,26 @@ export default function AsignacionesImportadas({ periodId, revision, onDataChang
       {/* Filtros y búsqueda interactiva */}
       {!loading && !error && semesterRows.length > 0 && (
         <div className="surface-card" style={{ padding: '16px 20px', marginBottom: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-            <Filter size={16} color="var(--primary-indigo)" />
-            <strong style={{ fontSize: '14px', color: 'var(--text-dark)' }}>Filtrar entrega académica</strong>
-            {visible.length !== semesterRows.length && (
-              <span className="status-pill active" style={{ fontSize: '12px', padding: '2px 8px' }}>
-                Mostrando {visible.length} de {semesterRows.length}
-              </span>
-            )}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', marginBottom: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Filter size={16} color="var(--primary-indigo)" />
+              <strong style={{ fontSize: '14px', color: 'var(--text-dark)' }}>Filtrar entrega académica</strong>
+              {visible.length !== semesterRows.length && (
+                <span className="status-pill active" style={{ fontSize: '12px', padding: '2px 8px' }}>
+                  Mostrando {visible.length} de {semesterRows.length}
+                </span>
+              )}
+            </div>
+
+            <button
+              className="primary"
+              type="button"
+              onClick={() => setShowCreateModal(true)}
+              style={{ fontSize: '13px', padding: '6px 14px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            >
+              <Plus size={15} aria-hidden="true" />
+              <span>Nueva asignación</span>
+            </button>
           </div>
 
           <div className="filter-grid" style={{ marginBottom: '12px' }}>
@@ -311,91 +359,7 @@ export default function AsignacionesImportadas({ periodId, revision, onDataChang
         <p role="status">Consultando asignación importada…</p>
       ) : (
         <div className="academic-delivery-layout">
-          {/* Columna Izquierda: Tabla de asignaturas */}
-          <div>
-            <div className="table-scroll academic-delivery-table">
-              <table>
-                <caption>Entrega recibida para el semestre activo</caption>
-                <thead>
-                  <tr>
-                    <th>Carrera y año</th>
-                    <th>Componente</th>
-                    <th>Docentes</th>
-                    <th>Turno</th>
-                    <th>Horas totales</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {visible.map(r => {
-                    const isSelected = selectedRecord?.id === r.id
-                    return (
-                      <tr
-                        key={r.id}
-                        onClick={() => setSelectedId(r.id)}
-                        style={{
-                          cursor: 'pointer',
-                          background: isSelected ? 'rgba(48, 44, 145, 0.06)' : undefined,
-                          borderLeft: isSelected ? '4px solid var(--primary-indigo)' : '4px solid transparent',
-                          transition: 'background 0.15s ease'
-                        }}
-                      >
-                        <td style={{ minWidth: '220px', wordBreak: 'normal', hyphens: 'none' }}>
-                          <strong>{r.carrera}</strong>
-                          <span className="cell-detail delivery-subline" style={{ color: 'var(--primary-indigo)', fontWeight: 600 }}>Año {r.ano_estudio}</span>
-                        </td>
-                        <td style={{ minWidth: '240px', wordBreak: 'normal' }}>
-                          <strong>{r.nombre_asignatura}</strong>
-                          <span className="cell-detail delivery-subline">{r.codigo_asignatura}</span>
-                        </td>
-                        <td style={{ minWidth: '200px', wordBreak: 'normal' }}>
-                          {r.docentes?.join(', ')}
-                        </td>
-                        <td style={{ minWidth: '130px', whiteSpace: 'nowrap' }}>
-                          <span className={turnPillClass(r.turno)}>
-                            <span className="status-dot" aria-hidden="true">●</span>
-                            <span>{turnName(r.turno)}</span>
-                          </span>
-                        </td>
-                        <td style={{ minWidth: '110px', textAlign: 'center', whiteSpace: 'nowrap' }}>
-                          <span style={{ fontWeight: 600 }}>{r.horas_semestre}</span>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                  {!visible.length && (
-                    <tr>
-                      <td colSpan={5} style={{ textAlign: 'center', padding: '36px 16px' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                          <Info size={32} color="var(--primary-indigo)" style={{ opacity: 0.6 }} />
-                          <p style={{ margin: 0, fontWeight: 500, color: 'var(--text-dark)' }}>
-                            {semesterRows.length
-                              ? 'No hay asignaciones que coincidan con los filtros.'
-                              : 'No hay entregas confirmadas en este semestre.'}
-                          </p>
-                          {semesterRows.length > 0 && (
-                            <button
-                              className="secondary"
-                              style={{ marginTop: '8px' }}
-                              onClick={() => {
-                                setCareer('')
-                                setYear('')
-                                setTurn('')
-                                setSearchTerm('')
-                              }}
-                            >
-                              Restablecer filtros
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Columna Derecha: Tarjeta de Registro seleccionado (Figma asignaturas_docentes_233_2490) */}
+          {/* Tarjeta de Registro seleccionado (Arriba) */}
           {semesterRows.length > 0 && (
             <details className="side-panel-card delivery-detail" open>
               <summary style={{ fontSize: '15px' }}>
@@ -501,6 +465,152 @@ export default function AsignacionesImportadas({ periodId, revision, onDataChang
               )}
             </details>
           )}
+
+          {/* Tabla de asignaturas con paginación (Abajo) */}
+          <div>
+            <div className="table-scroll academic-delivery-table">
+              <table>
+                <caption>Entrega recibida para el semestre activo</caption>
+                <thead>
+                  <tr>
+                    <th>Carrera y año</th>
+                    <th>Componente</th>
+                    <th>Docentes</th>
+                    <th>Turno</th>
+                    <th>Horas totales</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedRows.map(r => {
+                    const isSelected = selectedRecord?.id === r.id
+                    return (
+                      <tr
+                        key={r.id}
+                        onClick={() => setSelectedId(r.id)}
+                        style={{
+                          cursor: 'pointer',
+                          background: isSelected ? 'rgba(48, 44, 145, 0.06)' : undefined,
+                          borderLeft: isSelected ? '4px solid var(--primary-indigo)' : '4px solid transparent',
+                          transition: 'background 0.15s ease'
+                        }}
+                      >
+                        <td style={{ minWidth: '220px', wordBreak: 'normal', hyphens: 'none' }}>
+                          <strong>{r.carrera}</strong>
+                          <span className="cell-detail delivery-subline" style={{ color: 'var(--primary-indigo)', fontWeight: 600 }}>Año {r.ano_estudio}</span>
+                        </td>
+                        <td style={{ minWidth: '240px', wordBreak: 'normal' }}>
+                          <strong>{r.nombre_asignatura}</strong>
+                          <span className="cell-detail delivery-subline">{r.codigo_asignatura}</span>
+                        </td>
+                        <td style={{ minWidth: '200px', wordBreak: 'normal' }}>
+                          {r.docentes?.join(', ')}
+                        </td>
+                        <td style={{ minWidth: '130px', whiteSpace: 'nowrap' }}>
+                          <span className={turnPillClass(r.turno)}>
+                            <span className="status-dot" aria-hidden="true">●</span>
+                            <span>{turnName(r.turno)}</span>
+                          </span>
+                        </td>
+                        <td style={{ minWidth: '110px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                          <span style={{ fontWeight: 600 }}>{r.horas_semestre}</span>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                  {!visible.length && (
+                    <tr>
+                      <td colSpan={5} style={{ textAlign: 'center', padding: '36px 16px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                          <Info size={32} color="var(--primary-indigo)" style={{ opacity: 0.6 }} />
+                          <p style={{ margin: 0, fontWeight: 500, color: 'var(--text-dark)' }}>
+                            {semesterRows.length
+                              ? 'No hay asignaciones que coincidan con los filtros.'
+                              : 'No hay entregas confirmadas en este semestre.'}
+                          </p>
+                          {semesterRows.length > 0 ? (
+                            <button
+                              className="secondary"
+                              style={{ marginTop: '8px' }}
+                              onClick={() => {
+                                setCareer('')
+                                setYear('')
+                                setTurn('')
+                                setSearchTerm('')
+                              }}
+                            >
+                              Restablecer filtros
+                            </button>
+                          ) : (
+                            <button
+                              className="primary"
+                              type="button"
+                              style={{ marginTop: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                              onClick={() => setShowCreateModal(true)}
+                            >
+                              <Plus size={15} aria-hidden="true" />
+                              <span>Registrar asignación manualmente</span>
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Controles de paginación con límite de 10 */}
+            {visible.length > 0 && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '12px 18px',
+                  marginTop: '14px',
+                  background: '#FFFFFF',
+                  border: '1px solid #E2E8F0',
+                  borderRadius: '10px',
+                  fontSize: '13px',
+                  color: '#475569',
+                  flexWrap: 'wrap',
+                  gap: '10px',
+                }}
+              >
+                <span>
+                  Mostrando <strong>{(safePage - 1) * pageSize + 1}</strong>–<strong>{Math.min(safePage * pageSize, visible.length)}</strong> de <strong>{visible.length}</strong> componentes
+                </span>
+
+                {totalPages > 1 && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <button
+                      type="button"
+                      className="secondary"
+                      disabled={safePage <= 1}
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      style={{ padding: '6px 12px', fontSize: '13px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                    >
+                      <ChevronLeft size={14} />
+                      <span>Anterior</span>
+                    </button>
+                    <span style={{ padding: '0 6px', fontWeight: 600, color: 'var(--primary-dark)' }}>
+                      Página {safePage} de {totalPages}
+                    </span>
+                    <button
+                      type="button"
+                      className="secondary"
+                      disabled={safePage >= totalPages}
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      style={{ padding: '6px 12px', fontSize: '13px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                    >
+                      <span>Siguiente</span>
+                      <ChevronRight size={14} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

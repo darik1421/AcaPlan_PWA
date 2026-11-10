@@ -8,6 +8,15 @@ export function createApp({ authenticateRequest = authenticate, management = cre
     response.setHeader('Content-Type', 'application/json; charset=utf-8')
     response.setHeader('Cache-Control', 'no-store')
     response.setHeader('X-Content-Type-Options', 'nosniff')
+    response.setHeader('Access-Control-Allow-Origin', '*')
+    response.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS, HEAD')
+    response.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type, apikey')
+
+    if (request.method === 'OPTIONS') {
+      response.writeHead(204)
+      response.end()
+      return
+    }
     const path = new URL(request.url, 'http://localhost').pathname
     const routes = {
       'GET /api/workspace': 'context',
@@ -88,6 +97,7 @@ export function createApp({ authenticateRequest = authenticate, management = cre
       'PATCH /api/asignacion-academica/necesidades': 'academicNeeds.save',
       'PATCH /api/asignacion-academica/correccion': 'academicAssignments.save',
       'GET /api/asignacion-academica': 'academicAssignments.list',
+      'POST /api/asignacion-academica/manual': 'academicAssignments.manual',
       'POST /api/preparacion/revisar': 'preparation.preview',
       'GET /api/importacion/plantilla': 'import.template',
       'GET /api/importacion/historial': 'import.history',

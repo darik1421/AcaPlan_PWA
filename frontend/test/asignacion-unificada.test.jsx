@@ -91,3 +91,31 @@ test('Cambiar de semestre descarta los filtros anteriores y no oculta la nueva e
  expect(screen.getByLabelText('Carrera de la entrega').value).toBe('')
  expect(screen.queryByRole('cell',{name:/Programación.*P1/})).toBeNull()
 })
+
+test('Aplica paginación con límite de 10 elementos y permite navegar entre páginas',async()=>{
+ const fifteenRows = Array.from({ length: 15 }, (_, i) => {
+   const num = String(i + 1).padStart(2, '0')
+   return {
+     ...row,
+     id: i + 1,
+     codigo_asignatura: `COD-${num}`,
+     nombre_asignatura: `Asignatura ${num}`
+   }
+ })
+ mocks.api.mockResolvedValue(fifteenRows)
+ render(<AsignacionesImportadas periodId={1}/>)
+ await screen.findByRole('cell',{name:/Asignatura 01.*COD-01/})
+ expect(screen.getByRole('cell',{name:/Asignatura 10.*COD-10/})).toBeTruthy()
+ expect(screen.queryByRole('cell',{name:/Asignatura 11.*COD-11/})).toBeNull()
+ expect(screen.getByText('Página 1 de 2')).toBeTruthy()
+ 
+ fireEvent.click(screen.getByRole('button',{name:/Siguiente/i}))
+ await screen.findByRole('cell',{name:/Asignatura 11.*COD-11/})
+ expect(screen.getByRole('cell',{name:/Asignatura 15.*COD-15/})).toBeTruthy()
+ expect(screen.queryByRole('cell',{name:/Asignatura 01.*COD-01/})).toBeNull()
+ expect(screen.getByText('Página 2 de 2')).toBeTruthy()
+
+ fireEvent.click(screen.getByRole('button',{name:/Anterior/i}))
+ await screen.findByRole('cell',{name:/Asignatura 01.*COD-01/})
+ expect(screen.getByText('Página 1 de 2')).toBeTruthy()
+})

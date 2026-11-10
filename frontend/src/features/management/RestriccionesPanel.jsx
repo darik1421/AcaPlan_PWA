@@ -196,145 +196,154 @@ export default function RestriccionesPanel({ context }) {
         isOpen={Boolean(form && editable && form.id_periodo === period)}
         onClose={() => setForm(null)}
         title={form?.id ? 'Corregir restricción' : 'Nueva restricción comunicada'}
-        maxWidth={560}
+        maxWidth={620}
       >
         {form && editable && form.id_periodo === period && (
           <form className="management-form" onSubmit={save} style={{ margin: 0, padding: 0, border: 'none', background: 'transparent' }}>
-            <fieldset disabled={busy || reloadRequired} style={{ border: 'none', padding: 0, margin: 0 }}>
-              <div className="form-grid">
+            <fieldset disabled={busy || reloadRequired} style={{ border: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '18px' }}>
+              
+              <label>
+                Docente de la restricción
+                <select
+                  required
+                  disabled={Boolean(form.id)}
+                  value={form.id_docente ? key(form.origen, form.id_docente) : ''}
+                  onChange={e => {
+                    const selected = docentes.find(
+                      d => key(d.origen, d.id_docente) === e.target.value
+                    )
+                    setForm({
+                      ...form,
+                      origen: selected?.origen || '',
+                      id_docente: selected?.id_docente || '',
+                    })
+                  }}
+                >
+                  <option value="">Selecciona un docente</option>
+                  {docentes
+                    .filter(
+                      d =>
+                        d.estado === 'activo' ||
+                        key(d.origen, d.id_docente) === key(form.origen, form.id_docente)
+                    )
+                    .map(d => (
+                      <option key={key(d.origen, d.id_docente)} value={key(d.origen, d.id_docente)}>
+                        {d.nombre} · {d.origen === 'academico' ? 'Recibido por Excel' : 'Registro existente'}
+                      </option>
+                    ))}
+                </select>
+              </label>
+
+              <div className="day-selector-container">
                 <label>
-                  Docente de la restricción
+                  Día no disponible
                   <select
-                    required
-                    disabled={Boolean(form.id)}
-                    value={form.id_docente ? key(form.origen, form.id_docente) : ''}
-                    onChange={e => {
-                      const selected = docentes.find(
-                        d => key(d.origen, d.id_docente) === e.target.value
-                      )
-                      setForm({
-                        ...form,
-                        origen: selected?.origen || '',
-                        id_docente: selected?.id_docente || '',
-                      })
-                    }}
+                    value={form.dia}
+                    onChange={e => setForm({ ...form, dia: e.target.value })}
                   >
-                    <option value="">Selecciona un docente</option>
-                    {docentes
-                      .filter(
-                        d =>
-                          d.estado === 'activo' ||
-                          key(d.origen, d.id_docente) === key(form.origen, form.id_docente)
-                      )
-                      .map(d => (
-                        <option key={key(d.origen, d.id_docente)} value={key(d.origen, d.id_docente)}>
-                          {d.nombre} · {d.origen === 'academico' ? 'Recibido por Excel' : 'Registro existente'}
-                        </option>
-                      ))}
+                    {days.map(d => (
+                      <option key={d}>{d}</option>
+                    ))}
                   </select>
                 </label>
-
-                <div>
-                  <label>
-                    Día no disponible
-                    <select
-                      value={form.dia}
-                      onChange={e => setForm({ ...form, dia: e.target.value })}
+                {/* Visual Day Pills for dynamic quick selection */}
+                <div className="day-pills-selector" aria-hidden="true">
+                  {days.map(d => (
+                    <button
+                      key={d}
+                      type="button"
+                      className={`day-pill-btn ${form.dia === d ? 'selected' : ''}`}
+                      onClick={() => setForm({ ...form, dia: d })}
                     >
-                      {days.map(d => (
-                        <option key={d}>{d}</option>
-                      ))}
-                    </select>
-                  </label>
-                  {/* Visual Day Pills for dynamic quick selection */}
-                  <div className="day-pills-selector" aria-hidden="true">
-                    {days.map(d => (
-                      <button
-                        key={d}
-                        type="button"
-                        className={`day-pill-btn ${form.dia === d ? 'selected' : ''}`}
-                        onClick={() => setForm({ ...form, dia: d })}
-                      >
-                        {d}
-                      </button>
-                    ))}
-                  </div>
+                      {d}
+                    </button>
+                  ))}
                 </div>
+              </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-                  <label>
-                    Desde
-                    <input
-                      type="time"
-                      required
-                      value={form.hora_inicio}
-                      onChange={e => setForm({ ...form, hora_inicio: e.target.value })}
-                    />
-                  </label>
+              <div className="time-range-grid">
+                <label>
+                  Desde
+                  <input
+                    type="time"
+                    required
+                    value={form.hora_inicio}
+                    onChange={e => setForm({ ...form, hora_inicio: e.target.value })}
+                  />
+                </label>
 
-                  <label>
-                    Hasta
-                    <input
-                      type="time"
-                      required
-                      value={form.hora_fin}
-                      onChange={e => setForm({ ...form, hora_fin: e.target.value })}
-                    />
-                  </label>
+                <label>
+                  Hasta
+                  <input
+                    type="time"
+                    required
+                    value={form.hora_fin}
+                    onChange={e => setForm({ ...form, hora_fin: e.target.value })}
+                  />
+                </label>
+              </div>
+
+              {/* Quick Presets */}
+              <div className="restriction-presets-container">
+                <div className="presets-header">
+                  <Clock size={13} aria-hidden="true" />
+                  <span>Horarios habituales:</span>
                 </div>
-
-                {/* Quick Presets */}
-                <div style={{ gridColumn: '1 / -1' }}>
-                  <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>Horarios habituales:</span>
-                  <div className="time-presets">
-                    {[
-                      { label: '07:00 - 08:35 (Sesión 1 Matutino)', start: '07:00', end: '08:35' },
-                      { label: '08:45 - 10:20 (Sesión 2 Matutino)', start: '08:45', end: '10:20' },
-                      { label: '10:30 - 12:05 (Sesión 3 Matutino)', start: '10:30', end: '12:05' },
-                      { label: '13:00 - 14:35 (Sesión 1 Vespertino)', start: '13:00', end: '14:35' },
-                      { label: '14:45 - 16:20 (Sesión 2 Vespertino)', start: '14:45', end: '16:20' },
-                    ].map(p => (
+                <div className="time-presets">
+                  {[
+                    { label: '07:00 - 08:35 (Sesión 1 Matutino)', start: '07:00', end: '08:35', session: 'Sesión 1 Matutino' },
+                    { label: '08:45 - 10:20 (Sesión 2 Matutino)', start: '08:45', end: '10:20', session: 'Sesión 2 Matutino' },
+                    { label: '10:30 - 12:05 (Sesión 3 Matutino)', start: '10:30', end: '12:05', session: 'Sesión 3 Matutino' },
+                    { label: '13:00 - 14:35 (Sesión 1 Vespertino)', start: '13:00', end: '14:35', session: 'Sesión 1 Vespertino' },
+                    { label: '14:45 - 16:20 (Sesión 2 Vespertino)', start: '14:45', end: '16:20', session: 'Sesión 2 Vespertino' },
+                  ].map(p => {
+                    const isSelected = form.hora_inicio === p.start && form.hora_fin === p.end
+                    return (
                       <button
                         key={p.label}
                         type="button"
-                        className="time-preset-chip"
+                        className={`time-preset-chip ${isSelected ? 'selected' : ''}`}
                         onClick={() => setForm({ ...form, hora_inicio: p.start, hora_fin: p.end })}
                       >
-                        {p.label}
+                        <span className="preset-time">{p.start} - {p.end}</span>
+                        <span className="preset-tag">{p.session}</span>
                       </button>
-                    ))}
-                  </div>
+                    )
+                  })}
                 </div>
-
-                {form.id && (
-                  <label>
-                    Estado de la restricción
-                    <select
-                      value={String(form.activa)}
-                      onChange={e => setForm({ ...form, activa: e.target.value === 'true' })}
-                    >
-                      <option value="true">Activa</option>
-                      <option value="false">Retirada</option>
-                    </select>
-                  </label>
-                )}
               </div>
+
+              {form.id && (
+                <label>
+                  Estado de la restricción
+                  <select
+                    value={String(form.activa)}
+                    onChange={e => setForm({ ...form, activa: e.target.value === 'true' })}
+                  >
+                    <option value="true">Activa</option>
+                    <option value="false">Retirada</option>
+                  </select>
+                </label>
+              )}
 
               {/* Exact summary text guaranteed for tests and clear user feedback */}
               {form.id_docente && form.hora_inicio && form.hora_fin && (
-                <p className="notice" style={{ marginTop: '16px' }}>
-                  {name(form.origen, form.id_docente)}{' '}
-                  {form.activa ? 'no podrá dar clase' : 'dejará de tener esta restricción'} el {form.dia}{' '}
-                  de {form.hora_inicio} a {form.hora_fin}.
-                </p>
+                <div className={`restriction-preview-card ${form.activa ? '' : 'warning'}`}>
+                  <AlertCircle size={18} style={{ color: form.activa ? '#2563EB' : '#D97706', flexShrink: 0, marginTop: '2px' }} aria-hidden="true" />
+                  <p className="notice">
+                    {name(form.origen, form.id_docente)}{' '}
+                    {form.activa ? 'no podrá dar clase' : 'dejará de tener esta restricción'} el {form.dia}{' '}
+                    de {form.hora_inicio} a {form.hora_fin}.
+                  </p>
+                </div>
               )}
 
-              <div className="form-actions" style={{ marginTop: '20px' }}>
-                <button className="primary" type="submit">
-                  Guardar restricción
-                </button>
+              <div className="form-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '8px', paddingTop: '16px', borderTop: '1px solid #E2E8F0' }}>
                 <button className="secondary" type="button" onClick={() => setForm(null)}>
                   Cancelar
+                </button>
+                <button className="primary" type="submit">
+                  Guardar restricción
                 </button>
               </div>
             </fieldset>

@@ -41,3 +41,28 @@ test('No permite guardar sin docentes y descarta respuestas de un contexto anter
  resolve({guardado:true});await screen.findByLabelText('Ana')
  expect(saved).not.toHaveBeenCalled()
 })
+
+test('Al tener un único docente, seleccionar otro lo reemplaza automáticamente',async()=>{
+ const singleContext = {
+   asignacion: { id: 1, id_periodo: 2, revision: 5, horas_semestre: 56, docentes: [4], asignatura: 'Economía', ano_estudio: 1, turno: 'matutino' },
+   disponibles: [{ id: 4, nombre: 'Daniel', activo: true }, { id: 5, nombre: 'Valeria', activo: true }]
+ }
+ mocks.api.mockResolvedValue(singleContext)
+ render(<CorreccionAsignacion id={1} periodId={2} onSaved={vi.fn()} onClose={vi.fn()}/>)
+ 
+ const daniel = await screen.findByLabelText('Daniel')
+ const valeria = screen.getByLabelText('Valeria')
+ expect(daniel.checked).toBe(true)
+ expect(valeria.checked).toBe(false)
+
+ // Al hacer clic en Valeria, reemplaza a Daniel automáticamente
+ fireEvent.click(valeria)
+ expect(valeria.checked).toBe(true)
+ expect(daniel.checked).toBe(false)
+
+ // Al activar co-docencia, permite seleccionar a Daniel también
+ fireEvent.click(screen.getByLabelText('Permitir múltiples docentes (co-docencia)'))
+ fireEvent.click(daniel)
+ expect(daniel.checked).toBe(true)
+ expect(valeria.checked).toBe(true)
+})

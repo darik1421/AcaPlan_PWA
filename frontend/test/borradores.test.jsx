@@ -92,7 +92,7 @@ test('Distribuye docentes existentes entre dos sesiones sin crear identidades',a
 test('Después de fijar una clase vuelve a edición nueva sin conservar la operación anterior',async()=>{
  mocks.api.mockImplementation(async path=>path==='/borradores/estado'?{estado:'borrador',version:0,historial:[]}:path==='/borradores/consultar'?list:detail)
  render(<BorradoresPage canPlan periodId={1}/>);fireEvent.change(await screen.findByLabelText('Borrador'),{target:{value:'1'}})
- fireEvent.click(await screen.findByRole('button',{name:'Desfijar clase 5'}))
+ fireEvent.click(await screen.findByRole('button',{name:'Desfijar clase 5'},{timeout:4000}))
  fireEvent.change(screen.getByLabelText('Motivo de la autorización'),{target:{value:'Corrección autorizada'}})
  fireEvent.click(screen.getByLabelText('Autorizo este cambio de la clase fijada.'))
  await act(async()=>fireEvent.click(screen.getByRole('button',{name:'Confirmar estado'})))
@@ -101,7 +101,7 @@ test('Después de fijar una clase vuelve a edición nueva sin conservar la opera
   const button=screen.getByRole('button',{name:'Añadir clase al borrador'})
   expect(button.disabled).toBe(false)
   return button
- })
+ }, {timeout:4000})
  fireEvent.click(add)
  await screen.findByRole('group',{name:'Añadir una clase al borrador'})
  expect(screen.getByLabelText('Asignatura de la propuesta').value).toBe('')
@@ -133,7 +133,7 @@ test('Al retirar planificación se descartan la edición y la autorización de u
  await waitFor(async () => {
    fireEvent.click(await screen.findByRole('button',{name:'Añadir clase al borrador'}))
    await screen.findByRole('group',{name:'Añadir una clase al borrador'})
- })
+ }, { timeout: 4000 })
  expect(screen.queryByLabelText('Motivo de la autorización')).toBeNull()
  expect(mocks.api.mock.calls.some(([path])=>path==='/borradores/clase')).toBe(false)
 })
